@@ -2,8 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=1200, initial-scale=1"/>
-<title>BatoDice – 左右UI 最小プレイアブル（横レイアウト）</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>BatoDice – シングルページ版（Home/Select/Battle）</title>
 <style>
 :root{
   --bg:#0e1224; --bg2:#0a1022;
@@ -13,68 +13,82 @@
   --ally:#4da3ff; --enemy:#ff6d6d;
   --lowerH: 220px;
 }
-
-/* 全体2カラム：左=メイン、右=縦ドック */
 *{box-sizing:border-box;font-family:system-ui,Segoe UI,Roboto,"ヒラギノ角ゴ ProN",Meiryo,Arial}
 body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(--bg2))}
-.wrap{
-  max-width:1200px;margin:14px auto;padding:0 14px;display:grid;gap:12px;
-  grid-template-columns: 1fr 280px;
+
+/* ===== Shared Buttons ===== */
+.btn{padding:10px 16px;border-radius:12px;border:1px solid #2240b2;background:linear-gradient(180deg,var(--btn),var(--btn2));
+  color:#fff;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(37,66,210,.28), inset 0 1px 0 rgba(255,255,255,.12)}
+.btn:hover{background:linear-gradient(180deg,var(--btnH),#2f55ff)}
+.btn.ghost{background:transparent;border-color:#3a4bb7}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+/* ====== Home ====== */
+section#home {
+  min-height:100vh;
+  background:#000 url('home.png') center/cover no-repeat;
 }
+.homeWrap {
+  display:grid;
+  place-items:center;
+  text-align:center;
+  color:#fff;
+  text-shadow:0 2px 12px #000;
+}
+.homeWrap{text-align:center;color:#fff;text-shadow:0 2px 12px #000}
+.homeWrap h1{font-size:56px;margin:0 0 18px}
+.homeWrap p{opacity:.92;margin:0 0 18px}
+.homeBtns{display:flex;gap:12px;justify-content:center}
+
+/* ====== Select ====== */
+section#select{min-height:100vh;padding:18px}
+.selWrap{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+.selLeft{border:1px solid var(--line);border-radius:14px;padding:12px;background:linear-gradient(180deg,#101536,#0b1130)}
+.selRight{border:1px solid var(--line);border-radius:14px;padding:12px;background:linear-gradient(180deg,#101536,#0b1130)}
+.selTitle{margin:0 0 10px 0;color:#cfe1ff}
+.stageGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.stage{position:relative;border:1px solid var(--line);border-radius:12px;padding:10px;background:#0e1433;display:flex;flex-direction:column;gap:8px}
+.stage img{width:100%;height:120px;object-fit:contain;background:#0b1130;border-radius:8px}
+.lock{position:absolute;right:10px;top:10px;background:#0008;border:1px solid #fff3;color:#fff;padding:2px 8px;border-radius:999px;font-size:12px}
+.prog{font-size:12px;color:#b8c6ff}
+.selRight .row{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;margin:6px 0}
+.statBadge{display:inline-block;border:1px solid var(--line);padding:2px 8px;border-radius:999px;background:#0f1536;color:#cfe0ff}
+.equipList{display:flex;gap:8px;flex-wrap:wrap}
+.badgeEquip{border:1px solid #3e4dbb;background:#18205a;padding:6px 10px;border-radius:10px}
+
+/* ====== Battle (original UI) ====== */
+section#battle{min-height:100vh}
+.wrap{max-width:1200px;margin:14px auto;padding:0 14px;display:grid;gap:12px;grid-template-columns: 1fr 280px}
 .top{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between}
 .title{font-weight:800}
 .gear{padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:#151c3d;color:#cfe0ff}
-
-/* メインカラム（左） */
 .main{display:grid;gap:12px}
-
-/* 上段：勇者/スライム 2カラム */
 .arena{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .card{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#0f1430}
-.img{
-  width:100%;
-  height:clamp(280px, 34vh, 420px);
-  object-fit:contain; /* 画像を伸ばさない */
-  object-position:center;
-  background:#0b1130;
-  display:block;
-}
+.img{width:100%;height:clamp(280px, 34vh, 420px);object-fit:contain;object-position:center;background:#0b1130;display:block}
 .topbar{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;gap:8px;z-index:3}
 .name{font-weight:800;background:rgba(8,12,28,.72);padding:2px 8px;border-radius:8px}
 .hp{position:relative;flex:1;height:12px;border:1px solid var(--line);background:#0d1430;border-radius:999px;overflow:hidden}
 .hp i{display:block;height:100%;background:linear-gradient(90deg,var(--hpG),#2ad1c8)}
 .hp.warn i{background:linear-gradient(90deg,var(--hpW),#ffb800)}
-.hp .ticks{position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;
-  background:
-    repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 1px, transparent 1px 20%),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.28) 0 2px, transparent 2px 100%);
-}
+.hp .ticks{position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;background:repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 1px, transparent 1px 20%),repeating-linear-gradient(90deg, rgba(255,255,255,.28) 0 2px, transparent 2px 100%)}
 .badge{padding:2px 8px;border:1px solid var(--line);border-radius:999px;background:#0f1536;font-size:12px;color:#c9d6ff}
 .foot{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:8px;z-index:2}
-.passive{flex:1;min-height:36px;display:flex;align-items:center;padding:8px 10px;border-radius:10px;border:1px dashed var(--line);
-  background:linear-gradient(180deg,rgba(14,20,48,.84),rgba(14,20,48,.68));font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.passive{flex:1;min-height:36px;display:flex;align-items:center;padding:8px 10px;border-radius:10px;border:1px dashed var(--line);background:linear-gradient(180deg,rgba(14,20,48,.84),rgba(14,20,48,.68));font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pill{background:#20306b;border:1px solid var(--line);color:#dbe6ff;padding:8px 10px;border-radius:10px;font-size:13px}
-
-/* 技名リボン帯 */
 .ribbon{position:absolute;left:0;right:0;top:58px;display:flex;justify-content:center;pointer-events:none;z-index:4}
-.ribbon .lab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);
-  background:linear-gradient(180deg,#2440c2,#1b2d7f); box-shadow:0 10px 24px rgba(0,0,0,.28); font-weight:900}
+.ribbon .lab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:linear-gradient(180deg,#2440c2,#1b2d7f); box-shadow:0 10px 24px rgba(0,0,0,.28); font-weight:900}
 .ribbon.ult .lab{background:linear-gradient(180deg,#ffd54a,#ffb84d); color:#4b2b00; border-color:#efc14a; text-shadow:0 1px 0 #fff8}
 .ribbon.show{animation:rib .9s ease both}
 @keyframes rib{0%{transform:translateY(-16px);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateY(-32px);opacity:0}}
-
-/* ダメージなど */
 .hitShake{animation:shake .25s ease}
 @keyframes shake{20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}100%{transform:translateX(0)}}
 .flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.22), transparent 60%);animation:flash .35s ease;z-index:2}
 @keyframes flash{from{opacity:0}50%{opacity:1}to{opacity:0}}
-.dmg{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);font-size:42px;font-weight:900;color:#fff;
-  text-shadow:0 0 14px rgba(255,80,80,.85),0 0 3px #000;opacity:0;animation:dpop .8s ease both;z-index:5}
+.dmg{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);font-size:42px;font-weight:900;color:#fff;text-shadow:0 0 14px rgba(255,80,80,.85),0 0 3px #000;opacity:0;animation:dpop .8s ease both;z-index:5}
 @keyframes dpop{0%{opacity:0;transform:translate(-50%,-34%) scale(.7)}20%{opacity:1;transform:translate(-50%,-52%) scale(1)}100%{opacity:0;transform:translate(-50%,-76%) scale(1.1)}}
 .vanish{animation:vanish .8s forwards ease}
 @keyframes vanish{0%{opacity:1}60%{opacity:.6;filter:blur(2px) brightness(1.2);transform:scale(.97)}100%{opacity:0;filter:blur(6px) brightness(1.25);transform:scale(.9)}}
-
-/* 下段：ログ＋ダイス（履歴はサイド） */
 .row{display:grid;grid-template-columns:1.6fr 0.9fr;gap:12px}
 .log{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#101536,#0b1130);padding:10px;height:var(--lowerH);display:flex;flex-direction:column;min-height:0}
 .log h3{margin:0 0 6px 0;color:#bcd1ff;font-size:14px}
@@ -83,44 +97,24 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .tA{background:rgba(77,163,255,.2);border:1px solid var(--ally);color:#cfe6ff}
 .tE{background:rgba(255,109,109,.2);border:1px solid var(--enemy);color:#ffd1d1}
 .red{color:#ff8f8f} .gray{color:#b5c2ff}
-
-.dicePanel{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,var(--panel),var(--panel2));padding:10px;height:var(--lowerH);display:grid;place-items:center;min-height:0}
-.arenaDice{border:1px solid var(--line);border-radius:10px;background:radial-gradient(220px 100px at 50% 30%, #1f2a5a 0%, #0b102c 70%);display:flex;align-items:center;justify-content:center;perspective:900px;min-height:0}
-.cube{--size:96px;position:relative;width:var(--size);height:var(--size);transform-style:preserve-3d;transition:transform 700ms cubic-bezier(.2,.8,.2,1);transform:rotateX(-20deg) rotateY(30deg)}
-.face{position:absolute;width:var(--size);height:var(--size);background:#fff;border-radius:16px;box-shadow:inset 0 2px 0 rgba(0,0,0,.06), 0 12px 24px rgba(0,0,0,.28)}
-.pip{width:16px;height:16px;background:#19244e;border-radius:50%}
-.col{position:absolute;inset:16px;display:flex;flex-direction:column;justify-content:space-between}
-.rowP{position:absolute;inset:16px;display:flex;justify-content:space-between}
-.center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
-.front {transform:translateZ(calc(var(--size)/2))}
-.back  {transform:rotateY(180deg) translateZ(calc(var(--size)/2))}
-.right {transform:rotateY(90deg) translateZ(calc(var(--size)/2))}
-.left  {transform:rotateY(-90deg) translateZ(calc(var(--size)/2))}
-.top   {transform:rotateX(90deg) translateZ(calc(var(--size)/2))}
-.bottom{transform:rotateX(-90deg) translateZ(calc(var(--size)/2))}
-.show-1{transform:rotateX(-90deg) rotateY(0deg)}
-.show-2{transform:rotateX(-90deg) rotateY(90deg)}
-.show-3{transform:rotateX(90deg) rotateY(0deg)}
-.show-4{transform:rotateX(-90deg) rotateY(-90deg)}
-.show-5{transform:rotateX(0deg) rotateY(0deg)}
-.show-6{transform:rotateX(180deg) rotateY(0deg)}
-
-/* 右カラム：縦ドック */
+.dicePanel{border: 1px solid var(--line);border-radius: 12px;background: linear-gradient(180deg, var(--panel), var(--panel2));padding: 10px;height: var(--lowerH);display: grid;place-items: center}
+.scene{width: 120px;height: 120px;perspective: 800px}
+.dice{width: 120px;height: 120px;position: relative;transform-style: preserve-3d;transition: transform 1s ease-in-out}
+.face{position: absolute;width: 120px;height: 120px;background-size: cover;background-position: center}
+.front  { transform: rotateY(0deg) translateZ(60px);  background-image: url("1.png") }
+.back   { transform: rotateY(180deg) translateZ(60px); background-image: url("6.png") }
+.right  { transform: rotateY(90deg) translateZ(60px);  background-image: url("3.png") }
+.left   { transform: rotateY(-90deg) translateZ(60px); background-image: url("4.png") }
+.topp   { transform: rotateX(90deg) translateZ(60px);  background-image: url("5.png") }
+.bottom { transform: rotateX(-90deg) translateZ(60px); background-image: url("2.png") }
 .sidebar{position:sticky;top:8px;align-self:start;display:grid;gap:16px}
-.bigbtn{
-  width:100%; min-height:72px; padding:14px 18px; display:flex; align-items:center; gap:12px; color:#fff;
-  border-radius:16px; border:1px solid #2240b2;
-  background:linear-gradient(180deg,var(--btn),var(--btn2)); box-shadow:0 10px 24px rgba(37,66,210,.35), inset 0 1px 0 rgba(255,255,255,.15);
-  font-weight:800; letter-spacing:.02em; white-space:nowrap
-}
+.bigbtn{width:100%; min-height:72px; padding:14px 18px; display:flex; align-items:center; gap:12px; color:#fff;border-radius:16px; border:1px solid #2240b2;background:linear-gradient(180deg,var(--btn),var(--btn2)); box-shadow:0 10px 24px rgba(37,66,210,.35), inset 0 1px 0 rgba(255,255,255,.15);font-weight:800; letter-spacing:.02em; white-space:nowrap}
 .bigbtn:hover{background:linear-gradient(180deg,var(--btnH),#2f55ff)}
 .icon{width:26px;height:26px}
 .label{display:flex;flex-direction:row;gap:8px;align-items:baseline;white-space:nowrap}
 .jp{font-size:18px;line-height:1}
 .en{font-size:13px;opacity:.9}
 .bigbtn:disabled{opacity:.5;cursor:not-allowed}
-
-/* サイド履歴 */
 .sidebox{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#101536,#0b1130);padding:10px}
 .sidebox h4{margin:0 0 8px 0;font-size:14px;color:#bcd1ff}
 .history{display:grid;gap:6px}
@@ -131,14 +125,9 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .ally{border-color:var(--ally)} .enemy{border-color:var(--enemy)}
 .last{box-shadow:0 0 0 3px rgba(255,255,255,.12);animation:pulse 1.2s ease-out 1}
 @keyframes pulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,.28)}100%{transform:scale(1.06);box-shadow:0 0 0 8px rgba(255,255,255,0)}}
-
-/* WIN オーバーレイ */
-.win-overlay{pointer-events:none;position:fixed;inset:0;display:grid;place-items:center;font-size:72px;font-weight:900;letter-spacing:.06em;color:transparent;-webkit-text-stroke:2px #fff;
-  text-shadow:0 0 18px rgba(255,255,255,.6);background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.08), transparent 55%);opacity:0;transform:scale(.9);transition:opacity .35s,transform .35s;z-index:80}
+.win-overlay{pointer-events:none;position:fixed;inset:0;display:grid;place-items:center;font-size:72px;font-weight:900;letter-spacing:.06em;color:transparent;-webkit-text-stroke:2px #fff;text-shadow:0 0 18px rgba(255,255,255,.6);background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.08), transparent 55%);opacity:0;transform:scale(.9);transition:opacity .35s,transform .35s;z-index:80}
 .win-overlay.show{opacity:1;transform:scale(1)}
 .win-overlay span{background:linear-gradient(180deg,#fff,#ffe28a 60%,#ffb84d);-webkit-background-clip:text;background-clip:text;color:transparent}
-
-/* 設定モーダル */
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:90}
 .modal.show{display:flex}
 .modal .card{width:min(1080px,96vw);max-height:92vh;overflow:auto;background:#0e1537;border:1px solid #2a3571;border-radius:12px;padding:12px}
@@ -153,485 +142,675 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .cell{padding:6px;background:#17204a;border:1px solid #39458b;border-radius:8px}
 .list{display:grid;gap:6px}
 .item{display:flex;justify-content:space-between;gap:8px;padding:6px;border:1px solid #39458b;background:#17204a;border-radius:8px}
+@media (max-height:740px){:root{ --lowerH: 200px } .img{ height: clamp(240px, 32vh, 360px) } .foot{ bottom:6px } .pill{ padding:6px 8px; font-size:12px }}
+@media (max-height:620px){:root{ --lowerH: 180px } .img{ height: clamp(200px, 28vh, 320px) } .top .title{ font-size:16px }}
+.passive { cursor: pointer }
 
-/* 低い画面の圧縮 */
-@media (max-height:740px){
-  :root{ --lowerH: 200px; }
-  .img{ height: clamp(240px, 32vh, 360px); }
-  .foot{ bottom:6px } .pill{ padding:6px 8px; font-size:12px }
+/* small helpers */
+hr.sep{border:none;border-top:1px solid #2a3474;margin:10px 0}
+.note{font-size:12px;color:#b8c6ff}
+section {
+  display: none;   /* デフォルト非表示 */
 }
-@media (max-height:620px){
-  :root{ --lowerH: 180px; }
-  .img{ height: clamp(200px, 28vh, 320px); }
-  .top .title{ font-size:16px }
+section.active {
+  display: block;  /* activeが付いてる画面だけ表示 */
 }
+
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <div class="title">BatoDice – 左右UI 最小プレイアブル</div>
-    <button class="gear" id="btnSettings">⚙ 設定</button>
+<!-- ===================== HOME ===================== -->
+<section id="home" class="active">
+  <div class="homeWrap">
+    <h1>BatoDice</h1>
+    <p>ダイスで戦う小さなRPG。装備とアイテムで攻略ルートを選ぼう。</p>
+    <div class="homeBtns">
+      <button class="btn" onclick="goto('select')">ゲーム開始！</button>
+      <button class="btn ghost" onclick="resetSave(true)">セーブ初期化</button>
+    </div>
   </div>
+</section>
 
-  <!-- 左：メイン -->
-  <div class="main">
-    <!-- 上段：勇者 vs スライム -->
-    <section class="arena">
-      <article class="card" id="cardP">
-        <img class="img" id="imgP" src="勇者.jpg" alt="勇者">
-        <div class="topbar">
-          <div class="name" id="nameP">勇者A</div>
-          <div class="hp"><i id="hpP" style="width:100%"></i><span class="ticks"></span></div>
-          <span class="badge" id="badgeP">先制</span>
+<!-- ===================== SELECT ===================== -->
+<section id="select">
+  <div class="selWrap">
+    <div class="selLeft">
+      <h3 class="selTitle">ステージ選択</h3>
+      <div class="stageGrid">
+        <!-- Slime -->
+        <div class="stage">
+          <div class="prog">スライム討伐 <span id="progSlime">0/3</span></div>
+          <img src="スライム.png" alt="スライム">
+          <button id="btnStageSlime" class="btn" onclick="gotoStage('slime')">スライム狩り</button>
         </div>
-        <div class="ribbon" id="ribbonP" style="display:none"><div class="lab" id="ribbonPText"></div></div>
-        <div class="foot">
-          <div class="passive">パッシブ：先制 ― 最初の出目に+1判定（演出のみ）</div>
-          <button class="pill" data-open="#skillP">技一覧</button>
-          <button class="pill" data-open="#comboP">必殺</button>
+        <!-- Goblin -->
+        <div class="stage">
+          <div class="prog">ゴブリン討伐 <span id="progGoblin">0/3</span></div>
+          <img src="ゴブリン.png" alt="ゴブリン">
+          <button id="btnStageGoblin" class="btn" onclick="gotoStage('goblin')">ゴブリン挑戦</button>
+          <span id="lockGoblin" class="lock">Lv2 または スライム×3</span>
         </div>
-      </article>
-
-      <article class="card" id="cardE">
-        <img class="img" id="imgE" src="スライム.png" alt="スライム">
-        <div class="topbar">
-          <div class="name" id="nameE">スライムLv1</div>
-          <div class="hp"><i id="hpE" style="width:100%"></i><span class="ticks"></span></div>
-          <span class="badge" id="badgeE">凍結×1</span>
-        </div>
-        <div class="ribbon" id="ribbonE" style="display:none"><div class="lab" id="ribbonEText"></div></div>
-        <div class="foot">
-          <div class="passive">パッシブ：ぬめり ― 被ダメ時に1/6で半減（デモでは無効）</div>
-          <button class="pill" data-open="#skillE">技一覧</button>
-          <button class="pill" data-open="#comboP">必殺</button>
-        </div>
-      </article>
-    </section>
-
-    <!-- 下段：バトルログ + ダイス -->
-    <section class="row">
-      <div class="log">
-        <h3>バトルログ</h3>
-        <pre id="logpre"></pre>
-      </div>
-
-      <div class="dicePanel">
-        <div class="arenaDice">
-          <div id="cube" class="cube show-1">
-            <div class="face front"><div class="center"><div class="pip"></div></div></div>
-            <div class="face right"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
-            <div class="face back"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="center"><div class="pip"></div></div></div></div>
-            <div class="face left"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
-            <div class="face top"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="center"><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
-            <div class="face bottom"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div></div></div>
-          </div>
+        <!-- Dragon -->
+        <div class="stage">
+          <div class="prog">ドラゴン討伐 <span id="progDragon">0/1</span></div>
+          <img src="ドラゴン.png" alt="ドラゴン">
+          <button id="btnStageDragon" class="btn" onclick="gotoStage('dragon')">ドラゴン挑戦</button>
+          <span id="lockDragon" class="lock">Lv3 または ゴブリン×3</span>
         </div>
       </div>
-    </section>
-  </div>
-
-  <!-- 右：縦ドック -->
-  <aside class="sidebar" aria-label="コマンド">
-    <button class="bigbtn" id="btnRoll">
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
-        <rect x="3" y="3" width="18" height="18" rx="4" fill="#fff" opacity=".95"/>
-        <circle cx="8.0" cy="8.0" r="1.7" fill="#1e2a60"/>
-        <circle cx="12.0" cy="12.0" r="1.7" fill="#1e2a60"/>
-        <circle cx="16.0" cy="16.0" r="1.7" fill="#1e2a60"/>
-      </svg>
-      <span class="label"><span class="jp">サイコロ</span> <span class="en">Roll</span></span>
-    </button>
-    <button class="bigbtn" id="btnAct" disabled>
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" fill="#fff" opacity=".95"/></svg>
-      <span class="label"><span class="jp" id="actLabel">技</span> <span class="en">Action</span></span>
-    </button>
-    <button class="bigbtn" id="btnItem" disabled>
-      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2h4v2l2 3v2l-1 1v8a3 3 0 01-3 3H12a3 3 0 01-3-3V10L8 9V7l2-3V2z" fill="#fff" opacity=".95"/></svg>
-      <span class="label"><span class="jp">アイテム</span> <span class="en">Item</span></span>
-    </button>
-
-    <div class="sidebox">
-      <h4>出目履歴</h4>
-      <div class="history">
-        <div class="hrow"><span class="hlabel">味方</span><div class="chips" id="allyChips"></div></div>
-        <div class="hrow"><span class="hlabel">敵</span><div class="chips" id="enemyChips"></div></div>
+      <hr class="sep">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="openEquip()">装備を変更</button>
+        <button class="btn" onclick="openItems()">アイテムを確認</button>
+        <button class="btn ghost" onclick="goto('home')">ホームへ戻る</button>
       </div>
     </div>
-  </aside>
-</div>
+    <div class="selRight">
+      <h3 class="selTitle">勇者情報</h3>
+      <div class="row"><div>名前</div><div><span id="plName">勇者A</span></div></div>
+      <div class="row"><div>レベル</div><div>Lv.<span id="plLv">1</span> <span class="statBadge">経験値 <span id="plXp">0</span></span></div></div>
+      <div class="row"><div>HP</div><div><span id="plHp">10</span> / <span id="plMax">10</span></div></div>
+      <div class="row"><div>攻撃力</div><div><span id="plAtk">0</span></div></div>
+      <div class="row"><div>装備</div><div class="equipList" id="equipBadges"></div></div>
+      <div class="row"><div>所持アイテム</div><div id="plItems">-</div></div>
+      <p class="note">※ スライム3体でLv2解放、ゴブリン3体でLv3解放（または同等レベル到達）。
+        装備やアイテムはバトル勝利時にドロップすることがあります。</p>
+    </div>
+  </div>
+</section>
 
-<!-- WIN overlay（初期は hidden） -->
-<div class="win-overlay" id="winOverlay" hidden><span>WIN</span></div>
-
-<!-- 設定モーダル（初期は hidden） -->
-<div class="modal" id="settingsModal" hidden>
-  <div class="card">
-    <h3 style="margin:0 0 8px">設定</h3>
-
-    <fieldset class="fieldset">
-      <legend>バトル速度 / サウンド</legend>
-      <div class="ctlrow"><label>速度</label>
-        <select id="speedSel" class="num">
-          <option value="fast">速い</option>
-          <option value="normal" selected>標準</option>
-          <option value="slow">ゆっくり</option>
-        </select>
+<!-- ===================== BATTLE ===================== -->
+<section id="battle">
+  <div class="wrap">
+    <div class="top">
+      <div class="title">BatoDice – バトル</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="gear" id="btnSettings">⚙ 設定</button>
+        <button class="gear" onclick="leaveBattle()">⏎ セレクトへ</button>
       </div>
-      <div class="ctlrow"><label>戦闘BGM</label>
-        <div>
-          <input type="file" id="bgmFile" accept="audio/*" class="txt">
-          <div style="display:flex;gap:8px;margin-top:6px">
-            <button class="pill2" id="bgmPlay">再生</button>
-            <button class="pill2 ghost" id="bgmStop">停止</button>
-            <label style="display:flex;gap:6px;align-items:center">音量
-              <input type="range" id="bgmVol" min="0" max="1" step="0.01" value="0.35">
-            </label>
+    </div>
+
+    <!-- 左：メイン -->
+    <div class="main">
+      <!-- 上段：勇者 vs 敵 -->
+      <section class="arena">
+        <article class="card" id="cardP">
+          <img class="img" id="imgP" src="勇者.jpg" alt="勇者">
+          <div class="topbar">
+            <div class="name" id="nameP">勇者A</div>
+            <div class="hp"><i id="hpP" style="width:100%"></i><span class="ticks"></span></div>
+            <span class="badge" id="badgeP">先制</span>
           </div>
+          <div class="ribbon" id="ribbonP" style="display:none"><div class="lab" id="ribbonPText"></div></div>
+          <div class="foot">
+            <button class="pill" data-open="#passiveP">パッシブ：先制</button>
+            <button class="pill" data-open="#skillP">技一覧</button>
+            <button class="pill" data-open="#comboP">必殺</button>
+          </div>
+        </article>
+
+        <article class="card" id="cardE">
+          <img class="img" id="imgE" src="スライム.png" alt="敵">
+          <div class="topbar">
+            <div class="name" id="nameE">スライム</div>
+            <div class="hp"><i id="hpE" style="width:100%"></i><span class="ticks"></span></div>
+            <span class="badge" id="badgeE">-</span>
+          </div>
+          <div class="ribbon" id="ribbonE" style="display:none"><div class="lab" id="ribbonEText"></div></div>
+          <div class="foot">
+            <button class="pill" data-open="#passiveE">パッシブ：-</button>
+            <button class="pill" data-open="#skillE">技一覧</button>
+            <button class="pill" data-open="#comboP">必殺</button>
+          </div>
+        </article>
+      </section>
+
+      <!-- 下段：バトルログ + ダイス -->
+      <section class="row">
+        <div class="log">
+          <h3>バトルログ</h3>
+          <pre id="logpre"></pre>
+        </div>
+        <div class="dicePanel">
+          <div class="scene"><div class="dice" id="dice">
+            <div class="face front"></div>
+            <div class="face back"></div>
+            <div class="face right"></div>
+            <div class="face left"></div>
+            <div class="face topp"></div>
+            <div class="face bottom"></div>
+          </div></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- 右：縦ドック -->
+    <aside class="sidebar" aria-label="コマンド">
+      <button class="bigbtn" id="btnRoll">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="4" fill="#fff" opacity=".95"/>
+          <circle cx="8.0" cy="8.0" r="1.7" fill="#1e2a60"/>
+          <circle cx="12.0" cy="12.0" r="1.7" fill="#1e2a60"/>
+          <circle cx="16.0" cy="16.0" r="1.7" fill="#1e2a60"/>
+        </svg>
+        <span class="label"><span class="jp">サイコロ</span> <span class="en">Roll</span></span>
+      </button>
+      <button class="bigbtn" id="btnAct" disabled>
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" fill="#fff" opacity=".95"/></svg>
+        <span class="label"><span class="jp" id="actLabel">技</span> <span class="en">Action</span></span>
+      </button>
+      <button class="bigbtn" id="btnItem">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2h4v2l2 3v2l-1 1v8a3 3 0 01-3 3H12a3 3 0 01-3-3V10L8 9V7l2-3V2z" fill="#fff" opacity=".95"/></svg>
+        <span class="label"><span class="jp">アイテム</span> <span class="en">Item</span></span>
+      </button>
+
+      <div class="sidebox">
+        <h4>出目履歴</h4>
+        <div class="history">
+          <div class="hrow"><span class="hlabel">味方</span><div class="chips" id="allyChips"></div></div>
+          <div class="hrow"><span class="hlabel">敵</span><div class="chips" id="enemyChips"></div></div>
         </div>
       </div>
-      <div class="ctlrow"><label>勝利BGM</label>
-        <div>
-          <input type="file" id="winFile" accept="audio/*" class="txt">
-          <div style="display:flex;gap:8px;margin-top:6px">
-            <button class="pill2" id="winTest">試聴</button>
-            <button class="pill2 ghost" id="winStop">停止</button>
-            <label style="display:flex;gap:6px;align-items:center">音量
-              <input type="range" id="winVol" min="0" max="1" step="0.01" value="0.4">
-            </label>
+    </aside>
+  </div>
+
+  <!-- WIN overlay -->
+  <div class="win-overlay" id="winOverlay"><span>WIN</span></div>
+
+  <!-- 設定モーダル -->
+  <div class="modal" id="settingsModal">
+    <div class="card">
+      <h3 style="margin:0 0 8px">設定</h3>
+      <fieldset class="fieldset"><legend>バトル速度 / サウンド</legend>
+        <div class="ctlrow"><label>速度</label>
+          <select id="speedSel" class="num">
+            <option value="fast">速い</option>
+            <option value="normal" selected>標準</option>
+            <option value="slow">ゆっくり</option>
+          </select>
+        </div>
+        <div class="ctlrow"><label>戦闘BGM</label>
+          <div>
+            <input type="file" id="bgmFile" accept="audio/*" class="txt">
+            <div style="display:flex;gap:8px;margin-top:6px">
+              <button class="pill2" id="bgmPlay">再生</button>
+              <button class="pill2 ghost" id="bgmStop">停止</button>
+              <label style="display:flex;gap:6px;align-items:center">音量
+                <input type="range" id="bgmVol" min="0" max="1" step="0.01" value="0.35">
+              </label>
+            </div>
           </div>
         </div>
-      </div>
-    </fieldset>
-
-    <div class="grid2">
-      <fieldset class="fieldset">
-        <legend>味方設定</legend>
-        <div class="ctlrow"><label>名前</label><input id="pName" class="txt" value="勇者A"></div>
-        <div class="ctlrow"><label>最大HP</label><input id="pMax" type="number" class="num" min="1" value="10"></div>
-        <div class="ctlrow"><label>技（1〜6）</label>
-          <div class="skilltbl" id="pSkillsTbl"></div>
+        <div class="ctlrow"><label>勝利BGM</label>
+          <div>
+            <input type="file" id="winFile" accept="audio/*" class="txt">
+            <div style="display:flex;gap:8px;margin-top:6px">
+              <button class="pill2" id="winTest">試聴</button>
+              <button class="pill2 ghost" id="winStop">停止</button>
+              <label style="display:flex;gap:6px;align-items:center">音量
+                <input type="range" id="winVol" min="0" max="1" step="0.01" value="0.4">
+              </label>
+            </div>
+          </div>
         </div>
       </fieldset>
-      <fieldset class="fieldset">
-        <legend>敵設定</legend>
-        <div class="ctlrow"><label>名前</label><input id="eName" class="txt" value="スライムLv1"></div>
-        <div class="ctlrow"><label>最大HP</label><input id="eMax" type="number" class="num" min="1" value="10"></div>
-        <div class="ctlrow"><label>技（1〜6）</label>
-          <div class="skilltbl" id="eSkillsTbl"></div>
-        </div>
-      </fieldset>
-    </div>
 
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button class="pill2" id="applySettings">適用して閉じる</button>
-      <button class="pill2 ghost" id="closeSettings">閉じる</button>
+      <div class="grid2">
+        <fieldset class="fieldset">
+          <legend>味方設定</legend>
+          <div class="ctlrow"><label>名前</label><input id="pName" class="txt" value="勇者A"></div>
+          <div class="ctlrow"><label>最大HP</label><input id="pMax" type="number" class="num" min="1" value="10"></div>
+          <div class="ctlrow"><label>技（1〜6）</label><div class="skilltbl" id="pSkillsTbl"></div></div>
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend>敵設定</legend>
+          <div class="ctlrow"><label>名前</label><input id="eName" class="txt" value="スライム"></div>
+          <div class="ctlrow"><label>最大HP</label><input id="eMax" type="number" class="num" min="1" value="10"></div>
+          <div class="ctlrow"><label>技（1〜6）</label><div class="skilltbl" id="eSkillsTbl"></div></div>
+        </fieldset>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="pill2" id="applySettings">適用して閉じる</button>
+        <button class="pill2 ghost" id="closeSettings">閉じる</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- 技/必殺/敵技 モーダル（簡易版） -->
-<div class="modal" id="skillP" hidden>
-  <div class="card"><h4>技一覧（出目1〜6）</h4>
-    <div class="list" id="skillPList"></div>
-    <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
-  </div>
-</div>
-<div class="modal" id="comboP" hidden>
-  <div class="card"><h4>必殺（コンボ一覧）</h4>
-    <div class="list">
-      <div class="item"><span>ゾロ目：「王者の三連撃」</span><span>固定ダメージ3</span></div>
-      <div class="item"><span>4-5-6：「昇天連斬」</span><span>固定ダメージ4</span></div>
+  <!-- 技/必殺/敵技 モーダル（簡易版） -->
+  <div class="modal" id="passiveP" ><div class="card"><h4>パッシブ：先制</h4><p>最初の出目に+1判定（演出のみ）</p><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
+  <div class="modal" id="skillP" ><div class="card"><h4>技一覧（出目1〜6）</h4><div class="list" id="skillPList"></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
+  <div class="modal" id="comboP" ><div class="card"><h4>必殺（コンボ一覧）</h4><div class="list"><div class="item"><span>ゾロ目：「王者の三連撃」</span><span>固定ダメージ3</span></div><div class="item"><span>4-5-6：「昇天連斬」</span><span>固定ダメージ4</span></div></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
+  <div class="modal" id="passiveE"><div class="card"><h4>パッシブ：-</h4><p>デモでは無効</p><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
+  <div class="modal" id="skillE" ><div class="card"><h4>敵の技（参考）</h4><div class="list" id="skillEList"></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
+
+  <!-- アイテムモーダル（共通UI） -->
+  <div class="modal" id="itemModal">
+    <div class="card">
+      <h4>アイテム</h4>
+      <div class="list" id="itemList"></div>
+      <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
     </div>
-    <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
   </div>
-</div>
-<div class="modal" id="skillE" hidden>
-  <div class="card"><h4>敵の技（参考）</h4>
-    <div class="list" id="skillEList"></div>
-    <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
-  </div>
-</div>
-
-<!-- オーディオ要素 -->
-<audio id="bgm" loop></audio>
-<audio id="winbgm" loop></audio>
+</section>
 
 <script>
-(()=>{
-// ====== 基本データ ======
-const defaultPlayerSkills = {
-  1:{name:'小攻撃', dmg:1}, 2:{name:'小攻撃', dmg:1}, 3:{name:'小攻撃', dmg:1},
-  4:{name:'強攻撃', dmg:2}, 5:{name:'強攻撃', dmg:2}, 6:{name:'強攻撃', dmg:2}
-};
-const defaultEnemySkills = {
-  1:{name:'ぺちぺち', dmg:1}, 2:{name:'ぺちぺち', dmg:1}, 3:{name:'ぺちぺち', dmg:1},
-  4:{name:'のしかかり', dmg:1}, 5:{name:'のしかかり', dmg:1}, 6:{name:'どろ弾（強）', dmg:2}
-};
+// ======================= APP STATE =======================
+const ENEMY_BOOK = {
+  slime: {
+    key:'slime', name:'スライム', img:'スライム.png', max:10,
+    skills:{1:{name:'ぺちぺち',dmg:1},2:{name:'ぺちぺち',dmg:1},3:{name:'ぺちぺち',dmg:1},4:{name:'のしかかり',dmg:2},5:{name:'のしかかり',dmg:2},6:{name:'どろ弾（強）',dmg:2}},
+    xp:1
+  },
+  goblin: {
+    key:'goblin', name:'ゴブリン', img:'ゴブリン.png', max:15,
+    skills:{1:{name:'斬撃',dmg:2},2:{name:'斬撃',dmg:2},3:{name:'キック',dmg:2},4:{name:'毒ナイフ',dmg:3},5:{name:'毒ナイフ',dmg:3},6:{name:'突撃',dmg:4}},
+    xp:2
+  },
+  dragon: {
+    key:'dragon', name:'ドラゴン', img:'ドラゴン.png', max:30,
+    skills:{1:{name:'かみつき',dmg:3},2:{name:'かみつき',dmg:3},3:{name:'しっぽ',dmg:4},4:{name:'炎ブレス',dmg:6},5:{name:'炎ブレス',dmg:6},6:{name:'メガフレア',dmg:8}},
+    xp:5
+  }
+}
+const EQUIP_BOOK = {
+  ironSword: {slot:'weapon', name:'鉄の剣', atk:1},
+  leatherArmor: {slot:'armor', name:'革の鎧', hp:5}
+}
+const DEFAULT_SKILLS = {1:{name:'小攻撃',dmg:1},2:{name:'小攻撃',dmg:1},3:{name:'小攻撃',dmg:1},4:{name:'強攻撃',dmg:2},5:{name:'強攻撃',dmg:2},6:{name:'強攻撃',dmg:2}}
 
-const P = { name:'勇者A', max:10, hp:10, hist:[], finisher:false, skills:JSON.parse(JSON.stringify(defaultPlayerSkills)) };
-const E = { name:'スライムLv1', max:10, hp:10, hist:[], skills:JSON.parse(JSON.stringify(defaultEnemySkills)) };
+let Game = {
+  player:{ name:'勇者A', lvl:1, xp:0, atk:0, baseMax:10, max:10, hp:10, skills:JSON.parse(JSON.stringify(DEFAULT_SKILLS)),
+    items:{ potion:3, diceBoost:1 }, equip:{ weapon:null, armor:null }, box:[] },
+  progress:{ kills:{slime:0,goblin:0,dragon:0}, unlock:{ goblin:false, dragon:false } }
+}
 
-let rolledP=null, rolledE=null, phase='ready', busy=false;
+// ======================= ROUTER =======================
+function goto(id){
+  document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+function gotoStage(enemyKey){ startBattle(enemyKey); goto('battle') }
+function leaveBattle(){ goto('select') }
 
-const SPEEDS={ fast:{dice:450, pause:320, enemyPause:420}, normal:{dice:700, pause:420, enemyPause:520}, slow:{dice:950, pause:520, enemyPause:620} };
-let timing={...SPEEDS.normal};
+// ======================= SAVE / LOAD =======================
+const SAVE_KEY='batoDiceSaveV1'
+function saveGame(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(Game)) }catch(e){} }
+function loadGame(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY)
+    if(raw){
+      const g=JSON.parse(raw)
+      // shallow validate
+      if(g?.player && g?.progress){ Game=g }
+    }
+  }catch(e){}
+}
+function resetSave(andStay){
+  Game = { 
+    player:{ name:'勇者A', lvl:1, xp:0, atk:0, baseMax:10, max:10, hp:10,
+      skills:JSON.parse(JSON.stringify(DEFAULT_SKILLS)),
+      items:{potion:3,diceBoost:1}, equip:{weapon:null,armor:null}, box:[] },
+    progress:{ kills:{slime:0,goblin:0,dragon:0}, unlock:{goblin:false,dragon:false} }
+  }
+  localStorage.removeItem(SAVE_KEY); // ← ここを追加
+  saveGame();                        // ← 新しい初期データを保存
+  refreshSelect();                   // ← これを追加してUIを更新
+  // ✅ ボタンラベルを一時的に変える
+  const btn = document.querySelector('.homeBtns .btn.ghost');
+  if(btn){
+    btn.textContent = "初期化完了！";
+    btn.disabled = true;
+    setTimeout(()=>{
+      btn.textContent = "セーブ初期化";
+      btn.disabled = false;
+    }, 2000); // 2秒後に戻す
+  }
 
-// ====== 要素参照 ======
-const $ = s=>document.querySelector(s);
-const cube = $('#cube');
-const shows=[,'show-1','show-2','show-3','show-4','show-5','show-6'];
-const hpP=$('#hpP'), hpE=$('#hpE');
-const cardP=$('#cardP'), cardE=$('#cardE');
-const ribP=$('#ribbonP'), ribPText=$('#ribbonPText');
-const ribE=$('#ribbonE'), ribEText=$('#ribbonEText');
-const logpre=$('#logpre');
-const allyChips=$('#allyChips'), enemyChips=$('#enemyChips');
-const btnRoll=$('#btnRoll'), btnAct=$('#btnAct'), actLabel=$('#actLabel');
-const winOverlay=$('#winOverlay');
-const nameP=$('#nameP'), nameE=$('#nameE');
 
-const btnSettings = $('#btnSettings');
-const settingsModal = $('#settingsModal');
-const closeSettings = $('#closeSettings');
-const applySettings = $('#applySettings');
-const speedSel = $('#speedSel');
+  if(andStay){ goto('home') }
+}
+window.resetSave = resetSave;
 
-const pName=$('#pName'), pMax=$('#pMax'), pTbl=$('#pSkillsTbl');
-const eName=$('#eName'), eMax=$('#eMax'), eTbl=$('#eSkillsTbl');
+// ======================= SELECT UI =======================
+function refreshSelect(){
+  // Level gating by kills OR level
+  const u=Game.progress.unlock
+  u.goblin = u.goblin || Game.progress.kills.slime>=3 || Game.player.lvl>=2
+  u.dragon = u.dragon || Game.progress.kills.goblin>=3 || Game.player.lvl>=3
 
-const bgm=$('#bgm'), winbgm=$('#winbgm');
-const bgmFile=$('#bgmFile'), bgmPlay=$('#bgmPlay'), bgmStop=$('#bgmStop'), bgmVol=$('#bgmVol');
-const winFile=$('#winFile'), winTest=$('#winTest'), winStop=$('#winStop'), winVol=$('#winVol');
+  // Update buttons
+  const bG=document.getElementById('btnStageGoblin'), bD=document.getElementById('btnStageDragon')
+  bG.disabled = !u.goblin; bD.disabled = !u.dragon
+  document.getElementById('lockGoblin').style.display = u.goblin? 'none':'inline-block'
+  document.getElementById('lockDragon').style.display = u.dragon? 'none':'inline-block'
 
-// ====== ユーティリティ ======
-const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
-const pct=(v,tot)=>Math.round((v/tot)*100);
-const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  // Progress text
+  document.getElementById('progSlime').textContent = `${Game.progress.kills.slime}/3`
+  document.getElementById('progGoblin').textContent = `${Game.progress.kills.goblin}/3`
+  document.getElementById('progDragon').textContent = `${Game.progress.kills.dragon}/1`
+
+  // Player panel
+  document.getElementById('plName').textContent = Game.player.name
+  document.getElementById('plLv').textContent = Game.player.lvl
+  document.getElementById('plXp').textContent = Game.player.xp
+  document.getElementById('plHp').textContent = Game.player.hp
+  document.getElementById('plMax').textContent = Game.player.max
+  document.getElementById('plAtk').textContent = Game.player.atk
+  document.getElementById('plItems').textContent = Object.entries(Game.player.items).map(([k,v])=>{
+    const nm = k==='potion'? '回復薬': (k==='diceBoost'? '出目+1':'?');
+    return `${nm}×${v}`
+  }).join(' / ') || '-'
+
+  const badges=document.getElementById('equipBadges'); badges.innerHTML=''
+  const w = Game.player.equip.weapon ? EQUIP_BOOK[Game.player.equip.weapon].name : 'なし'
+  const a = Game.player.equip.armor ? EQUIP_BOOK[Game.player.equip.armor].name : 'なし'
+  badges.insertAdjacentHTML('beforeend', `<span class="badgeEquip">武器：${w}</span>`)
+  badges.insertAdjacentHTML('beforeend', `<span class="badgeEquip">防具：${a}</span>`)
+  saveGame()
+}
+
+function openItems(){ renderItems(); const m=document.getElementById('itemModal'); m.hidden=false; m.classList.add('show') }
+function openEquip(){
+  // simple equip chooser using item modal UI
+  const list=document.getElementById('itemList'); list.innerHTML=''
+  const title=document.createElement('div'); title.className='item'; title.innerHTML='<b>装備変更</b><span></span>'; list.appendChild(title)
+  ;['ironSword','leatherArmor'].forEach(key=>{
+    const e=EQUIP_BOOK[key]
+    const owned = Game.player.box.includes(key)
+    const equipped = Game.player.equip[e.slot]===key
+    const row=document.createElement('div'); row.className='item'
+    const eff = e.atk? `攻撃+${e.atk}` : `HP+${e.hp}`
+    row.innerHTML = `<span>${e.name}（${eff}）${owned? '':' <span style="opacity:.7">未入手</span>'}</span><span>${equipped? '装備中':''}</span>`
+    if(owned && !equipped){
+      const b=document.createElement('button'); b.className='pill2'; b.textContent='装備'
+      b.onclick=()=>{ equipItem(key); renderItems(); openEquip() }
+      row.appendChild(b)
+    }
+    list.appendChild(row)
+  })
+  const m=document.getElementById('itemModal'); m.hidden=false; m.classList.add('show')
+}
+function equipItem(key){
+  const e=EQUIP_BOOK[key];
+  // unequip same slot
+  Game.player.equip[e.slot]=key
+  applyDerivedStats()
+  refreshSelect(); saveGame()
+}
+
+// ======================= BATTLE STATE =======================
+let currentEnemyKey=null
+const P = { name:'勇者A', baseMax:10, max:10, hp:10, atk:0, hist:[], finisher:false, skills:JSON.parse(JSON.stringify(DEFAULT_SKILLS)) }
+const E = { key:'slime', name:'スライム', max:10, hp:10, img:'スライム.png', skills: ENEMY_BOOK.slime.skills, hist:[] }
+
+let rolledP=null, rolledE=null, phase='ready', busy=false
+const SPEEDS={ fast:{dice:450, pause:320, enemyPause:420}, normal:{dice:700, pause:420, enemyPause:520}, slow:{dice:950, pause:520, enemyPause:620} }
+let timing={...SPEEDS.normal}
+
+const $ = s=>document.querySelector(s)
+const hpP=$('#hpP'), hpE=$('#hpE')
+const cardP=$('#cardP'), cardE=$('#cardE')
+const ribP=$('#ribbonP'), ribPText=$('#ribbonPText')
+const ribE=$('#ribbonE'), ribEText=$('#ribbonEText')
+const logpre=$('#logpre')
+const allyChips=$('#allyChips'), enemyChips=$('#enemyChips')
+const btnRoll=$('#btnRoll'), btnAct=$('#btnAct'), actLabel=$('#actLabel')
+const winOverlay=$('#winOverlay')
+const nameP=$('#nameP'), nameE=$('#nameE')
+
+const btnSettings=$('#btnSettings')
+const settingsModal=$('#settingsModal')
+const closeSettings=$('#closeSettings')
+const applySettings=$('#applySettings')
+const speedSel=$('#speedSel')
+const pName=$('#pName'), pMax=$('#pMax'), pTbl=$('#pSkillsTbl')
+const eName=$('#eName'), eMax=$('#eMax'), eTbl=$('#eSkillsTbl')
+const bgm=$('#bgm'), winbgm=$('#winbgm')
+const bgmFile=$('#bgmFile'), bgmPlay=$('#bgmPlay'), bgmStop=$('#bgmStop'), bgmVol=$('#bgmVol')
+const winFile=$('#winFile'), winTest=$('#winTest'), winStop=$('#winStop'), winVol=$('#winVol')
+
+// audio tags for battle (created in settings modal section of HTML)
+const audioBgm = document.createElement('audio'); audioBgm.id='bgm'; audioBgm.loop=true
+const audioWin = document.createElement('audio'); audioWin.id='winbgm'; audioWin.loop=true
+
+// ====== Utils ======
+const clamp=(n,min,max)=>Math.max(min,Math.min(max,n))
+const pct=(v,tot)=>Math.round((v/tot)*100)
+const wait=ms=>new Promise(r=>setTimeout(r,ms))
 function setHp(who){
-  if(who==='P'){ hpP.style.width=pct(P.hp,P.max)+'%'; hpP.parentElement.classList.toggle('warn', P.hp/P.max<=.4); }
-  else { hpE.style.width=pct(E.hp,E.max)+'%'; hpE.parentElement.classList.toggle('warn', E.hp/E.max<=.4); }
+  if(who==='P'){ hpP.style.width=pct(P.hp,P.max)+'%'; hpP.parentElement.classList.toggle('warn', P.hp/P.max<=.4) }
+  else { hpE.style.width=pct(E.hp,E.max)+'%'; hpE.parentElement.classList.toggle('warn', E.hp/E.max<=.4) }
 }
 function pushChip(container,n,cls){
-  const kids=[...container.children]; kids.forEach(c=>c.classList.remove('last'));
-  if(kids.length>=3) container.removeChild(kids[0]);
-  const el=document.createElement('div'); el.className='chip '+cls+' last'; el.textContent=n; container.appendChild(el);
+  const kids=[...container.children]; kids.forEach(c=>c.classList.remove('last'))
+  if(kids.length>=3) container.removeChild(kids[0])
+  const el=document.createElement('div'); el.className='chip '+cls+' last'; el.textContent=n; container.appendChild(el)
 }
 function appendLog(side, n, name, dmg, remain){
-  const span=document.createElement('span');
-  span.className='t '+(side==='味'?'tA':'tE'); span.textContent=side;
-  logpre.appendChild(document.createTextNode('\n')); logpre.appendChild(span);
-  const dmgTxt = dmg!=null ? ` → <span class="red">-${dmg}</span>（残HP <span class="gray">${remain}</span>）` : '';
-  logpre.insertAdjacentHTML('beforeend', `【${n}】 ${name}${dmgTxt}`);
-  logpre.scrollTop=logpre.scrollHeight;
+  const span=document.createElement('span')
+  span.className='t '+(side==='味'?'tA':'tE'); span.textContent=side
+  logpre.appendChild(document.createTextNode('\n')); logpre.appendChild(span)
+  const dmgTxt = dmg!=null ? ` → <span class="red">-${dmg}</span>（残HP <span class="gray">${remain}</span>）` : ''
+  logpre.insertAdjacentHTML('beforeend', `【${n}】 ${name}${dmgTxt}`)
+  logpre.scrollTop=logpre.scrollHeight
 }
 function showRibbon(who, text, ult=false){
-  const rib = who==='P'? ribP : ribE; const t = who==='P'? ribPText : ribEText;
-  t.textContent = text; rib.style.display='flex'; rib.classList.toggle('ult', ult);
-  rib.classList.remove('show'); void rib.offsetWidth; rib.classList.add('show');
-  setTimeout(()=>{ rib.style.display='none'; }, 900);
+  const rib = who==='P'? ribP : ribE; const t = who==='P'? ribPText : ribEText
+  t.textContent = text; rib.style.display='flex'; rib.classList.toggle('ult', ult)
+  rib.classList.remove('show'); void rib.offsetWidth; rib.classList.add('show')
+  setTimeout(()=>{ rib.style.display='none' }, 900)
 }
 function hitFX(card, dmg){
-  const f=document.createElement('div'); f.className='flash'; f.style.zIndex=2; card.appendChild(f); setTimeout(()=>f.remove(),350);
-  const d=document.createElement('div'); d.className='dmg'; d.textContent='-'+dmg; card.appendChild(d); setTimeout(()=>d.remove(),820);
-  card.classList.remove('hitShake'); void card.offsetWidth; card.classList.add('hitShake');
+  const f=document.createElement('div'); f.className='flash'; f.style.zIndex=2; card.appendChild(f); setTimeout(()=>f.remove(),350)
+  const d=document.createElement('div'); d.className='dmg'; d.textContent='-'+dmg; card.appendChild(d); setTimeout(()=>d.remove(),820)
+  card.classList.remove('hitShake'); void card.offsetWidth; card.classList.add('hitShake')
 }
 function checkComboP(){
-  if(P.hist.length<3) return null;
-  const h=P.hist.slice(-3), set=new Set(h);
-  if(h[0]===h[1] && h[1]===h[2]) return {type:'triple', label:'ゾロ目', bonus:2};
-  if(set.size===3 && set.has(4)&&set.has(5)&&set.has(6)) return {type:'456', label:'4-5-6', bonus:2};
-  return null;
+  if(P.hist.length<3) return null
+  const h=P.hist.slice(-3), set=new Set(h)
+  if(h[0]===h[1] && h[1]===h[2]) return {type:'triple', label:'ゾロ目', bonus:2}
+  if(set.size===3 && set.has(4)&&set.has(5)&&set.has(6)) return {type:'456', label:'4-5-6', bonus:2}
+  return null
 }
-function rollOne(){ return Math.floor(Math.random()*6)+1; }
-function rotateCube(n){ shows.forEach(s=>s&&cube.classList.remove(s)); cube.classList.add(shows[n]); }
+
+// dice visuals
+let rotX=0, rotY=0
+function spinDice(n){
+  const dice=document.getElementById('dice')
+  rotX += 360 * (2 + Math.floor(Math.random()*2))
+  rotY += 360 * (2 + Math.floor(Math.random()*2))
+  const FACE={1:{x:0,y:0},2:{x:90,y:0},3:{x:0,y:-90},4:{x:0,y:90},5:{x:-90,y:0},6:{x:0,y:180}}
+  const base=FACE[n]
+  dice.style.transform=`rotateX(${rotX+base.x}deg) rotateY(${rotY+base.y}deg)`
+}
+
+// ======================= ITEMS =======================
+const btnItem=$('#btnItem'), itemModal=$('#itemModal'), itemList=$('#itemList')
+let diceBoostActive=false
+
+function renderItems(){
+  itemList.innerHTML=''
+  const items=Game.player.items
+  for(const [key,count] of Object.entries(items)){
+    let label=''; if(key==='potion') label='回復薬（HP+3）'; if(key==='diceBoost') label='出目+1（次のサイコロのみ）'
+    const div=document.createElement('div'); div.className='item'; div.innerHTML=`<span>${label}</span><span>残り ${count}</span>`
+    if(count>0){ const btn=document.createElement('button'); btn.className='pill2'; btn.textContent='使う'; btn.onclick=()=>useItem(key); div.appendChild(btn) }
+    itemList.appendChild(div)
+  }
+}
+function useItem(type){
+  const items=Game.player.items
+  if(items[type]<=0) return
+  if(type==='potion'){
+    const heal=3; P.hp=clamp(P.hp+heal,0,P.max); setHp('P'); appendLog('味','-','回復薬を使用',null,`${P.hp}/${P.max}`)
+  }
+  if(type==='diceBoost'){ diceBoostActive=true; appendLog('味','-','出目+1アイテムを使用',null,`${P.hp}/${P.max}`) }
+  items[type]--; renderItems(); itemModal.classList.remove('show'); itemModal.hidden=true; saveGame()
+}
+btnItem.addEventListener('click',()=>{ renderItems(); itemModal.hidden=false; itemModal.classList.add('show') })
+
+// hook rollOne for diceBoost
+function rollOneBase(){ return Math.floor(Math.random()*6)+1 }
+function rollOne(){ let n=rollOneBase(); if(diceBoostActive){ n=Math.min(6, n+1); diceBoostActive=false } return n }
+
+// ======================= BATTLE CORE =======================
+function startBattle(enemyKey){
+  // sync player from save
+  P.name=Game.player.name; P.baseMax=Game.player.baseMax; P.max=Game.player.max; P.hp=Math.min(Game.player.hp, P.max); P.atk=Game.player.atk; P.skills=JSON.parse(JSON.stringify(Game.player.skills))
+  // apply derived (equip)
+  applyDerivedStats()
+
+  // setup enemy
+  currentEnemyKey=enemyKey
+  const T=ENEMY_BOOK[enemyKey]
+  E.key=T.key; E.name=T.name; E.max=T.max; E.hp=T.max; E.img=T.img; E.skills=T.skills; E.hist=[]
+  $('#imgE').src=E.img; $('#nameE').textContent=E.name; $('#eName').value=E.name; $('#eMax').value=E.max
+
+  // reset visuals
+  resetBattle(true)
+  logpre.textContent=`${E.name} が現れた！`
+}
+
+function applyDerivedStats(){
+  // base
+  let max = Game.player.baseMax
+  let atk = Game.player.atk
+  // equip bonuses
+  const wKey=Game.player.equip.weapon; const aKey=Game.player.equip.armor
+  if(wKey){ const w=EQUIP_BOOK[wKey]; atk += (w.atk||0) }
+  if(aKey){ const a=EQUIP_BOOK[aKey]; max += (a.hp||0) }
+  Game.player.max = max; Game.player.atk = atk
+  // push to P if in battle
+  P.max=max; P.atk=atk; if(P.hp>max) P.hp=max
+}
+
 function resetBattle(keepAudio=true){
-  busy=false; phase='ready'; rolledP=null; rolledE=null; P.finisher=false;
-  P.hp=P.max; E.hp=E.max; P.hist.length=0; E.hist.length=0;
-  setHp('P'); setHp('E'); nameP.textContent=P.name; nameE.textContent=E.name;
-  $('#imgE').classList.remove('vanish'); winOverlay.classList.remove('show'); winOverlay.hidden=true;
-  allyChips.innerHTML=''; enemyChips.innerHTML='';
-  logpre.textContent='バトル開始！ 先にスライムを倒そう。';
-  btnRoll.disabled=false; btnAct.disabled=true; actLabel.textContent='技';
-  if(!keepAudio){ try{ bgm.pause(); winbgm.pause(); }catch(e){} }
+  busy=false; phase='ready'; rolledP=null; rolledE=null; P.finisher=false
+  setHp('P'); setHp('E'); nameP.textContent=P.name; nameE.textContent=E.name
+  $('#imgE').classList.remove('vanish'); winOverlay.classList.remove('show'); winOverlay.hidden=true
+  allyChips.innerHTML=''; enemyChips.innerHTML=''
+  btnRoll.disabled=false; btnAct.disabled=true; actLabel.textContent='技'
+  if(!keepAudio){ try{ bgm.pause(); winbgm.pause() }catch(e){} }
 }
 
-// ====== ロール → 技確定 ======
 btnRoll.addEventListener('click', async ()=>{
-  if(phase!=='ready' || busy) return;
-  busy=true; phase='rolled'; btnRoll.disabled=true; btnAct.disabled=true;
+  if(phase!=='ready' || busy) return; busy=true; phase='rolled'; btnRoll.disabled=true; btnAct.disabled=true
+  const nP=rollOne(); rolledP=nP; spinDice(nP)
+  setTimeout(()=>{ P.hist.push(nP); if(P.hist.length>3) P.hist.shift(); pushChip(allyChips,nP,'ally') },1000)
+  const base=P.skills[nP].dmg + P.atk
+  const combo=checkComboP(); if(combo){ P.finisher=true; showRibbon('P',`コンボ成立！ ${combo.label}`,true) }
+  const shown= base + (P.finisher?2:0)
+  await wait(timing.pause+300)
+  showRibbon('P',`技${nP}：${P.skills[nP].name}（${shown}）`, P.finisher)
+  actLabel.textContent = (P.finisher? '必殺：':'技：') + `${P.skills[nP].name}（${shown}）`
+  await wait(timing.pause); btnAct.disabled=false; busy=false
+})
 
-  const nP = rollOne(); rotateCube(nP);
-  const nE = rollOne();
-
-  rolledP=nP; rolledE=nE;
-
-  P.hist.push(nP); if(P.hist.length>3) P.hist.shift();
-  E.hist.push(nE); if(E.hist.length>3) E.hist.shift();
-  pushChip(allyChips, nP, 'ally'); pushChip(enemyChips, nE, 'enemy');
-
-  const baseP = P.skills[nP].dmg;
-  const combo = checkComboP();
-  if(combo){ P.finisher=true; showRibbon('P', `コンボ成立！ ${combo.label}`, true); }
-  const shownDmg = baseP + (P.finisher ? 2 : 0);
-  showRibbon('P', `技${nP}：${P.skills[nP].name}（${shownDmg}）`, P.finisher);
-  showRibbon('E', `技${nE}：${E.skills[nE].name}`, false);
-
-  actLabel.textContent = (P.finisher? '必殺：':'技：') + `${P.skills[nP].name}（${shownDmg}）`;
-
-  await wait(timing.pause);
-  btnAct.disabled=false; busy=false;
-});
-
-// ====== 行動（味方→敵→ターン回し） ======
 btnAct.addEventListener('click', async ()=>{
-  if(phase!=='rolled' || busy) return;
-  busy=true; phase='acting'; btnAct.disabled=true;
-
-  // 味方攻撃
-  const dmgP = Math.max(0, P.skills[rolledP].dmg + (P.finisher?2:0));
-  E.hp = clamp(E.hp - dmgP, 0, E.max);
-  hitFX(cardE, dmgP); setHp('E');
-  appendLog('味', rolledP, (P.finisher?'必殺：':'')+P.skills[rolledP].name, dmgP, `${E.hp}/${E.max}`);
-  P.finisher=false; actLabel.textContent='技';
+  if(phase!=='rolled' || busy) return; busy=true; phase='acting'; btnAct.disabled=true
+  const dmgP=Math.max(0, P.skills[rolledP].dmg + P.atk + (P.finisher?2:0))
+  E.hp = clamp(E.hp - dmgP, 0, E.max); hitFX(cardE, dmgP); setHp('E'); appendLog('味', rolledP, (P.finisher?'必殺：':'')+P.skills[rolledP].name, dmgP, `${E.hp}/${E.max}`)
+  P.finisher=false; actLabel.textContent='技'
 
   if(E.hp<=0){
-    await wait(350);
-    $('#imgE').classList.add('vanish');
-    try{ bgm.pause(); }catch(e){}
-    try{
-      if(!winbgm.src && winFile.files?.[0]) winbgm.src = URL.createObjectURL(winFile.files[0]);
-      winbgm.volume=parseFloat(winVol.value||0.4); winbgm.play().catch(()=>{});
-    }catch(e){}
-    await wait(500);
-    winOverlay.querySelector('span').textContent='WIN';
-    winOverlay.hidden=false;
-    winOverlay.classList.add('show');
-    btnRoll.disabled=true; btnAct.disabled=true; busy=false; return;
+    await wait(350); $('#imgE').classList.add('vanish'); await wait(800); handleWin(); return
   }
 
-  await wait(timing.enemyPause);
+  await wait(timing.enemyPause)
+  rolledE=rollOne(); spinDice(rolledE)
+  setTimeout(()=>{ E.hist.push(rolledE); if(E.hist.length>3) E.hist.shift(); pushChip(enemyChips,rolledE,'enemy') },1000)
+  await wait(timing.pause+300); showRibbon('E',`技${rolledE}：${E.skills[rolledE].name}`,false)
+  await wait(timing.pause+500)
+  const dmgE=Math.max(0, E.skills[rolledE].dmg)
+  P.hp = clamp(P.hp - dmgE, 0, P.max); hitFX(cardP, dmgE); setHp('P'); appendLog('敵', rolledE, E.skills[rolledE].name, dmgE, `${P.hp}/${P.max}`)
+  if(P.hp<=0){ await wait(350); try{ bgm.pause() }catch(e){}; winOverlay.querySelector('span').textContent='LOSE'; winOverlay.hidden=false; winOverlay.classList.add('show'); btnRoll.disabled=true; btnAct.disabled=true; busy=false; return }
+  phase='ready'; btnRoll.disabled=false; btnAct.disabled=true; busy=false
+})
 
-  // 敵攻撃
-  const dmgE = Math.max(0, E.skills[rolledE].dmg);
-  P.hp = clamp(P.hp - dmgE, 0, P.max);
-  hitFX(cardP, dmgE); setHp('P');
-  appendLog('敵', rolledE, E.skills[rolledE].name, dmgE, `${P.hp}/${P.max}`);
+function handleWin(){
+  // Win overlay
+  winOverlay.querySelector('span').textContent='WIN'; winOverlay.hidden=false; winOverlay.classList.add('show')
 
-  if(P.hp<=0){
-    await wait(350);
-    try{ bgm.pause(); }catch(e){}
-    winOverlay.querySelector('span').textContent='LOSE';
-    winOverlay.hidden=false;
-    winOverlay.classList.add('show');
-    btnRoll.disabled=true; btnAct.disabled=true; busy=false; return;
+  // Update meta progress
+  Game.progress.kills[currentEnemyKey]++
+  const gainXP = ENEMY_BOOK[currentEnemyKey].xp
+  Game.player.xp += gainXP
+
+  // Level up thresholds example: Lv2 at >=3 XP OR slime×3; Lv3 at >=6 XP OR goblin×3
+  let leveled=false
+  if(Game.player.lvl<2 && (Game.player.xp>=3 || Game.progress.kills.slime>=3)){
+    Game.player.lvl=2; Game.player.baseMax+=2; Game.player.atk+=1; leveled=true
   }
+  if(Game.player.lvl<3 && (Game.player.xp>=6 || Game.progress.kills.goblin>=3)){
+    Game.player.lvl=3; Game.player.baseMax+=3; Game.player.atk+=2; leveled=true
+  }
+  applyDerivedStats()
 
-  phase='ready'; btnRoll.disabled=false; btnAct.disabled=true; busy=false;
-});
+  // simple drops
+  const drops=[]
+  if(Math.random()<0.55){ Game.player.items.potion=(Game.player.items.potion||0)+1; drops.push('回復薬+1') }
+  if(Math.random()<0.25){ Game.player.items.diceBoost=(Game.player.items.diceBoost||0)+1; drops.push('出目+1+1') }
+  if(currentEnemyKey==='goblin' && Math.random()<0.35 && !Game.player.box.includes('ironSword')){ Game.player.box.push('ironSword'); drops.push('鉄の剣') }
+  if(currentEnemyKey==='slime' && Math.random()<0.25 && !Game.player.box.includes('leatherArmor')){ Game.player.box.push('leatherArmor'); drops.push('革の鎧') }
 
-// ====== 設定モーダル ======
-btnSettings.addEventListener('click', ()=>{
-  speedSel.value = 'normal';
-  pName.value=P.name; pMax.value=P.max; eName.value=E.name; eMax.value=E.max;
-  pTbl.innerHTML = buildSkillTbl(P.skills,'p');
-  eTbl.innerHTML = buildSkillTbl(E.skills,'e');
-  settingsModal.hidden=false;
-  settingsModal.classList.add('show');
-});
-closeSettings.addEventListener('click', ()=>{ settingsModal.classList.remove('show'); settingsModal.hidden=true; });
-applySettings.addEventListener('click', ()=>{
-  P.name = (pName.value||'勇者A').trim();
-  P.max  = Math.max(1, parseInt(pMax.value||10)); P.hp = P.max;
-  P.skills = collectTbl('p');
+  // Persist hero HP after battle (clamped)
+  Game.player.hp = clamp(P.hp, 1, Game.player.max) // 勇者は瀕死で生還（0は負け処理で戻る）
 
-  E.name = (eName.value||'スライムLv1').trim();
-  E.max  = Math.max(1, parseInt(eMax.value||10)); E.hp = E.max;
-  E.skills = collectTbl('e');
+  // Log rewards
+  logpre.insertAdjacentHTML('beforeend', `\n—— 勝利！ 経験値+${gainXP} ${drops.length? ' / ドロップ：'+drops.join(', '): ''}`)
+  if(leveled){ logpre.insertAdjacentHTML('beforeend', `\n—— レベルアップ！ 現在Lv${Game.player.lvl}（HP上限+ / 攻撃+）`) }
 
-  resetBattle(true);
-  settingsModal.classList.remove('show'); settingsModal.hidden=true;
-});
+  saveGame()
+  setTimeout(()=>{ goto('select') }, 1000)
+}
+
+// ======================= Settings & Tables =======================
+btnSettings.addEventListener('click',()=>{
+  speedSel.value='normal'
+  pName.value=P.name; pMax.value=P.max; eName.value=E.name; eMax.value=E.max
+  pTbl.innerHTML = buildSkillTbl(P.skills,'p')
+  eTbl.innerHTML = buildSkillTbl(E.skills,'e')
+  settingsModal.hidden=false; settingsModal.classList.add('show')
+})
+closeSettings.addEventListener('click',()=>{ settingsModal.classList.remove('show'); settingsModal.hidden=true })
+applySettings.addEventListener('click',()=>{
+  P.name=(pName.value||'勇者A').trim(); Game.player.name=P.name
+  Game.player.baseMax = Math.max(1, parseInt(pMax.value||10)); applyDerivedStats(); P.hp=P.max
+  P.skills = collectTbl('p'); Game.player.skills = JSON.parse(JSON.stringify(P.skills))
+  E.name=(eName.value||E.name).trim(); E.max=Math.max(1, parseInt(eMax.value||E.max)); E.hp=E.max
+  E.skills = collectTbl('e')
+  resetBattle(true)
+  settingsModal.classList.remove('show'); settingsModal.hidden=true; saveGame()
+})
 
 function buildSkillTbl(skills, prefix){
-  // モーダル用の一覧も更新
   if(prefix==='p'){
-    const list = document.getElementById('skillPList'); list.innerHTML='';
-    for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1};
-      const row=document.createElement('div'); row.className='item';
-      row.innerHTML=`<span>${i}：${s.name}</span><span>敵にダメージ${s.dmg}</span>`; list.appendChild(row);
-    }
+    const list=document.getElementById('skillPList'); list.innerHTML=''
+    for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1}; const row=document.createElement('div'); row.className='item'; row.innerHTML=`<span>${i}：${s.name}</span><span>敵にダメージ${s.dmg} + 攻撃</span>`; list.appendChild(row) }
   }else{
-    const list = document.getElementById('skillEList'); list.innerHTML='';
-    for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1};
-      const row=document.createElement('div'); row.className='item';
-      row.innerHTML=`<span>${i}：${s.name}</span><span>味方にダメージ${s.dmg}</span>`; list.appendChild(row);
-    }
+    const list=document.getElementById('skillEList'); list.innerHTML=''
+    for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1}; const row=document.createElement('div'); row.className='item'; row.innerHTML=`<span>${i}：${s.name}</span><span>味方にダメージ${s.dmg}</span>`; list.appendChild(row) }
   }
-  // 設定編集テーブル
-  let html=''; for(let i=1;i<=6;i++){
-    const s=skills[i]||{name:`技${i}`,dmg:1};
-    html+=`<div class="cell">
-      <div style="font-weight:700;margin-bottom:4px">${i}</div>
-      <input id="${prefix}_name_${i}" class="txt" placeholder="技名" value="${s.name}">
-      <div style="margin-top:4px"><input id="${prefix}_dmg_${i}" class="num" type="number" min="0" value="${s.dmg}"></div>
-    </div>`;
-  } return html;
+  let html=''; for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1}; html+=`<div class="cell"><div style="font-weight:700;margin-bottom:4px">${i}</div><input id="${prefix}_name_${i}" class="txt" placeholder="技名" value="${s.name}"><div style="margin-top:4px"><input id="${prefix}_dmg_${i}" class="num" type="number" min="0" value="${s.dmg}"></div></div>` }
+  return html
 }
-function collectTbl(prefix){
-  const out={}; for(let i=1;i<=6;i++){
-    const nm=(document.getElementById(prefix+'_name_'+i)?.value||`技${i}`).trim();
-    const dm=Math.max(0, parseInt(document.getElementById(prefix+'_dmg_'+i)?.value||0));
-    out[i]={name:nm,dmg:dm};
-  }
-  // 一覧も更新
-  buildSkillTbl(out, prefix);
-  return out;
-}
+function collectTbl(prefix){ const out={}; for(let i=1;i<=6;i++){ const nm=(document.getElementById(prefix+'_name_'+i)?.value||`技${i}`).trim(); const dm=Math.max(0, parseInt(document.getElementById(prefix+'_dmg_'+i)?.value||0)); out[i]={name:nm,dmg:dm} } buildSkillTbl(out, prefix); return out }
 
-// ====== BGM操作 ======
-bgmPlay.addEventListener('click', ()=>{
-  try{
-    const f=bgmFile.files?.[0]; if(f){ bgm.src = URL.createObjectURL(f); }
-    bgm.volume=parseFloat(bgmVol.value||0.35); bgm.play().catch(()=>{});
-  }catch(e){}
-});
-bgmStop.addEventListener('click', ()=>{ try{ bgm.pause(); }catch(e){} });
-bgmVol.addEventListener('input', ()=>{ try{ bgm.volume=parseFloat(bgmVol.value||0.35); }catch(e){} });
+// ======================= Generic modal handlers =======================
+document.querySelectorAll('[data-open]').forEach(b=>{ b.addEventListener('click',()=>{ const el=document.querySelector(b.getAttribute('data-open')); if(el){ el.hidden=false; el.classList.add('show') } }) })
+document.querySelectorAll('[data-close]').forEach(b=>{ b.addEventListener('click',()=>{ const m=b.closest('.modal'); if(m){ m.classList.remove('show'); m.hidden=true } }) })
+document.addEventListener('click', e=>{ if(e.target.classList.contains('modal')){ e.target.classList.remove('show'); e.target.hidden=true } })
 
-winTest.addEventListener('click', ()=>{
-  try{
-    const f=winFile.files?.[0]; if(f){ winbgm.src = URL.createObjectURL(f); }
-    winbgm.volume=parseFloat(winVol.value||0.4); winbgm.play().catch(()=>{});
-  }catch(e){}
-});
-winStop.addEventListener('click', ()=>{ try{ winbgm.pause(); }catch(e){} });
-winVol.addEventListener('input', ()=>{ try{ winbgm.volume=parseFloat(winVol.value||0.4); }catch(e){} });
-
-// ====== 初期化 ======
+// ======================= INIT =======================
 function init(){
-  document.querySelectorAll('.hp').forEach(hp=>{ if(!hp.querySelector('.ticks')){ const t=document.createElement('span'); t.className='ticks'; hp.appendChild(t); }});
-  nameP.textContent=P.name; nameE.textContent=E.name;
-  setHp('P'); setHp('E');
-  logpre.textContent='バトル開始！ 先にスライムを倒そう。';
-  buildSkillTbl(P.skills,'p'); buildSkillTbl(E.skills,'e');
+  loadGame(); applyDerivedStats()
+  // prepare HP bars
+  document.querySelectorAll('.hp').forEach(hp=>{ if(!hp.querySelector('.ticks')){ const t=document.createElement('span'); t.className='ticks'; hp.appendChild(t) } })
+  nameP.textContent=Game.player.name; setHp('P');
+  refreshSelect()
 }
-init();
-})(); // end IIFE
-
-// モーダル開閉（汎用）
-document.querySelectorAll('[data-open]').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    const el=document.querySelector(b.getAttribute('data-open'));
-    if(el){ el.hidden=false; el.classList.add('show'); }
-  });
-});
-document.querySelectorAll('[data-close]').forEach(b=>{
-  b.addEventListener('click', ()=>{ const m=b.closest('.modal'); if(m){ m.classList.remove('show'); m.hidden=true; } });
-});
-document.addEventListener('click', e=>{
-  if(e.target.classList.contains('modal')){ e.target.classList.remove('show'); e.target.hidden=true; }
-});
+init()
 </script>
 </body>
 </html>
