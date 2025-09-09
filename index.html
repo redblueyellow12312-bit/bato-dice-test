@@ -34,9 +34,9 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .img{
   width:100%;
   height:clamp(280px, 34vh, 420px);
-  object-fit:contain;            /* ← 画像を伸ばさない */
+  object-fit:contain; /* 画像を伸ばさない */
   object-position:center;
-  background:#0b1130;            /* レターボックス色 */
+  background:#0b1130;
   display:block;
 }
 .topbar{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;gap:8px;z-index:3}
@@ -74,7 +74,7 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .vanish{animation:vanish .8s forwards ease}
 @keyframes vanish{0%{opacity:1}60%{opacity:.6;filter:blur(2px) brightness(1.2);transform:scale(.97)}100%{opacity:0;filter:blur(6px) brightness(1.25);transform:scale(.9)}}
 
-/* 下段：ログ＋ダイス（履歴は右サイドへ移動） */
+/* 下段：ログ＋ダイス（履歴はサイド） */
 .row{display:grid;grid-template-columns:1.6fr 0.9fr;gap:12px}
 .log{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#101536,#0b1130);padding:10px;height:var(--lowerH);display:flex;flex-direction:column;min-height:0}
 .log h3{margin:0 0 6px 0;color:#bcd1ff;font-size:14px}
@@ -105,7 +105,7 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .show-5{transform:rotateX(0deg) rotateY(0deg)}
 .show-6{transform:rotateX(180deg) rotateY(0deg)}
 
-/* 右カラム：縦ドック（固定ではなくsticky） */
+/* 右カラム：縦ドック */
 .sidebar{position:sticky;top:8px;align-self:start;display:grid;gap:16px}
 .bigbtn{
   width:100%; min-height:72px; padding:14px 18px; display:flex; align-items:center; gap:12px; color:#fff;
@@ -120,7 +120,7 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .en{font-size:13px;opacity:.9}
 .bigbtn:disabled{opacity:.5;cursor:not-allowed}
 
-/* サイドバーの履歴ボックス */
+/* サイド履歴 */
 .sidebox{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#101536,#0b1130);padding:10px}
 .sidebox h4{margin:0 0 8px 0;font-size:14px;color:#bcd1ff}
 .history{display:grid;gap:6px}
@@ -132,7 +132,29 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .last{box-shadow:0 0 0 3px rgba(255,255,255,.12);animation:pulse 1.2s ease-out 1}
 @keyframes pulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,.28)}100%{transform:scale(1.06);box-shadow:0 0 0 8px rgba(255,255,255,0)}}
 
-/* 横向きスマホなど高さが低い時の圧縮 */
+/* WIN オーバーレイ */
+.win-overlay{pointer-events:none;position:fixed;inset:0;display:grid;place-items:center;font-size:72px;font-weight:900;letter-spacing:.06em;color:transparent;-webkit-text-stroke:2px #fff;
+  text-shadow:0 0 18px rgba(255,255,255,.6);background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.08), transparent 55%);opacity:0;transform:scale(.9);transition:opacity .35s,transform .35s;z-index:80}
+.win-overlay.show{opacity:1;transform:scale(1)}
+.win-overlay span{background:linear-gradient(180deg,#fff,#ffe28a 60%,#ffb84d);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* 設定モーダル */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:90}
+.modal.show{display:flex}
+.modal .card{width:min(1080px,96vw);max-height:92vh;overflow:auto;background:#0e1537;border:1px solid #2a3571;border-radius:12px;padding:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fieldset{border:1px solid #2a3571;border-radius:10px;padding:10px;margin-bottom:10px}
+.fieldset legend{padding:0 6px;font-weight:700}
+.ctlrow{display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center;margin:6px 0}
+.num,.txt{width:100%;padding:6px;border-radius:8px;border:1px solid #3b4aad;background:#1b2550;color:#fff}
+.pill2{background:#445dff;color:#fff;padding:8px 12px;border:none;border-radius:10px;font-weight:700;cursor:pointer}
+.pill2.ghost{background:transparent;border:1px solid #445dff}
+.skilltbl{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.cell{padding:6px;background:#17204a;border:1px solid #39458b;border-radius:8px}
+.list{display:grid;gap:6px}
+.item{display:flex;justify-content:space-between;gap:8px;padding:6px;border:1px solid #39458b;background:#17204a;border-radius:8px}
+
+/* 低い画面の圧縮 */
 @media (max-height:740px){
   :root{ --lowerH: 200px; }
   .img{ height: clamp(240px, 32vh, 360px); }
@@ -182,12 +204,12 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
         <div class="foot">
           <div class="passive">パッシブ：ぬめり ― 被ダメ時に1/6で半減（デモでは無効）</div>
           <button class="pill" data-open="#skillE">技一覧</button>
-          <button class="pill" data-open="#comboE">必殺</button>
+          <button class="pill" data-open="#comboP">必殺</button>
         </div>
       </article>
     </section>
 
-    <!-- 下段：バトルログ + ダイス（履歴は右サイド） -->
+    <!-- 下段：バトルログ + ダイス -->
     <section class="row">
       <div class="log">
         <h3>バトルログ</h3>
@@ -197,17 +219,11 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
       <div class="dicePanel">
         <div class="arenaDice">
           <div id="cube" class="cube show-1">
-            <!-- 1 -->
             <div class="face front"><div class="center"><div class="pip"></div></div></div>
-            <!-- 2 -->
             <div class="face right"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
-            <!-- 3 -->
             <div class="face back"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="center"><div class="pip"></div></div></div></div>
-            <!-- 4 -->
             <div class="face left"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
-            <!-- 5 -->
             <div class="face top"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="center"><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
-            <!-- 6 -->
             <div class="face bottom"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div></div></div>
           </div>
         </div>
@@ -235,7 +251,6 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
       <span class="label"><span class="jp">アイテム</span> <span class="en">Item</span></span>
     </button>
 
-    <!-- 右下：サイコロ履歴（味方/敵） -->
     <div class="sidebox">
       <h4>出目履歴</h4>
       <div class="history">
@@ -246,11 +261,11 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
   </aside>
 </div>
 
-<!-- WIN overlay -->
-<div class="win-overlay" id="winOverlay"><span>WIN</span></div>
+<!-- WIN overlay（初期は hidden） -->
+<div class="win-overlay" id="winOverlay" hidden><span>WIN</span></div>
 
-<!-- 設定モーダル -->
-<div class="modal" id="settingsModal">
+<!-- 設定モーダル（初期は hidden） -->
+<div class="modal" id="settingsModal" hidden>
   <div class="card">
     <h3 style="margin:0 0 8px">設定</h3>
 
@@ -312,6 +327,29 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
       <button class="pill2" id="applySettings">適用して閉じる</button>
       <button class="pill2 ghost" id="closeSettings">閉じる</button>
     </div>
+  </div>
+</div>
+
+<!-- 技/必殺/敵技 モーダル（簡易版） -->
+<div class="modal" id="skillP" hidden>
+  <div class="card"><h4>技一覧（出目1〜6）</h4>
+    <div class="list" id="skillPList"></div>
+    <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
+  </div>
+</div>
+<div class="modal" id="comboP" hidden>
+  <div class="card"><h4>必殺（コンボ一覧）</h4>
+    <div class="list">
+      <div class="item"><span>ゾロ目：「王者の三連撃」</span><span>固定ダメージ3</span></div>
+      <div class="item"><span>4-5-6：「昇天連斬」</span><span>固定ダメージ4</span></div>
+    </div>
+    <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
+  </div>
+</div>
+<div class="modal" id="skillE" hidden>
+  <div class="card"><h4>敵の技（参考）</h4>
+    <div class="list" id="skillEList"></div>
+    <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
   </div>
 </div>
 
@@ -411,7 +449,7 @@ function resetBattle(keepAudio=true){
   busy=false; phase='ready'; rolledP=null; rolledE=null; P.finisher=false;
   P.hp=P.max; E.hp=E.max; P.hist.length=0; E.hist.length=0;
   setHp('P'); setHp('E'); nameP.textContent=P.name; nameE.textContent=E.name;
-  $('#imgE').classList.remove('vanish'); winOverlay.classList.remove('show');
+  $('#imgE').classList.remove('vanish'); winOverlay.classList.remove('show'); winOverlay.hidden=true;
   allyChips.innerHTML=''; enemyChips.innerHTML='';
   logpre.textContent='バトル開始！ 先にスライムを倒そう。';
   btnRoll.disabled=false; btnAct.disabled=true; actLabel.textContent='技';
@@ -467,6 +505,7 @@ btnAct.addEventListener('click', async ()=>{
     }catch(e){}
     await wait(500);
     winOverlay.querySelector('span').textContent='WIN';
+    winOverlay.hidden=false;
     winOverlay.classList.add('show');
     btnRoll.disabled=true; btnAct.disabled=true; busy=false; return;
   }
@@ -483,6 +522,7 @@ btnAct.addEventListener('click', async ()=>{
     await wait(350);
     try{ bgm.pause(); }catch(e){}
     winOverlay.querySelector('span').textContent='LOSE';
+    winOverlay.hidden=false;
     winOverlay.classList.add('show');
     btnRoll.disabled=true; btnAct.disabled=true; busy=false; return;
   }
@@ -496,9 +536,10 @@ btnSettings.addEventListener('click', ()=>{
   pName.value=P.name; pMax.value=P.max; eName.value=E.name; eMax.value=E.max;
   pTbl.innerHTML = buildSkillTbl(P.skills,'p');
   eTbl.innerHTML = buildSkillTbl(E.skills,'e');
+  settingsModal.hidden=false;
   settingsModal.classList.add('show');
 });
-closeSettings.addEventListener('click', ()=> settingsModal.classList.remove('show'));
+closeSettings.addEventListener('click', ()=>{ settingsModal.classList.remove('show'); settingsModal.hidden=true; });
 applySettings.addEventListener('click', ()=>{
   P.name = (pName.value||'勇者A').trim();
   P.max  = Math.max(1, parseInt(pMax.value||10)); P.hp = P.max;
@@ -509,10 +550,25 @@ applySettings.addEventListener('click', ()=>{
   E.skills = collectTbl('e');
 
   resetBattle(true);
-  settingsModal.classList.remove('show');
+  settingsModal.classList.remove('show'); settingsModal.hidden=true;
 });
 
 function buildSkillTbl(skills, prefix){
+  // モーダル用の一覧も更新
+  if(prefix==='p'){
+    const list = document.getElementById('skillPList'); list.innerHTML='';
+    for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1};
+      const row=document.createElement('div'); row.className='item';
+      row.innerHTML=`<span>${i}：${s.name}</span><span>敵にダメージ${s.dmg}</span>`; list.appendChild(row);
+    }
+  }else{
+    const list = document.getElementById('skillEList'); list.innerHTML='';
+    for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1};
+      const row=document.createElement('div'); row.className='item';
+      row.innerHTML=`<span>${i}：${s.name}</span><span>味方にダメージ${s.dmg}</span>`; list.appendChild(row);
+    }
+  }
+  // 設定編集テーブル
   let html=''; for(let i=1;i<=6;i++){
     const s=skills[i]||{name:`技${i}`,dmg:1};
     html+=`<div class="cell">
@@ -527,7 +583,10 @@ function collectTbl(prefix){
     const nm=(document.getElementById(prefix+'_name_'+i)?.value||`技${i}`).trim();
     const dm=Math.max(0, parseInt(document.getElementById(prefix+'_dmg_'+i)?.value||0));
     out[i]={name:nm,dmg:dm};
-  } return out;
+  }
+  // 一覧も更新
+  buildSkillTbl(out, prefix);
+  return out;
 }
 
 // ====== BGM操作 ======
@@ -552,23 +611,26 @@ winVol.addEventListener('input', ()=>{ try{ winbgm.volume=parseFloat(winVol.valu
 // ====== 初期化 ======
 function init(){
   document.querySelectorAll('.hp').forEach(hp=>{ if(!hp.querySelector('.ticks')){ const t=document.createElement('span'); t.className='ticks'; hp.appendChild(t); }});
-  document.getElementById('nameP').textContent=P.name; document.getElementById('nameE').textContent=E.name;
-  setHp('P'); setHp('E'); logpre.textContent='バトル開始！ 先にスライムを倒そう。';
+  nameP.textContent=P.name; nameE.textContent=E.name;
+  setHp('P'); setHp('E');
+  logpre.textContent='バトル開始！ 先にスライムを倒そう。';
+  buildSkillTbl(P.skills,'p'); buildSkillTbl(E.skills,'e');
 }
 init();
 })(); // end IIFE
 
-// モーダル開閉
+// モーダル開閉（汎用）
 document.querySelectorAll('[data-open]').forEach(b=>{
   b.addEventListener('click', ()=>{
-    document.querySelector(b.getAttribute('data-open'))?.classList.add('show');
+    const el=document.querySelector(b.getAttribute('data-open'));
+    if(el){ el.hidden=false; el.classList.add('show'); }
   });
 });
 document.querySelectorAll('[data-close]').forEach(b=>{
-  b.addEventListener('click', ()=> b.closest('.modal')?.classList.remove('show'));
+  b.addEventListener('click', ()=>{ const m=b.closest('.modal'); if(m){ m.classList.remove('show'); m.hidden=true; } });
 });
 document.addEventListener('click', e=>{
-  if(e.target.classList.contains('modal')) e.target.classList.remove('show');
+  if(e.target.classList.contains('modal')){ e.target.classList.remove('show'); e.target.hidden=true; }
 });
 </script>
 </body>
