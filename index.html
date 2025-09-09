@@ -146,6 +146,33 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .pill2.ghost{background:transparent;border:1px solid #445dff}
 .skilltbl{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .cell{padding:6px;background:#17204a;border:1px solid #39458b;border-radius:8px}
+/* ===== 低い画面用：コンパクト表示（横向きスマホ想定） ===== */
+@media (max-height: 740px) {
+  :root{ --lowerH: 230px; }       /* 下段(ログ/ダイス)を少し低く */
+  .img{ height: clamp(240px, 34vh, 360px); }  /* 上段画像を圧縮 */
+  .foot{ bottom: 6px; }
+  .pill{ padding:6px 8px; font-size:12px; }
+  .bigbtn{ min-height:56px; min-width:200px; padding:12px 14px; }
+  .dock-inner{ gap:8px; }
+}
+
+@media (max-height: 620px) {
+  :root{ --lowerH: 200px; }
+  .img{ height: clamp(200px, 30vh, 300px); }
+  .top .title{ font-size:16px; }
+}
+/* ドックに下段が隠れないよう常に余白を確保 */
+body{ padding-bottom: 110px; }   /* ドック高さより少し多め */
+/* ドック折りたたみ */
+.dock{ transition: transform .25s ease; }
+.dock.collapsed{ transform: translateY(calc(100% - 28px)); }
+.dock-toggle{
+  position:absolute; right:14px; top:-18px;
+  background:#1a2250; border:1px solid var(--line);
+  color:#fff; border-radius:999px; font-size:12px; padding:2px 8px;
+}
+
+
 </style>
 </head>
 <body>
@@ -609,6 +636,10 @@ document.querySelectorAll('[data-close]').forEach(b=>{
 document.addEventListener('click', e=>{
   if(e.target.classList.contains('modal')) e.target.classList.remove('show');
 });
+document.getElementById('dockTgl')?.addEventListener('click',()=>{
+  document.querySelector('.dock')?.classList.toggle('collapsed');
+});
+
 </script>
 </body>
 </html>
