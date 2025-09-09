@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>BatoDice – 左右UI 最小プレイアブル（帯演出＋必殺＋修正版）</title>
+<style>
+:root{
+  --bg:#0e1224; --bg2:#0a1022;
+  --panel:#141a33; --panel2:#1a2142; --line:#293162;
+  --txt:#e9edff; --hpG:#49e39e; --hpW:#ffd54a;
+  --btn:#2d4fe0; --btn2:#2747ce; --btnH:#355bf6;
+  --ally:#4da3ff; --enemy:#ff6d6d;
+  --lowerH: 300px;
+}
+*{box-sizing:border-box;font-family:system-ui,Segoe UI,Roboto,"ヒラギノ角ゴ ProN",Meiryo,Arial}
+body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(--bg2))}
+.wrap{max-width:1200px;margin:14px auto 96px;padding:0 14px;display:grid;gap:10px}
+
+/* Header */
+.top{display:flex;align-items:center;justify-content:space-between}
+.title{font-weight:800}
+.gear{padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:#151c3d;color:#cfe0ff}
+
+/* 上段：左右2カラム（勇者/スライム） */
+.arena{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#0f1430}
+.img{height:480px;width:100%;object-fit:cover;display:block}
+.topbar{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;gap:8px;z-index:3}
+.name{font-weight:800;background:rgba(8,12,28,.72);padding:2px 8px;border-radius:8px}
+.hp{position:relative;flex:1;height:12px;border:1px solid var(--line);background:#0d1430;border-radius:999px;overflow:hidden}
+.hp i{display:block;height:100%;background:linear-gradient(90deg,var(--hpG),#2ad1c8)}
+.hp.warn i{background:linear-gradient(90deg,var(--hpW),#ffb800)}
+/* HPメモリ線（5分割） */
+.hp .ticks{position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 1px, transparent 1px 20%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.28) 0 2px, transparent 2px 100%);
+}
+.badge{padding:2px 8px;border:1px solid var(--line);border-radius:999px;background:#0f1536;font-size:12px;color:#c9d6ff}
+.foot{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:8px;z-index:2}
+.passive{flex:1;min-height:36px;display:flex;align-items:center;padding:8px 10px;border-radius:10px;border:1px dashed var(--line);
+         background:linear-gradient(180deg,rgba(14,20,48,.84),rgba(14,20,48,.68));font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pill{background:#20306b;border:1px solid var(--line);color:#dbe6ff;padding:8px 10px;border-radius:10px;font-size:13px}
+
+/* 技名リボン帯 */
+.ribbon{position:absolute;left:0;right:0;top:58px;display:flex;justify-content:center;pointer-events:none;z-index:4}
+.ribbon .lab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);
+  background:linear-gradient(180deg,#2440c2,#1b2d7f); box-shadow:0 10px 24px rgba(0,0,0,.28); font-weight:900}
+.ribbon.ult .lab{background:linear-gradient(180deg,#ffd54a,#ffb84d); color:#4b2b00; border-color:#efc14a; text-shadow:0 1px 0 #fff8}
+.ribbon.show{animation:rib .9s ease both}
+@keyframes rib{0%{transform:translateY(-16px);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateY(-32px);opacity:0}}
+
+/* ダメージなど（画像に被らないようZ調整済み） */
+.hitShake{animation:shake .25s ease}
+@keyframes shake{20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}100%{transform:translateX(0)}}
+.flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.22), transparent 60%);animation:flash .35s ease;z-index:2}
+@keyframes flash{from{opacity:0}50%{opacity:1}to{opacity:0}}
+.dmg{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);font-size:42px;font-weight:900;color:#fff;
+  text-shadow:0 0 14px rgba(255,80,80,.85),0 0 3px #000;opacity:0;animation:dpop .8s ease both;z-index:5}
+@keyframes dpop{0%{opacity:0;transform:translate(-50%,-34%) scale(.7)}20%{opacity:1;transform:translate(-50%,-52%) scale(1)}100%{opacity:0;transform:translate(-50%,-76%) scale(1.1)}}
+.vanish{animation:vanish .8s forwards ease}
+@keyframes vanish{0%{opacity:1}60%{opacity:.6;filter:blur(2px) brightness(1.2);transform:scale(.97)}100%{opacity:0;filter:blur(6px) brightness(1.25);transform:scale(.9)}}
+
+/* 下段：ログ＋ダイス */
+.row{display:grid;grid-template-columns:1.3fr 0.7fr;gap:12px}
+.log{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#101536,#0b1130);padding:10px;height:var(--lowerH);display:flex;flex-direction:column;min-height:0}
+.log h3{margin:0 0 6px 0;color:#bcd1ff;font-size:14px}
+.log pre{margin:0;color:#cdd7ff;font-size:13px;line-height:1.3;white-space:pre-wrap;overflow:auto;flex:1;min-height:0}
+.log .t{display:inline-block;min-width:24px;text-align:center;border-radius:6px;margin-right:6px;padding:0 4px;font-weight:700}
+.tA{background:rgba(77,163,255,.2);border:1px solid var(--ally);color:#cfe6ff}
+.tE{background:rgba(255,109,109,.2);border:1px solid var(--enemy);color:#ffd1d1}
+.red{color:#ff8f8f} .gray{color:#b5c2ff}
+
+/* ダイスパネル＋3Dダイス */
+.dicePanel{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,var(--panel),var(--panel2));padding:10px;height:var(--lowerH);display:grid;grid-template-rows:1fr auto;gap:8px;min-height:0}
+.arenaDice{border:1px solid var(--line);border-radius:10px;background:radial-gradient(220px 100px at 50% 30%, #1f2a5a 0%, #0b102c 70%);
+           display:flex;align-items:center;justify-content:center;perspective:900px;min-height:0}
+.cube{--size:110px;position:relative;width:var(--size);height:var(--size);transform-style:preserve-3d;
+      transition:transform 700ms cubic-bezier(.2,.8,.2,1);transform:rotateX(-20deg) rotateY(30deg)}
+.face{position:absolute;width:var(--size);height:var(--size);background:#fff;border-radius:16px;box-shadow:inset 0 2px 0 rgba(0,0,0,.06), 0 12px 24px rgba(0,0,0,.28)}
+.pip{width:16px;height:16px;background:#19244e;border-radius:50%}
+.col{position:absolute;inset:16px;display:flex;flex-direction:column;justify-content:space-between}
+.rowP{position:absolute;inset:16px;display:flex;justify-content:space-between}
+.center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+.front {transform:translateZ(calc(var(--size)/2))}
+.back  {transform:rotateY(180deg) translateZ(calc(var(--size)/2))}
+.right {transform:rotateY(90deg) translateZ(calc(var(--size)/2))}
+.left  {transform:rotateY(-90deg) translateZ(calc(var(--size)/2))}
+.top   {transform:rotateX(90deg) translateZ(calc(var(--size)/2))}
+.bottom{transform:rotateX(-90deg) translateZ(calc(var(--size)/2))}
+.show-1{transform:rotateX(-90deg) rotateY(0deg)}
+.show-2{transform:rotateX(-90deg) rotateY(90deg)}
+.show-3{transform:rotateX(90deg) rotateY(0deg)}
+.show-4{transform:rotateX(-90deg) rotateY(-90deg)}
+.show-5{transform:rotateX(0deg) rotateY(0deg)}
+.show-6{transform:rotateX(180deg) rotateY(0deg)}
+
+/* 履歴 */
+.history{display:grid;gap:6px}
+.hrow{display:flex;align-items:center;gap:8px}
+.hlabel{width:42px;text-align:right;color:#9fb2ff;font-size:12px}
+.chips{display:flex;gap:8px}
+.chip{width:28px;height:28px;border-radius:9px;background:linear-gradient(180deg,#1f2a5a,#2a3560);border:2px solid transparent;display:flex;align-items:center;justify-content:center;font-weight:800}
+.ally{border-color:var(--ally)} .enemy{border-color:var(--enemy)}
+.last{box-shadow:0 0 0 3px rgba(255,255,255,.12);animation:pulse 1.2s ease-out 1}
+@keyframes pulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,.28)}100%{transform:scale(1.06);box-shadow:0 0 0 8px rgba(255,255,255,0)}}
+
+/* Bottom dock */
+.dock{position:fixed;left:0;right:0;bottom:0;border-top:1px solid var(--line);
+      background:linear-gradient(180deg,rgba(14,18,36,.6),rgba(10,16,34,.92));
+      backdrop-filter:blur(8px);padding:10px 14px}
+.dock-inner{max-width:1200px;margin:0 auto;display:flex;gap:16px;justify-content:center;flex-wrap:nowrap}
+.bigbtn{min-width:220px;min-height:68px;padding:14px 18px;display:flex;align-items:center;gap:12px;color:#fff;border-radius:16px;border:1px solid #2240b2;
+  background:linear-gradient(180deg,var(--btn),var(--btn2));box-shadow:0 10px 24px rgba(37,66,210,.35), inset 0 1px 0 rgba(255,255,255,.15);
+  font-weight:800;letter-spacing:.02em;white-space:nowrap}
+.bigbtn:hover{background:linear-gradient(180deg,var(--btnH),#2f55ff)}
+.icon{width:26px;height:26px}
+.label{display:flex;flex-direction:row;gap:8px;align-items:baseline;white-space:nowrap}
+.jp{font-size:18px;line-height:1}
+.en{font-size:13px;opacity:.9}
+.bigbtn:disabled{opacity:.5;cursor:not-allowed}
+
+/* WIN オーバーレイ */
+.win-overlay{pointer-events:none;position:fixed;inset:0;display:grid;place-items:center;font-size:72px;font-weight:900;letter-spacing:.06em;color:transparent;-webkit-text-stroke:2px #fff;
+  text-shadow:0 0 18px rgba(255,255,255,.6);background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.08), transparent 55%);opacity:0;transform:scale(.9);transition:opacity .35s,transform .35s;z-index:50}
+.win-overlay.show{opacity:1;transform:scale(1)}
+.win-overlay span{background:linear-gradient(180deg,#fff,#ffe28a 60%,#ffb84d);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* 設定モーダル */
+.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:80}
+.modal.show{display:flex}
+.modal .card{width:min(1080px,96vw);max-height:92vh;overflow:auto;background:#0e1537;border:1px solid #2a3571;border-radius:12px;padding:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:920px){ .arena{grid-template-columns:1fr} .img{height:360px} .row{grid-template-columns:1fr} .grid2{grid-template-columns:1fr} }
+.fieldset{border:1px solid #2a3571;border-radius:10px;padding:10px;margin-bottom:10px}
+.fieldset legend{padding:0 6px;font-weight:700}
+.ctlrow{display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center;margin:6px 0}
+.num, .txt{width:100%;padding:6px;border-radius:8px;border:1px solid #3b4aad;background:#1b2550;color:#fff}
+.pill2{background:#445dff;color:#fff;padding:8px 12px;border:none;border-radius:10px;font-weight:700;cursor:pointer}
+.pill2.ghost{background:transparent;border:1px solid #445dff}
+.skilltbl{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.cell{padding:6px;background:#17204a;border:1px solid #39458b;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="title">BatoDice – 左右UI 最小プレイアブル</div>
+    <button class="gear" id="btnSettings">⚙ 設定</button>
+  </div>
+
+  <!-- 上段：勇者 vs スライム -->
+  <section class="arena">
+    <article class="card" id="cardP">
+      <img class="img" id="imgP" src="勇者.jpg" alt="勇者">
+      <div class="topbar">
+        <div class="name" id="nameP">勇者A</div>
+        <div class="hp"><i id="hpP" style="width:100%"></i><span class="ticks"></span></div>
+        <span class="badge" id="badgeP">先制</span>
+      </div>
+      <div class="ribbon" id="ribbonP" style="display:none"><div class="lab" id="ribbonPText"></div></div>
+      <div class="foot">
+        <div class="passive">パッシブ：先制 ― 最初の出目に+1判定（演出のみ）</div>
+        <button class="pill" data-open="#skillP">技一覧</button>
+        <button class="pill" data-open="#comboP">必殺</button>
+
+      </div>
+    </article>
+
+    <article class="card" id="cardE">
+      <img class="img" id="imgE" src="スライム.png" alt="スライム">
+      <div class="topbar">
+        <div class="name" id="nameE">スライムLv1</div>
+        <div class="hp"><i id="hpE" style="width:100%"></i><span class="ticks"></span></div>
+        <span class="badge" id="badgeE">凍結×1</span>
+      </div>
+      <div class="ribbon" id="ribbonE" style="display:none"><div class="lab" id="ribbonEText"></div></div>
+      <div class="foot">
+        <div class="passive">パッシブ：ぬめり ― 被ダメ時に1/6で半減（デモでは無効）</div>
+        <button class="pill" data-open="#skillE">技一覧</button>
+        <button class="pill" data-open="#comboE">必殺</button>
+      </div>
+    </article>
+  </section>
+   
+  <!-- 下段：バトルログ + 3Dサイコロ＆履歴 -->
+  <section class="row">
+    <div class="log">
+      <h3>バトルログ</h3>
+      <pre id="logpre"></pre>
+    </div>
+
+    <div class="dicePanel">
+      <div class="arenaDice">
+        <div id="cube" class="cube show-1">
+          <!-- 1 -->
+          <div class="face front"><div class="center"><div class="pip"></div></div></div>
+          <!-- 2 -->
+          <div class="face right"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
+          <!-- 3 -->
+          <div class="face back"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="center"><div class="pip"></div></div></div></div>
+          <!-- 4 -->
+          <div class="face left"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
+          <!-- 5 -->
+          <div class="face top"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="center"><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
+          <!-- 6 -->
+          <div class="face bottom"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div></div></div>
+        </div>
+      </div>
+
+      <div class="history">
+        <div class="hrow"><span class="hlabel">味方</span><div class="chips" id="allyChips"></div></div>
+        <div class="hrow"><span class="hlabel">敵</span><div class="chips" id="enemyChips"></div></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+  <!-- ＿＿＿＿＿＿＿ モーダル（UIのみ） ＿＿＿＿＿＿＿ -->
+  <div class="modal" id="passiveP"><div class="card"><h4>パッシブ：HighBias</h4><p class="mut">サイコロが高め（4/5/6）に寄る傾向。</p><div style="text-align:right"><button class="btn small close" data-close>閉じる</button></div></div></div>
+  <div class="modal" id="passiveE"><div class="card"><h4>パッシブ（敵）</h4><p class="mut">ステ1では特になし。</p><div style="text-align:right"><button class="btn small close" data-close>閉じる</button></div></div></div>
+  <div class="modal" id="skillP"><div class="card"><h4>技一覧（出目1〜6）</h4><div class="list">
+    <div class="item"><span class="name">1：技1</span><span class="desc">敵にダメージ1</span></div>
+    <div class="item"><span class="name">2：技2</span><span class="desc">敵にダメージ1</span></div>
+    <div class="item"><span class="name">3：技3</span><span class="desc">敵にダメージ1</span></div>
+    <div class="item"><span class="name">4：技4</span><span class="desc">敵にダメージ2</span></div>
+    <div class="item"><span class="name">5：技5</span><span class="desc">敵にダメージ2</span></div>
+    <div class="item"><span class="name">6：技6</span><span class="desc">敵にダメージ2</span></div>
+  </div><div style="text-align:right;margin-top:8px"><button class="btn small close" data-close>閉じる</button></div></div></div>
+  <div class="modal" id="comboP"><div class="card"><h4>必殺（コンボ一覧）</h4><div class="list">
+    <div class="item"><span class="name">ゾロ目：「王者の三連撃」</span><span class="desc">固定ダメージ3</span></div>
+    <div class="item"><span class="name">4-5-6：「昇天連斬」</span><span class="desc">固定ダメージ4</span></div>
+  </div><div style="text-align:right;margin-top:8px"><button class="btn small close" data-close>閉じる</button></div></div></div>
+  <div class="modal" id="skillE"><div class="card"><h4>敵の技（参考）</h4><div class="list">
+    <div class="item"><span class="name">1〜5：小</span><span class="desc">味方にダメージ1</span></div>
+    <div class="item"><span class="name">6：強</span><span class="desc">味方にダメージ2</span></div>
+  </div><div style="text-align:right;margin-top:8px"><button class="btn small close" data-close>閉じる</button></div></div></div>
+
+
+
+<!-- Bottom Dock -->
+<footer class="dock">
+  <div class="dock-inner">
+    <button class="bigbtn" id="btnRoll">
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="3" y="3" width="18" height="18" rx="4" fill="#fff" opacity=".95"/>
+        <circle cx="8.0" cy="8.0" r="1.7" fill="#1e2a60"/>
+        <circle cx="12.0" cy="12.0" r="1.7" fill="#1e2a60"/>
+        <circle cx="16.0" cy="16.0" r="1.7" fill="#1e2a60"/>
+      </svg>
+      <span class="label"><span class="jp">サイコロ</span> <span class="en">Roll</span></span>
+    </button>
+    <button class="bigbtn" id="btnAct" disabled>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" fill="#fff" opacity=".95"/></svg>
+      <span class="label"><span class="jp" id="actLabel">技</span> <span class="en">Action</span></span>
+    </button>
+    <button class="bigbtn" id="btnItem" disabled>
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2h4v2l2 3v2l-1 1v8a3 3 0 01-3 3H12a3 3 0 01-3-3V10L8 9V7l2-3V2z" fill="#fff" opacity=".95"/></svg>
+      <span class="label"><span class="jp">アイテム</span> <span class="en">Item</span></span>
+    </button>
+  </div>
+</footer>
+
+<!-- WIN overlay -->
+<div class="win-overlay" id="winOverlay"><span>WIN</span></div>
+
+<!-- 設定モーダル -->
+<div class="modal" id="settingsModal">
+  <div class="card">
+    <h3 style="margin:0 0 8px">設定</h3>
+
+    <fieldset class="fieldset">
+      <legend>バトル速度 / サウンド</legend>
+      <div class="ctlrow"><label>速度</label>
+        <select id="speedSel" class="num">
+          <option value="fast">速い</option>
+          <option value="normal" selected>標準</option>
+          <option value="slow">ゆっくり</option>
+        </select>
+      </div>
+      <div class="ctlrow"><label>戦闘BGM</label>
+        <div>
+          <input type="file" id="bgmFile" accept="audio/*" class="txt">
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="pill2" id="bgmPlay">再生</button>
+            <button class="pill2 ghost" id="bgmStop">停止</button>
+            <label style="display:flex;gap:6px;align-items:center">音量
+              <input type="range" id="bgmVol" min="0" max="1" step="0.01" value="0.35">
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="ctlrow"><label>勝利BGM</label>
+        <div>
+          <input type="file" id="winFile" accept="audio/*" class="txt">
+          <div style="display:flex;gap:8px;margin-top:6px">
+            <button class="pill2" id="winTest">試聴</button>
+            <button class="pill2 ghost" id="winStop">停止</button>
+            <label style="display:flex;gap:6px;align-items:center">音量
+              <input type="range" id="winVol" min="0" max="1" step="0.01" value="0.4">
+            </label>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="grid2">
+      <fieldset class="fieldset">
+        <legend>味方設定</legend>
+        <div class="ctlrow"><label>名前</label><input id="pName" class="txt" value="勇者A"></div>
+        <div class="ctlrow"><label>最大HP</label><input id="pMax" type="number" class="num" min="1" value="10"></div>
+        <div class="ctlrow"><label>技（1〜6）</label>
+          <div class="skilltbl" id="pSkillsTbl"></div>
+        </div>
+      </fieldset>
+      <fieldset class="fieldset">
+        <legend>敵設定</legend>
+        <div class="ctlrow"><label>名前</label><input id="eName" class="txt" value="スライムLv1"></div>
+        <div class="ctlrow"><label>最大HP</label><input id="eMax" type="number" class="num" min="1" value="10"></div>
+        <div class="ctlrow"><label>技（1〜6）</label>
+          <div class="skilltbl" id="eSkillsTbl"></div>
+        </div>
+      </fieldset>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="pill2" id="applySettings">適用して閉じる</button>
+      <button class="pill2 ghost" id="closeSettings">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- オーディオ要素 -->
+<audio id="bgm" loop></audio>
+<audio id="winbgm" loop></audio>
+
+<script>
+(()=>{
+// ====== 基本データ ======
+const defaultPlayerSkills = {
+  1:{name:'小攻撃', dmg:1}, 2:{name:'小攻撃', dmg:1}, 3:{name:'小攻撃', dmg:1},
+  4:{name:'強攻撃', dmg:2}, 5:{name:'強攻撃', dmg:2}, 6:{name:'強攻撃', dmg:2}
+};
+const defaultEnemySkills = {
+  1:{name:'ぺちぺち', dmg:1}, 2:{name:'ぺちぺち', dmg:1}, 3:{name:'ぺちぺち', dmg:1},
+  4:{name:'のしかかり', dmg:1}, 5:{name:'のしかかり', dmg:1}, 6:{name:'どろ弾（強）', dmg:2}
+};
+
+const P = { name:'勇者A', max:10, hp:10, hist:[], finisher:false, skills:JSON.parse(JSON.stringify(defaultPlayerSkills)) };
+const E = { name:'スライムLv1', max:10, hp:10, hist:[], skills:JSON.parse(JSON.stringify(defaultEnemySkills)) };
+
+let rolledP=null, rolledE=null, phase='ready', busy=false;
+
+const SPEEDS={ fast:{dice:450, pause:320, enemyPause:420}, normal:{dice:700, pause:420, enemyPause:520}, slow:{dice:950, pause:520, enemyPause:620} };
+let timing={...SPEEDS.normal};
+
+// ====== 要素参照 ======
+const $ = s=>document.querySelector(s);
+const cube = $('#cube');
+const shows=[,'show-1','show-2','show-3','show-4','show-5','show-6'];
+const hpP=$('#hpP'), hpE=$('#hpE');
+const cardP=$('#cardP'), cardE=$('#cardE');
+const ribP=$('#ribbonP'), ribPText=$('#ribbonPText');
+const ribE=$('#ribbonE'), ribEText=$('#ribbonEText');
+const logpre=$('#logpre');
+const allyChips=$('#allyChips'), enemyChips=$('#enemyChips');
+const btnRoll=$('#btnRoll'), btnAct=$('#btnAct'), actLabel=$('#actLabel');
+const winOverlay=$('#winOverlay');
+const nameP=$('#nameP'), nameE=$('#nameE');
+
+const btnSettings = $('#btnSettings');
+const settingsModal = $('#settingsModal');
+const closeSettings = $('#closeSettings');
+const applySettings = $('#applySettings');
+const speedSel = $('#speedSel');
+
+const pName=$('#pName'), pMax=$('#pMax'), pTbl=$('#pSkillsTbl');
+const eName=$('#eName'), eMax=$('#eMax'), eTbl=$('#eSkillsTbl');
+
+const bgm=$('#bgm'), winbgm=$('#winbgm');
+const bgmFile=$('#bgmFile'), bgmPlay=$('#bgmPlay'), bgmStop=$('#bgmStop'), bgmVol=$('#bgmVol');
+const winFile=$('#winFile'), winTest=$('#winTest'), winStop=$('#winStop'), winVol=$('#winVol');
+
+// ====== ユーティリティ ======
+const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+const pct=(v,tot)=>Math.round((v/tot)*100);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function setHp(who){
+  if(who==='P'){ hpP.style.width=pct(P.hp,P.max)+'%'; hpP.parentElement.classList.toggle('warn', P.hp/P.max<=.4); }
+  else { hpE.style.width=pct(E.hp,E.max)+'%'; hpE.parentElement.classList.toggle('warn', E.hp/E.max<=.4); }
+}
+function pushChip(container,n,cls){
+  const kids=[...container.children]; kids.forEach(c=>c.classList.remove('last'));
+  if(kids.length>=3) container.removeChild(kids[0]);
+  const el=document.createElement('div'); el.className='chip '+cls+' last'; el.textContent=n; container.appendChild(el);
+}
+function appendLog(side, n, name, dmg, remain){
+  const span=document.createElement('span');
+  span.className='t '+(side==='味'?'tA':'tE'); span.textContent=side;
+  logpre.appendChild(document.createTextNode('\n')); logpre.appendChild(span);
+  const dmgTxt = dmg!=null ? ` → <span class="red">-${dmg}</span>（残HP <span class="gray">${remain}</span>）` : '';
+  logpre.insertAdjacentHTML('beforeend', `【${n}】 ${name}${dmgTxt}`);
+  logpre.scrollTop=logpre.scrollHeight;
+}
+function showRibbon(who, text, ult=false){
+  const rib = who==='P'? ribP : ribE; const t = who==='P'? ribPText : ribEText;
+  t.textContent = text; rib.style.display='flex'; rib.classList.toggle('ult', ult);
+  rib.classList.remove('show'); void rib.offsetWidth; rib.classList.add('show');
+  setTimeout(()=>{ rib.style.display='none'; }, 900);
+}
+function hitFX(card, dmg){
+  const f=document.createElement('div'); f.className='flash'; f.style.zIndex=2; card.appendChild(f); setTimeout(()=>f.remove(),350);
+  const d=document.createElement('div'); d.className='dmg'; d.textContent='-'+dmg; card.appendChild(d); setTimeout(()=>d.remove(),820);
+  card.classList.remove('hitShake'); void card.offsetWidth; card.classList.add('hitShake');
+}
+function checkComboP(){
+  if(P.hist.length<3) return null;
+  const h=P.hist.slice(-3), set=new Set(h);
+  if(h[0]===h[1] && h[1]===h[2]) return {type:'triple', label:'ゾロ目', bonus:2};
+  if(set.size===3 && set.has(4)&&set.has(5)&&set.has(6)) return {type:'456', label:'4-5-6', bonus:2};
+  return null;
+}
+function rollOne(){ return Math.floor(Math.random()*6)+1; }
+function rotateCube(n){ shows.forEach(s=>s&&cube.classList.remove(s)); cube.classList.add(shows[n]); }
+function resetBattle(keepAudio=true){
+  busy=false; phase='ready'; rolledP=null; rolledE=null; P.finisher=false;
+  P.hp=P.max; E.hp=E.max; P.hist.length=0; E.hist.length=0;
+  setHp('P'); setHp('E'); nameP.textContent=P.name; nameE.textContent=E.name;
+  $('#imgE').classList.remove('vanish'); winOverlay.classList.remove('show');
+  allyChips.innerHTML=''; enemyChips.innerHTML='';
+  logpre.textContent='バトル開始！ 先にスライムを倒そう。';
+  btnRoll.disabled=false; btnAct.disabled=true; actLabel.textContent='技';
+  if(!keepAudio){ try{ bgm.pause(); winbgm.pause(); }catch(e){} }
+}
+
+// ====== ロール → 技確定（技ボタンに 技名＋ダメージ 表示） ======
+btnRoll.addEventListener('click', async ()=>{
+  if(phase!=='ready' || busy) return;
+  busy=true; phase='rolled'; btnRoll.disabled=true; btnAct.disabled=true;
+
+  // プレイヤー／敵 ロール
+  const nP = rollOne(); rotateCube(nP);
+  const nE = rollOne();
+
+  rolledP=nP; rolledE=nE;
+
+  // 履歴
+  P.hist.push(nP); if(P.hist.length>3) P.hist.shift();
+  E.hist.push(nE); if(E.hist.length>3) E.hist.shift();
+  pushChip(allyChips, nP, 'ally'); pushChip(enemyChips, nE, 'enemy');
+
+  // 技名リボン帯（確定表示）
+  const baseP = P.skills[nP].dmg;
+  const combo = checkComboP();
+  if(combo){ P.finisher=true; showRibbon('P', `コンボ成立！ ${combo.label}`, true); }
+  const shownDmg = baseP + (P.finisher ? 2 : 0);
+  showRibbon('P', `技${nP}：${P.skills[nP].name}（${shownDmg}）`, P.finisher);
+  showRibbon('E', `技${nE}：${E.skills[nE].name}`, false);
+
+  // ボタンラベル更新（技名＋ダメージ）
+  actLabel.textContent = (P.finisher? '必殺：':'技：') + `${P.skills[nP].name}（${shownDmg}）`;
+
+
+  await wait(timing.pause);
+  btnAct.disabled=false; busy=false;
+});
+
+// ====== 行動（味方→敵→ターン回し）：1ターン目から必ずHP反映 ======
+btnAct.addEventListener('click', async ()=>{
+  if(phase!=='rolled' || busy) return;
+  busy=true; phase='acting'; btnAct.disabled=true;
+
+  // 味方攻撃
+  const dmgP = Math.max(0, P.skills[rolledP].dmg + (P.finisher?2:0));
+  E.hp = clamp(E.hp - dmgP, 0, E.max);
+  hitFX(cardE, dmgP); setHp('E');
+  appendLog('味', rolledP, (P.finisher?'必殺：':'')+P.skills[rolledP].name, dmgP, `${E.hp}/${E.max}`);
+  P.finisher=false; actLabel.textContent='技';
+
+  if(E.hp<=0){
+    await wait(350);
+    $('#imgE').classList.add('vanish');
+    try{ bgm.pause(); }catch(e){}
+    try{
+      if(!winbgm.src && winFile.files?.[0]) winbgm.src = URL.createObjectURL(winFile.files[0]);
+      winbgm.volume=parseFloat(winVol.value||0.4); winbgm.play().catch(()=>{});
+    }catch(e){}
+    await wait(500);
+    winOverlay.querySelector('span').textContent='WIN';
+    winOverlay.classList.add('show');
+    btnRoll.disabled=true; btnAct.disabled=true; busy=false; return;
+  }
+
+  await wait(timing.enemyPause);
+
+  // 敵攻撃
+  const dmgE = Math.max(0, E.skills[rolledE].dmg);
+  P.hp = clamp(P.hp - dmgE, 0, P.max);
+  hitFX(cardP, dmgE); setHp('P');
+  appendLog('敵', rolledE, E.skills[rolledE].name, dmgE, `${P.hp}/${P.max}`);
+
+  if(P.hp<=0){
+    await wait(350);
+    try{ bgm.pause(); }catch(e){}
+    winOverlay.querySelector('span').textContent='LOSE';
+    winOverlay.classList.add('show');
+    btnRoll.disabled=true; btnAct.disabled=true; busy=false; return;
+  }
+
+  // 次ターンへ
+  phase='ready'; btnRoll.disabled=false; btnAct.disabled=true; busy=false;
+});
+
+// ====== 設定モーダル ======
+btnSettings.addEventListener('click', ()=>{
+  // 速度
+  speedSel.value = Object.keys(SPEEDS).find(k=>JSON.stringify(SPEEDS[k])===JSON.stringify(timing)) || 'normal';
+  // キャラ
+  pName.value=P.name; pMax.value=P.max; eName.value=E.name; eMax.value=E.max;
+  pTbl.innerHTML = buildSkillTbl(P.skills,'p');
+  eTbl.innerHTML = buildSkillTbl(E.skills,'e');
+  settingsModal.classList.add('show');
+});
+closeSettings.addEventListener('click', ()=> settingsModal.classList.remove('show'));
+applySettings.addEventListener('click', ()=>{
+  // 速度
+  const v=speedSel.value; timing={...SPEEDS[v]};
+
+  // キャラ反映
+  P.name = (pName.value||'勇者A').trim();
+  P.max  = Math.max(1, parseInt(pMax.value||10)); P.hp = P.max;
+  P.skills = collectTbl('p', P.skills);
+
+  E.name = (eName.value||'スライムLv1').trim();
+  E.max  = Math.max(1, parseInt(eMax.value||10)); E.hp = E.max;
+  E.skills = collectTbl('e', E.skills);
+
+  resetBattle(true);
+  settingsModal.classList.remove('show');
+});
+
+function buildSkillTbl(skills, prefix){
+  let html='';
+  for(let i=1;i<=6;i++){
+    const s=skills[i]||{name:`技${i}`,dmg:1};
+    html+=`<div class="cell">
+      <div style="font-weight:700;margin-bottom:4px">${i}</div>
+      <input id="${prefix}_name_${i}" class="txt" placeholder="技名" value="${s.name}">
+      <div style="margin-top:4px"><input id="${prefix}_dmg_${i}" class="num" type="number" min="0" value="${s.dmg}"></div>
+    </div>`;
+  }
+  return html;
+}
+function collectTbl(prefix, base){
+  const out={}; for(let i=1;i<=6;i++){
+    const nm=($('#'+prefix+'_name_'+i)?.value||`技${i}`).trim();
+    const dm=Math.max(0, parseInt($('#'+prefix+'_dmg_'+i)?.value||0));
+    out[i]={name:nm,dmg:dm};
+  } return out;
+}
+
+// ====== BGM操作 ======
+bgmPlay.addEventListener('click', ()=>{
+  try{
+    const f=bgmFile.files?.[0]; if(f){ bgm.src = URL.createObjectURL(f); }
+    bgm.volume=parseFloat(bgmVol.value||0.35); bgm.play().catch(()=>{});
+  }catch(e){}
+});
+bgmStop.addEventListener('click', ()=>{ try{ bgm.pause(); }catch(e){} });
+bgmVol.addEventListener('input', ()=>{ try{ bgm.volume=parseFloat(bgmVol.value||0.35); }catch(e){} });
+
+winTest.addEventListener('click', ()=>{
+  try{
+    const f=winFile.files?.[0]; if(f){ winbgm.src = URL.createObjectURL(f); }
+    winbgm.volume=parseFloat(winVol.value||0.4); winbgm.play().catch(()=>{});
+  }catch(e){}
+});
+winStop.addEventListener('click', ()=>{ try{ winbgm.pause(); }catch(e){} });
+winVol.addEventListener('input', ()=>{ try{ winbgm.volume=parseFloat(winVol.value||0.4); }catch(e){} });
+
+// ====== 初期化 ======
+function init(){
+  // HPメモリ（span.ticksをHTMLに入れてあるが、保険で補完）
+  document.querySelectorAll('.hp').forEach(hp=>{ if(!hp.querySelector('.ticks')){ const t=document.createElement('span'); t.className='ticks'; hp.appendChild(t); }});
+  nameP.textContent=P.name; nameE.textContent=E.name;
+  setHp('P'); setHp('E');
+  logpre.textContent='バトル開始！ 先にスライムを倒そう。';
+}
+init();
+})(); // バトル処理スクリプト終わり
+
+// ここにモーダル開閉処理を追加
+document.querySelectorAll('[data-open]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelector(b.getAttribute('data-open'))?.classList.add('show');
+  });
+});
+document.querySelectorAll('[data-close]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    b.closest('.modal')?.classList.remove('show');
+  });
+});
+document.addEventListener('click', e=>{
+  if(e.target.classList.contains('modal')) e.target.classList.remove('show');
+});
+</script>
+</body>
+</html>
