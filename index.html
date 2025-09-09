@@ -2,9 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8"/>
-<!-- ★変更1：PC幅(1200px)基準に固定して、スマホでは自動縮小して収める -->
 <meta name="viewport" content="width=1200, initial-scale=1"/>
-<title>BatoDice – 左右UI 最小プレイアブル（横UI固定）</title>
+<title>BatoDice – 左右UI 最小プレイアブル（横レイアウト）</title>
 <style>
 :root{
   --bg:#0e1224; --bg2:#0a1022;
@@ -12,21 +11,34 @@
   --txt:#e9edff; --hpG:#49e39e; --hpW:#ffd54a;
   --btn:#2d4fe0; --btn2:#2747ce; --btnH:#355bf6;
   --ally:#4da3ff; --enemy:#ff6d6d;
-  --lowerH: 300px;
+  --lowerH: 220px;
 }
-*{box-sizing:border-box;font-family:system-ui,Segoe UI,Roboto,"ヒラギノ角ゴ ProN",Meiryo,Arial}
-body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(--bg2));overflow-x:hidden}
-.wrap{max-width:1200px;margin:14px auto 96px;padding:0 14px;display:grid;gap:10px}
 
-/* Header */
-.top{display:flex;align-items:center;justify-content:space-between}
+/* 全体2カラム：左=メイン、右=縦ドック */
+*{box-sizing:border-box;font-family:system-ui,Segoe UI,Roboto,"ヒラギノ角ゴ ProN",Meiryo,Arial}
+body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(--bg2))}
+.wrap{
+  max-width:1200px;margin:14px auto;padding:0 14px;display:grid;gap:12px;
+  grid-template-columns: 1fr 280px;
+}
+.top{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between}
 .title{font-weight:800}
 .gear{padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:#151c3d;color:#cfe0ff}
 
-/* 上段：左右2カラム（勇者/スライム） */
+/* メインカラム（左） */
+.main{display:grid;gap:12px}
+
+/* 上段：勇者/スライム 2カラム */
 .arena{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .card{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#0f1430}
-.img{height:480px;width:100%;object-fit:cover;display:block}
+.img{
+  width:100%;
+  height:clamp(280px, 34vh, 420px);
+  object-fit:contain;            /* ← 画像を伸ばさない */
+  object-position:center;
+  background:#0b1130;            /* レターボックス色 */
+  display:block;
+}
 .topbar{position:absolute;left:10px;right:10px;top:10px;display:flex;align-items:center;gap:8px;z-index:3}
 .name{font-weight:800;background:rgba(8,12,28,.72);padding:2px 8px;border-radius:8px}
 .hp{position:relative;flex:1;height:12px;border:1px solid var(--line);background:#0d1430;border-radius:999px;overflow:hidden}
@@ -40,7 +52,7 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .badge{padding:2px 8px;border:1px solid var(--line);border-radius:999px;background:#0f1536;font-size:12px;color:#c9d6ff}
 .foot{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:8px;z-index:2}
 .passive{flex:1;min-height:36px;display:flex;align-items:center;padding:8px 10px;border-radius:10px;border:1px dashed var(--line);
-         background:linear-gradient(180deg,rgba(14,20,48,.84),rgba(14,20,48,.68));font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  background:linear-gradient(180deg,rgba(14,20,48,.84),rgba(14,20,48,.68));font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pill{background:#20306b;border:1px solid var(--line);color:#dbe6ff;padding:8px 10px;border-radius:10px;font-size:13px}
 
 /* 技名リボン帯 */
@@ -62,8 +74,8 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .vanish{animation:vanish .8s forwards ease}
 @keyframes vanish{0%{opacity:1}60%{opacity:.6;filter:blur(2px) brightness(1.2);transform:scale(.97)}100%{opacity:0;filter:blur(6px) brightness(1.25);transform:scale(.9)}}
 
-/* 下段：ログ＋ダイス */
-.row{display:grid;grid-template-columns:1.3fr 0.7fr;gap:12px}
+/* 下段：ログ＋ダイス（履歴は右サイドへ移動） */
+.row{display:grid;grid-template-columns:1.6fr 0.9fr;gap:12px}
 .log{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#101536,#0b1130);padding:10px;height:var(--lowerH);display:flex;flex-direction:column;min-height:0}
 .log h3{margin:0 0 6px 0;color:#bcd1ff;font-size:14px}
 .log pre{margin:0;color:#cdd7ff;font-size:13px;line-height:1.3;white-space:pre-wrap;overflow:auto;flex:1;min-height:0}
@@ -72,10 +84,9 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .tE{background:rgba(255,109,109,.2);border:1px solid var(--enemy);color:#ffd1d1}
 .red{color:#ff8f8f} .gray{color:#b5c2ff}
 
-/* ダイスパネル＋3Dダイス */
-.dicePanel{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,var(--panel),var(--panel2));padding:10px;height:var(--lowerH);display:grid;grid-template-rows:1fr auto;gap:8px;min-height:0}
+.dicePanel{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,var(--panel),var(--panel2));padding:10px;height:var(--lowerH);display:grid;place-items:center;min-height:0}
 .arenaDice{border:1px solid var(--line);border-radius:10px;background:radial-gradient(220px 100px at 50% 30%, #1f2a5a 0%, #0b102c 70%);display:flex;align-items:center;justify-content:center;perspective:900px;min-height:0}
-.cube{--size:110px;position:relative;width:var(--size);height:var(--size);transform-style:preserve-3d;transition:transform 700ms cubic-bezier(.2,.8,.2,1);transform:rotateX(-20deg) rotateY(30deg)}
+.cube{--size:96px;position:relative;width:var(--size);height:var(--size);transform-style:preserve-3d;transition:transform 700ms cubic-bezier(.2,.8,.2,1);transform:rotateX(-20deg) rotateY(30deg)}
 .face{position:absolute;width:var(--size);height:var(--size);background:#fff;border-radius:16px;box-shadow:inset 0 2px 0 rgba(0,0,0,.06), 0 12px 24px rgba(0,0,0,.28)}
 .pip{width:16px;height:16px;background:#19244e;border-radius:50%}
 .col{position:absolute;inset:16px;display:flex;flex-direction:column;justify-content:space-between}
@@ -94,7 +105,24 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .show-5{transform:rotateX(0deg) rotateY(0deg)}
 .show-6{transform:rotateX(180deg) rotateY(0deg)}
 
-/* 履歴 */
+/* 右カラム：縦ドック（固定ではなくsticky） */
+.sidebar{position:sticky;top:8px;align-self:start;display:grid;gap:16px}
+.bigbtn{
+  width:100%; min-height:72px; padding:14px 18px; display:flex; align-items:center; gap:12px; color:#fff;
+  border-radius:16px; border:1px solid #2240b2;
+  background:linear-gradient(180deg,var(--btn),var(--btn2)); box-shadow:0 10px 24px rgba(37,66,210,.35), inset 0 1px 0 rgba(255,255,255,.15);
+  font-weight:800; letter-spacing:.02em; white-space:nowrap
+}
+.bigbtn:hover{background:linear-gradient(180deg,var(--btnH),#2f55ff)}
+.icon{width:26px;height:26px}
+.label{display:flex;flex-direction:row;gap:8px;align-items:baseline;white-space:nowrap}
+.jp{font-size:18px;line-height:1}
+.en{font-size:13px;opacity:.9}
+.bigbtn:disabled{opacity:.5;cursor:not-allowed}
+
+/* サイドバーの履歴ボックス */
+.sidebox{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#101536,#0b1130);padding:10px}
+.sidebox h4{margin:0 0 8px 0;font-size:14px;color:#bcd1ff}
 .history{display:grid;gap:6px}
 .hrow{display:flex;align-items:center;gap:8px}
 .hlabel{width:42px;text-align:right;color:#9fb2ff;font-size:12px}
@@ -104,75 +132,17 @@ body{margin:0;color:var(--txt);background:linear-gradient(180deg,var(--bg),var(-
 .last{box-shadow:0 0 0 3px rgba(255,255,255,.12);animation:pulse 1.2s ease-out 1}
 @keyframes pulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,.28)}100%{transform:scale(1.06);box-shadow:0 0 0 8px rgba(255,255,255,0)}}
 
-/* Bottom dock */
-.dock{position:fixed;left:0;right:0;bottom:0;border-top:1px solid var(--line);
-      background:linear-gradient(180deg,rgba(14,18,36,.6),rgba(10,16,34,.92));
-      backdrop-filter:blur(8px);padding:10px 14px}
-.dock-inner{max-width:1200px;margin:0 auto;display:flex;gap:16px;justify-content:center;flex-wrap:nowrap}
-.bigbtn{min-width:220px;min-height:68px;padding:14px 18px;display:flex;align-items:center;gap:12px;color:#fff;border-radius:16px;border:1px solid #2240b2;
-  background:linear-gradient(180deg,var(--btn),var(--btn2));box-shadow:0 10px 24px rgba(37,66,210,.35), inset 0 1px 0 rgba(255,255,255,.15);
-  font-weight:800;letter-spacing:.02em;white-space:nowrap}
-.bigbtn:hover{background:linear-gradient(180deg,var(--btnH),#2f55ff)}
-.icon{width:26px;height:26px}
-.label{display:flex;flex-direction:row;gap:8px;align-items:baseline;white-space:nowrap}
-.jp{font-size:18px;line-height:1}
-.en{font-size:13px;opacity:.9}
-.bigbtn:disabled{opacity:.5;cursor:not-allowed}
-
-/* WIN オーバーレイ */
-.win-overlay{pointer-events:none;position:fixed;inset:0;display:grid;place-items:center;font-size:72px;font-weight:900;letter-spacing:.06em;color:transparent;-webkit-text-stroke:2px #fff;
-  text-shadow:0 0 18px rgba(255,255,255,.6);background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.08), transparent 55%);opacity:0;transform:scale(.9);transition:opacity .35s,transform .35s;z-index:50}
-.win-overlay.show{opacity:1;transform:scale(1)}
-.win-overlay span{background:linear-gradient(180deg,#fff,#ffe28a 60%,#ffb84d);-webkit-background-clip:text;background-clip:text;color:transparent}
-
-/* 設定モーダル */
-.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:80}
-.modal.show{display:flex}
-.modal .card{width:min(1080px,96vw);max-height:92vh;overflow:auto;background:#0e1537;border:1px solid #2a3571;border-radius:12px;padding:12px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-
-/* ★変更2：レスポンシブの崩しを無効化（スマホでもPCと同じ横UI維持） */
-@media (max-width:920px){
-  .arena{grid-template-columns:1fr 1fr}
-  .img{height:480px}
-  .row{grid-template-columns:1.3fr 0.7fr}
-  .grid2{grid-template-columns:1fr 1fr}
-}
-.fieldset{border:1px solid #2a3571;border-radius:10px;padding:10px;margin-bottom:10px}
-.fieldset legend{padding:0 6px;font-weight:700}
-.ctlrow{display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:center;margin:6px 0}
-.num, .txt{width:100%;padding:6px;border-radius:8px;border:1px solid #3b4aad;background:#1b2550;color:#fff}
-.pill2{background:#445dff;color:#fff;padding:8px 12px;border:none;border-radius:10px;font-weight:700;cursor:pointer}
-.pill2.ghost{background:transparent;border:1px solid #445dff}
-.skilltbl{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.cell{padding:6px;background:#17204a;border:1px solid #39458b;border-radius:8px}
-/* ===== 低い画面用：コンパクト表示（横向きスマホ想定） ===== */
-@media (max-height: 740px) {
-  :root{ --lowerH: 230px; }       /* 下段(ログ/ダイス)を少し低く */
-  .img{ height: clamp(240px, 34vh, 360px); }  /* 上段画像を圧縮 */
-  .foot{ bottom: 6px; }
-  .pill{ padding:6px 8px; font-size:12px; }
-  .bigbtn{ min-height:56px; min-width:200px; padding:12px 14px; }
-  .dock-inner{ gap:8px; }
-}
-
-@media (max-height: 620px) {
+/* 横向きスマホなど高さが低い時の圧縮 */
+@media (max-height:740px){
   :root{ --lowerH: 200px; }
-  .img{ height: clamp(200px, 30vh, 300px); }
-  .top .title{ font-size:16px; }
+  .img{ height: clamp(240px, 32vh, 360px); }
+  .foot{ bottom:6px } .pill{ padding:6px 8px; font-size:12px }
 }
-/* ドックに下段が隠れないよう常に余白を確保 */
-body{ padding-bottom: 110px; }   /* ドック高さより少し多め */
-/* ドック折りたたみ */
-.dock{ transition: transform .25s ease; }
-.dock.collapsed{ transform: translateY(calc(100% - 28px)); }
-.dock-toggle{
-  position:absolute; right:14px; top:-18px;
-  background:#1a2250; border:1px solid var(--line);
-  color:#fff; border-radius:999px; font-size:12px; padding:2px 8px;
+@media (max-height:620px){
+  :root{ --lowerH: 180px; }
+  .img{ height: clamp(200px, 28vh, 320px); }
+  .top .title{ font-size:16px }
 }
-
-
 </style>
 </head>
 <body>
@@ -182,98 +152,71 @@ body{ padding-bottom: 110px; }   /* ドック高さより少し多め */
     <button class="gear" id="btnSettings">⚙ 設定</button>
   </div>
 
-  <!-- 上段：勇者 vs スライム -->
-  <section class="arena">
-    <article class="card" id="cardP">
-      <img class="img" id="imgP" src="勇者.jpg" alt="勇者">
-      <div class="topbar">
-        <div class="name" id="nameP">勇者A</div>
-        <div class="hp"><i id="hpP" style="width:100%"></i><span class="ticks"></span></div>
-        <span class="badge" id="badgeP">先制</span>
-      </div>
-      <div class="ribbon" id="ribbonP" style="display:none"><div class="lab" id="ribbonPText"></div></div>
-      <div class="foot">
-        <div class="passive">パッシブ：先制 ― 最初の出目に+1判定（演出のみ）</div>
-        <button class="pill" data-open="#skillP">技一覧</button>
-        <button class="pill" data-open="#comboP">必殺</button>
+  <!-- 左：メイン -->
+  <div class="main">
+    <!-- 上段：勇者 vs スライム -->
+    <section class="arena">
+      <article class="card" id="cardP">
+        <img class="img" id="imgP" src="勇者.jpg" alt="勇者">
+        <div class="topbar">
+          <div class="name" id="nameP">勇者A</div>
+          <div class="hp"><i id="hpP" style="width:100%"></i><span class="ticks"></span></div>
+          <span class="badge" id="badgeP">先制</span>
+        </div>
+        <div class="ribbon" id="ribbonP" style="display:none"><div class="lab" id="ribbonPText"></div></div>
+        <div class="foot">
+          <div class="passive">パッシブ：先制 ― 最初の出目に+1判定（演出のみ）</div>
+          <button class="pill" data-open="#skillP">技一覧</button>
+          <button class="pill" data-open="#comboP">必殺</button>
+        </div>
+      </article>
 
-      </div>
-    </article>
+      <article class="card" id="cardE">
+        <img class="img" id="imgE" src="スライム.png" alt="スライム">
+        <div class="topbar">
+          <div class="name" id="nameE">スライムLv1</div>
+          <div class="hp"><i id="hpE" style="width:100%"></i><span class="ticks"></span></div>
+          <span class="badge" id="badgeE">凍結×1</span>
+        </div>
+        <div class="ribbon" id="ribbonE" style="display:none"><div class="lab" id="ribbonEText"></div></div>
+        <div class="foot">
+          <div class="passive">パッシブ：ぬめり ― 被ダメ時に1/6で半減（デモでは無効）</div>
+          <button class="pill" data-open="#skillE">技一覧</button>
+          <button class="pill" data-open="#comboE">必殺</button>
+        </div>
+      </article>
+    </section>
 
-    <article class="card" id="cardE">
-      <img class="img" id="imgE" src="スライム.png" alt="スライム">
-      <div class="topbar">
-        <div class="name" id="nameE">スライムLv1</div>
-        <div class="hp"><i id="hpE" style="width:100%"></i><span class="ticks"></span></div>
-        <span class="badge" id="badgeE">凍結×1</span>
+    <!-- 下段：バトルログ + ダイス（履歴は右サイド） -->
+    <section class="row">
+      <div class="log">
+        <h3>バトルログ</h3>
+        <pre id="logpre"></pre>
       </div>
-      <div class="ribbon" id="ribbonE" style="display:none"><div class="lab" id="ribbonEText"></div></div>
-      <div class="foot">
-        <div class="passive">パッシブ：ぬめり ― 被ダメ時に1/6で半減（デモでは無効）</div>
-        <button class="pill" data-open="#skillE">技一覧</button>
-        <button class="pill" data-open="#comboE">必殺</button>
-      </div>
-    </article>
-  </section>
-   
-  <!-- 下段：バトルログ + 3Dサイコロ＆履歴 -->
-  <section class="row">
-    <div class="log">
-      <h3>バトルログ</h3>
-      <pre id="logpre"></pre>
-    </div>
 
-    <div class="dicePanel">
-      <div class="arenaDice">
-        <div id="cube" class="cube show-1">
-          <!-- 1 -->
-          <div class="face front"><div class="center"><div class="pip"></div></div></div>
-          <!-- 2 -->
-          <div class="face right"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
-          <!-- 3 -->
-          <div class="face back"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="center"><div class="pip"></div></div></div></div>
-          <!-- 4 -->
-          <div class="face left"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
-          <!-- 5 -->
-          <div class="face top"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="center"><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
-          <!-- 6 -->
-          <div class="face bottom"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div></div></div>
+      <div class="dicePanel">
+        <div class="arenaDice">
+          <div id="cube" class="cube show-1">
+            <!-- 1 -->
+            <div class="face front"><div class="center"><div class="pip"></div></div></div>
+            <!-- 2 -->
+            <div class="face right"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
+            <!-- 3 -->
+            <div class="face back"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="center"><div class="pip"></div></div></div></div>
+            <!-- 4 -->
+            <div class="face left"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
+            <!-- 5 -->
+            <div class="face top"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div></div><div class="center"><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div></div></div></div>
+            <!-- 6 -->
+            <div class="face bottom"><div class="rowP"><div class="col"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div><div class="col"><div class="pip"></div><div class="pip"></div><div class="pip"></div></div></div></div>
+          </div>
         </div>
       </div>
+    </section>
+  </div>
 
-      <div class="history">
-        <div class="hrow"><span class="hlabel">味方</span><div class="chips" id="allyChips"></div></div>
-        <div class="hrow"><span class="hlabel">敵</span><div class="chips" id="enemyChips"></div></div>
-      </div>
-    </div>
-  </section>
-</div>
-
-  <!-- ＿＿＿＿＿＿＿ モーダル（UIのみ） ＿＿＿＿＿＿＿ -->
-  <div class="modal" id="passiveP"><div class="card"><h4>パッシブ：HighBias</h4><p class="mut">サイコロが高め（4/5/6）に寄る傾向。</p><div style="text-align:right"><button class="btn small close" data-close>閉じる</button></div></div></div>
-  <div class="modal" id="passiveE"><div class="card"><h4>パッシブ（敵）</h4><p class="mut">ステ1では特になし。</p><div style="text-align:right"><button class="btn small close" data-close>閉じる</button></div></div></div>
-  <div class="modal" id="skillP"><div class="card"><h4>技一覧（出目1〜6）</h4><div class="list">
-    <div class="item"><span class="name">1：技1</span><span class="desc">敵にダメージ1</span></div>
-    <div class="item"><span class="name">2：技2</span><span class="desc">敵にダメージ1</span></div>
-    <div class="item"><span class="name">3：技3</span><span class="desc">敵にダメージ1</span></div>
-    <div class="item"><span class="name">4：技4</span><span class="desc">敵にダメージ2</span></div>
-    <div class="item"><span class="name">5：技5</span><span class="desc">敵にダメージ2</span></div>
-    <div class="item"><span class="name">6：技6</span><span class="desc">敵にダメージ2</span></div>
-  </div><div style="text-align:right;margin-top:8px"><button class="btn small close" data-close>閉じる</button></div></div></div>
-  <div class="modal" id="comboP"><div class="card"><h4>必殺（コンボ一覧）</h4><div class="list">
-    <div class="item"><span class="name">ゾロ目：「王者の三連撃」</span><span class="desc">固定ダメージ3</span></div>
-    <div class="item"><span class="name">4-5-6：「昇天連斬」</span><span class="desc">固定ダメージ4</span></div>
-  </div><div style="text-align:right;margin-top:8px"><button class="btn small close" data-close>閉じる</button></div></div></div>
-  <div class="modal" id="skillE"><div class="card"><h4>敵の技（参考）</h4><div class="list">
-    <div class="item"><span class="name">1〜5：小</span><span class="desc">味方にダメージ1</span></div>
-    <div class="item"><span class="name">6：強</span><span class="desc">味方にダメージ2</span></div>
-  </div><div style="text-align:right;margin-top:8px"><button class="btn small close" data-close>閉じる</button></div></div></div>
-
-
-
-<!-- Bottom Dock -->
-<footer class="dock">
-  <div class="dock-inner">
+  <!-- 右：縦ドック -->
+  <aside class="sidebar" aria-label="コマンド">
     <button class="bigbtn" id="btnRoll">
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
         <rect x="3" y="3" width="18" height="18" rx="4" fill="#fff" opacity=".95"/>
@@ -291,8 +234,17 @@ body{ padding-bottom: 110px; }   /* ドック高さより少し多め */
       <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2h4v2l2 3v2l-1 1v8a3 3 0 01-3 3H12a3 3 0 01-3-3V10L8 9V7l2-3V2z" fill="#fff" opacity=".95"/></svg>
       <span class="label"><span class="jp">アイテム</span> <span class="en">Item</span></span>
     </button>
-  </div>
-</footer>
+
+    <!-- 右下：サイコロ履歴（味方/敵） -->
+    <div class="sidebox">
+      <h4>出目履歴</h4>
+      <div class="history">
+        <div class="hrow"><span class="hlabel">味方</span><div class="chips" id="allyChips"></div></div>
+        <div class="hrow"><span class="hlabel">敵</span><div class="chips" id="enemyChips"></div></div>
+      </div>
+    </div>
+  </aside>
+</div>
 
 <!-- WIN overlay -->
 <div class="win-overlay" id="winOverlay"><span>WIN</span></div>
@@ -466,23 +418,20 @@ function resetBattle(keepAudio=true){
   if(!keepAudio){ try{ bgm.pause(); winbgm.pause(); }catch(e){} }
 }
 
-// ====== ロール → 技確定（技ボタンに 技名＋ダメージ 表示） ======
+// ====== ロール → 技確定 ======
 btnRoll.addEventListener('click', async ()=>{
   if(phase!=='ready' || busy) return;
   busy=true; phase='rolled'; btnRoll.disabled=true; btnAct.disabled=true;
 
-  // プレイヤー／敵 ロール
   const nP = rollOne(); rotateCube(nP);
   const nE = rollOne();
 
   rolledP=nP; rolledE=nE;
 
-  // 履歴
   P.hist.push(nP); if(P.hist.length>3) P.hist.shift();
   E.hist.push(nE); if(E.hist.length>3) E.hist.shift();
   pushChip(allyChips, nP, 'ally'); pushChip(enemyChips, nE, 'enemy');
 
-  // 技名リボン帯（確定表示）
   const baseP = P.skills[nP].dmg;
   const combo = checkComboP();
   if(combo){ P.finisher=true; showRibbon('P', `コンボ成立！ ${combo.label}`, true); }
@@ -490,15 +439,13 @@ btnRoll.addEventListener('click', async ()=>{
   showRibbon('P', `技${nP}：${P.skills[nP].name}（${shownDmg}）`, P.finisher);
   showRibbon('E', `技${nE}：${E.skills[nE].name}`, false);
 
-  // ボタンラベル更新（技名＋ダメージ）
   actLabel.textContent = (P.finisher? '必殺：':'技：') + `${P.skills[nP].name}（${shownDmg}）`;
-
 
   await wait(timing.pause);
   btnAct.disabled=false; busy=false;
 });
 
-// ====== 行動（味方→敵→ターン回し）：1ターン目から必ずHP反映 ======
+// ====== 行動（味方→敵→ターン回し） ======
 btnAct.addEventListener('click', async ()=>{
   if(phase!=='rolled' || busy) return;
   busy=true; phase='acting'; btnAct.disabled=true;
@@ -540,15 +487,12 @@ btnAct.addEventListener('click', async ()=>{
     btnRoll.disabled=true; btnAct.disabled=true; busy=false; return;
   }
 
-  // 次ターンへ
   phase='ready'; btnRoll.disabled=false; btnAct.disabled=true; busy=false;
 });
 
 // ====== 設定モーダル ======
 btnSettings.addEventListener('click', ()=>{
-  // 速度
-  speedSel.value = Object.keys(SPEEDS).find(k=>JSON.stringify(SPEEDS[k])===JSON.stringify(timing)) || 'normal';
-  // キャラ
+  speedSel.value = 'normal';
   pName.value=P.name; pMax.value=P.max; eName.value=E.name; eMax.value=E.max;
   pTbl.innerHTML = buildSkillTbl(P.skills,'p');
   eTbl.innerHTML = buildSkillTbl(E.skills,'e');
@@ -556,38 +500,32 @@ btnSettings.addEventListener('click', ()=>{
 });
 closeSettings.addEventListener('click', ()=> settingsModal.classList.remove('show'));
 applySettings.addEventListener('click', ()=>{
-  // 速度
-  const v=speedSel.value; timing={...SPEEDS[v]};
-
-  // キャラ反映
   P.name = (pName.value||'勇者A').trim();
   P.max  = Math.max(1, parseInt(pMax.value||10)); P.hp = P.max;
-  P.skills = collectTbl('p', P.skills);
+  P.skills = collectTbl('p');
 
   E.name = (eName.value||'スライムLv1').trim();
   E.max  = Math.max(1, parseInt(eMax.value||10)); E.hp = E.max;
-  E.skills = collectTbl('e', E.skills);
+  E.skills = collectTbl('e');
 
   resetBattle(true);
   settingsModal.classList.remove('show');
 });
 
 function buildSkillTbl(skills, prefix){
-  let html='';
-  for(let i=1;i<=6;i++){
+  let html=''; for(let i=1;i<=6;i++){
     const s=skills[i]||{name:`技${i}`,dmg:1};
     html+=`<div class="cell">
       <div style="font-weight:700;margin-bottom:4px">${i}</div>
       <input id="${prefix}_name_${i}" class="txt" placeholder="技名" value="${s.name}">
       <div style="margin-top:4px"><input id="${prefix}_dmg_${i}" class="num" type="number" min="0" value="${s.dmg}"></div>
     </div>`;
-  }
-  return html;
+  } return html;
 }
-function collectTbl(prefix, base){
+function collectTbl(prefix){
   const out={}; for(let i=1;i<=6;i++){
-    const nm=($('#'+prefix+'_name_'+i)?.value||`技${i}`).trim();
-    const dm=Math.max(0, parseInt($('#'+prefix+'_dmg_'+i)?.value||0));
+    const nm=(document.getElementById(prefix+'_name_'+i)?.value||`技${i}`).trim();
+    const dm=Math.max(0, parseInt(document.getElementById(prefix+'_dmg_'+i)?.value||0));
     out[i]={name:nm,dmg:dm};
   } return out;
 }
@@ -613,33 +551,25 @@ winVol.addEventListener('input', ()=>{ try{ winbgm.volume=parseFloat(winVol.valu
 
 // ====== 初期化 ======
 function init(){
-  // HPメモリ（span.ticksをHTMLに入れてあるが、保険で補完）
   document.querySelectorAll('.hp').forEach(hp=>{ if(!hp.querySelector('.ticks')){ const t=document.createElement('span'); t.className='ticks'; hp.appendChild(t); }});
-  nameP.textContent=P.name; nameE.textContent=E.name;
-  setHp('P'); setHp('E');
-  logpre.textContent='バトル開始！ 先にスライムを倒そう。';
+  document.getElementById('nameP').textContent=P.name; document.getElementById('nameE').textContent=E.name;
+  setHp('P'); setHp('E'); logpre.textContent='バトル開始！ 先にスライムを倒そう。';
 }
 init();
-})(); // バトル処理スクリプト終わり
+})(); // end IIFE
 
-// ここにモーダル開閉処理を追加
+// モーダル開閉
 document.querySelectorAll('[data-open]').forEach(b=>{
   b.addEventListener('click', ()=>{
     document.querySelector(b.getAttribute('data-open'))?.classList.add('show');
   });
 });
 document.querySelectorAll('[data-close]').forEach(b=>{
-  b.addEventListener('click', ()=>{
-    b.closest('.modal')?.classList.remove('show');
-  });
+  b.addEventListener('click', ()=> b.closest('.modal')?.classList.remove('show'));
 });
 document.addEventListener('click', e=>{
   if(e.target.classList.contains('modal')) e.target.classList.remove('show');
 });
-document.getElementById('dockTgl')?.addEventListener('click',()=>{
-  document.querySelector('.dock')?.classList.toggle('collapsed');
-});
-
 </script>
 </body>
 </html>
