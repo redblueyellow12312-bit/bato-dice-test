@@ -42,7 +42,6 @@ section#select{min-height:100vh;padding:18px}
 .stageGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .stage{position:relative;border:1px solid var(--line);border-radius:12px;padding:10px;background:#0e1433;display:flex;flex-direction:column;gap:8px}
 .stage img{width:100%;height:120px;object-fit:contain;background:#0b1130;border-radius:8px}
-.lock{position:absolute;right:10px;top:10px;background:#0008;border:1px solid #fff3;color:#fff;padding:2px 8px;border-radius:999px;font-size:12px}
 .prog{font-size:12px;color:#b8c6ff}
 .selRight .row{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;margin:6px 0}
 .statBadge{display:inline-block;border:1px solid var(--line);padding:2px 8px;border-radius:999px;background:#0f1536;color:#cfe0ff}
@@ -50,7 +49,7 @@ section#select{min-height:100vh;padding:18px}
 .badgeEquip{border:1px solid #3e4dbb;background:#18205a;padding:6px 10px;border-radius:10px}
 
 /* ====== Battle ====== */
-section#battle{min-height:100vh}
+section#battle{min-height:100vh; transition: background .3s ease}
 .wrap{max-width:1200px;margin:14px auto;padding:0 14px;display:grid;gap:12px;grid-template-columns: 1fr 280px}
 .top{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between}
 .title{font-weight:800}
@@ -74,7 +73,8 @@ section#battle{min-height:100vh}
 .ribbon.show{animation:rib .9s ease both}
 @keyframes rib{0%{transform:translateY(-16px);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateY(-32px);opacity:0}}
 .hitShake{animation:shake .25s ease}
-@keyframes shake{20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}100%{transform:translateX(0)}}
+@keyframes shake{20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}100%{transform:translateX(0)}
+}
 .flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.22), transparent 60%);animation:flash .35s ease;z-index:2}
 @keyframes flash{from{opacity:0}50%{opacity:1}to{opacity:0}}
 .dmg{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);font-size:42px;font-weight:900;color:#fff;text-shadow:0 0 14px rgba(255,80,80,.85),0 0 3px #000;opacity:0;animation:dpop .8s ease both;z-index:5}
@@ -136,28 +136,26 @@ section#battle{min-height:100vh}
 .item{display:flex;justify-content:space-between;gap:8px;padding:6px;border:1px solid #39458b;background:#17204a;border-radius:8px}
 @media (max-height:740px){:root{ --lowerH: 200px } .img{ height: clamp(240px, 32vh, 360px) } .foot{ bottom:6px } .pill{ padding:6px 8px; font-size:12px }}
 @media (max-height:620px){:root{ --lowerH: 180px } .img{ height: clamp(200px, 28vh, 320px) } .top .title{ font-size:16px }}
-
-/* helpers */
 hr.sep{border:none;border-top:1px solid #2a3474;margin:10px 0}
-.note{font-size:12px;color:#b8c6ff}
 section { display: none; }
 section.active { display: block; }
 
 /* ===== 宝箱演出 ===== */
 .chest-drop {
-  position: fixed;
-  top: 40%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 120px; height: 120px;
-  opacity: 0; transition: opacity 0.8s ease-out;
+  position: fixed;               /* ビューポート基準 */
+  width: 120px;
+  height: 120px;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity .25s ease-out, transform .35s ease-out;
   z-index: 150;
+  pointer-events: none;
 }
-.chest-drop.show { opacity: 1; }
-.result-chest {
-  width: 100px; height: 100px; margin: 0 6px;
-  cursor: pointer; transition: transform 0.2s;
+.prog {
+  display: none;
 }
+.chest-drop.show { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+.result-chest { width: 100px; height: 100px; margin: 0 6px; cursor: pointer; transition: transform .2s }
 .result-chest:hover { transform: scale(1.1); }
 </style>
 </head>
@@ -181,23 +179,35 @@ section.active { display: block; }
     <div class="selLeft">
       <h3 class="selTitle">ステージ選択</h3>
       <div class="stageGrid">
-        <!-- Stage1: 草原 -->
+        <!-- 1 草原 -->
         <div class="stage">
           <div class="prog">草原 進行 <span id="prog_st1">0/3</span></div>
           <img src="stage1.png" alt="草原">
           <button class="btn" onclick="gotoStage('st1')">草原へ</button>
         </div>
-        <!-- Stage2: 洞窟 -->
+        <!-- 2 森 -->
         <div class="stage">
-          <div class="prog">洞窟 進行 <span id="prog_st2">0/4</span></div>
-          <img src="stage2.png" alt="洞窟">
-          <button class="btn" onclick="gotoStage('st2')">洞窟へ</button>
+          <div class="prog">森 進行 <span id="prog_st2">0/3</span></div>
+          <img src="stage2.png" alt="森">
+          <button class="btn" onclick="gotoStage('st2')">森へ</button>
         </div>
-        <!-- Stage3: 竜の山 -->
+        <!-- 3 湖畔 -->
         <div class="stage">
-          <div class="prog">竜の山 進行 <span id="prog_st3">0/1</span></div>
-          <img src="stage3.png" alt="竜の山">
-          <button class="btn" onclick="gotoStage('st3')">竜の山へ</button>
+          <div class="prog">湖畔 進行 <span id="prog_st3">0/3</span></div>
+          <img src="stage3.png" alt="湖畔">
+          <button class="btn" onclick="gotoStage('st3')">湖畔へ</button>
+        </div>
+        <!-- 4 洞窟 -->
+        <div class="stage">
+          <div class="prog">洞窟 進行 <span id="prog_st4">0/3</span></div>
+          <img src="stage4.png" alt="洞窟">
+          <button class="btn" onclick="gotoStage('st4')">洞窟へ</button>
+        </div>
+        <!-- 5 廃墟（中ボス） -->
+        <div class="stage">
+          <div class="prog">廃墟 進行 <span id="prog_st5">0/2</span></div>
+          <img src="stage5.png" alt="廃墟">
+          <button class="btn" onclick="gotoStage('st5')">廃墟へ</button>
         </div>
       </div>
 
@@ -266,7 +276,6 @@ section.active { display: block; }
           <div class="foot">
             <button class="pill" data-open="#passiveE">パッシブ：-</button>
             <button class="pill" data-open="#skillE">技一覧</button>
-            <button class="pill" data-open="#comboP">必殺</button>
           </div>
         </article>
       </section>
@@ -385,7 +394,7 @@ section.active { display: block; }
   <!-- 簡易モーダル -->
   <div class="modal" id="passiveP" ><div class="card"><h4>パッシブ：先制</h4><p>最初の出目に+1判定（演出のみ）</p><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
   <div class="modal" id="skillP" ><div class="card"><h4>技一覧（出目1〜6）</h4><div class="list" id="skillPList"></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
-  <div class="modal" id="comboP" ><div class="card"><h4>必殺（コンボ一覧）</h4><div class="list"><div class="item"><span>ゾロ目：「王者の三連撃」</span><span>固定ダメージ3</span></div><div class="item"><span>4-5-6：「昇天連斬」</span><span>固定ダメージ4</span></div></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
+  <div class="modal" id="comboP" ><div class="card"><h4>必殺（コンボ一覧）</h4><div class="list"><div class="item"><span>ゾロ目：「王者の三連撃」</span><span>技ダメージ +5/span></div><div class="item"><span>4-5-6：「昇天連斬」</span><span>技ダメージ +3</span></div></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
   <div class="modal" id="passiveE"><div class="card"><h4>パッシブ：-</h4><p>デモでは無効</p><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
   <div class="modal" id="skillE" ><div class="card"><h4>敵の技（参考）</h4><div class="list" id="skillEList"></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
 </section>
@@ -454,48 +463,102 @@ section.active { display: block; }
 
 <script>
 // ======================= APP STATE =======================
+// 敵図鑑（st1〜st5まで）
 const ENEMY_BOOK = {
+  // 草原/森：入門
   slime: {
-    key:'slime', name:'スライム', img:'スライム.png', max:10,
+    key:'slime', name:'スライム', img:'スライム.png', max:8,
     skills:{1:{name:'ぺちぺち',dmg:1},2:{name:'ぺちぺち',dmg:1},3:{name:'ぺちぺち',dmg:1},4:{name:'のしかかり',dmg:2},5:{name:'のしかかり',dmg:2},6:{name:'どろ弾（強）',dmg:2}},
-    xp:1
+    xp:1, chest:{ rate:0.30, white:0.95 } // 入門：白多め
   },
+  // 草原/森：防御寄り
   mutant: {
-    key:'mutant', name:'変異スライム', img:'スライム1.png', max:11,
-    skills:{1:{name:'ぺちぺち',dmg:1},2:{name:'ぺちぺち',dmg:1},3:{name:'のしかかり',dmg:2},4:{name:'のしかかり',dmg:2},5:{name:'のしかかり',dmg:2},6:{name:'のしかかり',dmg:2}},
-    xp:1
+    key:'mutant', name:'変異スライム', img:'スライム1.png', max:12,
+    skills:{1:{name:'ぽよん防御',dmg:1},2:{name:'ぽよん防御',dmg:1},3:{name:'のしかかり',dmg:2},4:{name:'のしかかり',dmg:2},5:{name:'硬化',dmg:2},6:{name:'硬化（強）',dmg:2}},
+    xp:1, chest:{ rate:0.40, white:0.70 } // 出現率低め、青寄り
   },
-  goblin: {
-    key:'goblin', name:'ゴブリン', img:'ゴブリン.png', max:15,
-    skills:{1:{name:'斬撃',dmg:2},2:{name:'斬撃',dmg:2},3:{name:'キック',dmg:2},4:{name:'毒ナイフ',dmg:3},5:{name:'毒ナイフ',dmg:3},6:{name:'突撃',dmg:4}},
-    xp:2
+  // 森：初級
+  mushroom: {
+    key:'mushroom', name:'キノコ', img:'キノコ.png', max:13,
+    skills:{1:{name:'胞子',dmg:1},2:{name:'胞子',dmg:1},3:{name:'柄打ち',dmg:2},4:{name:'柄打ち',dmg:2},5:{name:'毒胞子',dmg:2},6:{name:'毒胞子（強）',dmg:3}},
+    xp:1, chest:{ rate:0.45, white:0.80 }
   },
-  dragon: {
-    key:'dragon', name:'ドラゴン', img:'ドラゴン.png', max:30,
-    skills:{1:{name:'かみつき',dmg:3},2:{name:'かみつき',dmg:3},3:{name:'しっぽ',dmg:4},4:{name:'炎ブレス',dmg:6},5:{name:'炎ブレス',dmg:6},6:{name:'メガフレア',dmg:8}},
-    xp:5
+  // 湖畔：水辺差分
+  waterSlime: {
+    key:'waterSlime', name:'水スライム', img:'水スライム.png', max:12,
+    skills:{1:{name:'水しぶき',dmg:1},2:{name:'水しぶき',dmg:1},3:{name:'水弾',dmg:2},4:{name:'水弾',dmg:2},5:{name:'水流タックル',dmg:2},6:{name:'渦打ち',dmg:3}},
+    xp:1, chest:{ rate:0.50, white:0.75 }
+  },
+  // 湖畔：初級アタッカー
+  frog: {
+    key:'frog', name:'カエル', img:'カエル.png', max:14,
+    skills:{1:{name:'舌ペチ',dmg:2},2:{name:'舌ペチ',dmg:2},3:{name:'跳び蹴り',dmg:2},4:{name:'跳び蹴り',dmg:3},5:{name:'毒舌',dmg:3},6:{name:'体当たり',dmg:4}},
+    xp:2, chest:{ rate:0.60, white:0.70 }
+  },
+  // 洞窟：コウモリ（回避寄り）
+  bat: {
+    key:'bat', name:'コウモリ', img:'コウモリ.png', max:16,
+    skills:{1:{name:'噛みつき',dmg:2},2:{name:'噛みつき',dmg:2},3:{name:'急降下',dmg:2},4:{name:'急降下',dmg:3},5:{name:'超音波',dmg:3},6:{name:'狂乱連撃',dmg:4}},
+    xp:2, chest:{ rate:0.55, white:0.65 }
+  },
+  // 洞窟：巨鼠（毒気味）
+  giantRat: {
+    key:'giantRat', name:'巨鼠', img:'巨鼠.png', max:18,
+    skills:{1:{name:'かじりつき',dmg:2},2:{name:'かじりつき',dmg:2},3:{name:'突進',dmg:2},4:{name:'毒噛み',dmg:3},5:{name:'毒噛み',dmg:3},6:{name:'牙の連打',dmg:4}},
+    xp:2, chest:{ rate:0.58, white:0.60 }
+  },
+  // 洞窟：小ゴーレム（硬い・重い）
+  smallGolem: {
+    key:'smallGolem', name:'小ゴーレム', img:'小ゴーレム.png', max:20,
+    skills:{1:{name:'岩拳',dmg:2},2:{name:'岩拳',dmg:2},3:{name:'瓦礫投げ',dmg:3},4:{name:'瓦礫投げ',dmg:3},5:{name:'地響き',dmg:4},6:{name:'地割れ',dmg:5}},
+    xp:3, chest:{ rate:0.65, white:0.55 } // ややレア寄り
+  },
+  // 廃墟：中ボス
+  ruinsGuardian: {
+    key:'ruinsGuardian', name:'廃墟守護者', img:'廃墟守護者.png', max:30,
+    // 期待2.8/turnくらい
+    skills:{1:{name:'斬撃',dmg:3},2:{name:'盾打ち',dmg:3},3:{name:'呪詛紋',dmg:4},4:{name:'魔力砲',dmg:5},5:{name:'魔力砲・強',dmg:6},6:{name:'粛清光',dmg:7}},
+      passive: {
+    name: "鉄壁の守り",
+    desc: "被ダメージ-1（最低1保証）"
+  },
+    xp:7, chest:{ rate:1.00, white:0.30 } // 確定ドロップ、青寄り
+    
   }
 };
 
-// ステージ図鑑
+// ステージ図鑑（1 草原 → 2 森 → 3 湖畔 → 4 洞窟 → 5 廃墟）
 const STAGE_BOOK = {
-  st1: { // 草原：スライム主体 3戦
+  st1: { // 草原
     key:'st1', name:'草原', bg:'stage1.png',
     battles:3,
-    pool:[ {key:'slime', w:70}, {key:'mutant', w:30} ],
+    pool:[ {key:'slime', w:60}, {key:'mutant', w:40} ],
     xp:2
   },
-  st2: { // 洞窟：ゴブリン中心 4戦
-    key:'st2', name:'洞窟', bg:'stage2.png',
-    battles:4,
-    pool:[ {key:'goblin', w:70}, {key:'mutant', w:30} ],
+  st2: { // 森
+    key:'st2', name:'森', bg:'stage2.png',
+    battles:3,
+    pool:[ {key:'slime', w:40}, {key:'mutant', w:30}, {key:'mushroom', w:30} ],
     xp:3
   },
-  st3: { // 竜の山：ボス1戦
-    key:'st3', name:'竜の山', bg:'stage3.png',
-    battles:1,
-    pool:[ {key:'dragon', w:100} ],
+  st3: { // 湖畔
+    key:'st3', name:'湖畔', bg:'stage3.png',
+    battles:3,
+    pool:[ {key:'waterSlime', w:60}, {key:'frog', w:40} ],
+    xp:4
+  },
+  st4: { // 洞窟
+    key:'st4', name:'洞窟', bg:'stage4.png',
+    battles:3,
+    pool:[ {key:'bat', w:50}, {key:'giantRat', w:30}, {key:'smallGolem', w:20} ],
     xp:5
+  },
+  st5: { // 廃墟（中ボス）：2戦目固定ボス
+    key:'st5', name:'廃墟', bg:'stage5.png',
+    battles:2,
+    pool:[ {key:'bat', w:60}, {key:'giantRat', w:30}, {key:'smallGolem', w:10} ],
+    boss:'ruinsGuardian',
+    xp:6
   }
 };
 
@@ -512,6 +575,33 @@ const DEFAULT_SKILLS = {
   6:{name:'強攻撃',dmg:3}
 };
 
+// レベルアップ定義表
+const LEVEL_TABLE = {
+  2: { xp: 3,  hp: 2, atk: 1 },
+  3: { xp: 9,  hp: 2, atk: 0 },
+  4: { xp: 16, hp: 2, atk: 1 },
+  5: { xp: 25, hp: 2, atk: 0 },
+  6: { xp: 36, hp: 2, atk: 0 },
+  7: { xp: 49, hp: 2, atk: 1 },
+  8: { xp: 64, hp: 2, atk: 0 },
+  9: { xp: 81, hp: 2, atk: 0 },
+ 10: { xp: 100, hp: 2, atk: 1 }
+};
+// レベルごとの必要経験値表（Lv1→2, Lv2→3 ...）
+const XP_TABLE = {
+  1: 3,
+  2: 9,
+  3: 16,
+  4: 25,
+  5: 36,
+  6: 49,
+  7: 64,
+  8: 81,
+  9: 100
+  // Lv10以上は未設定にしておく
+};
+
+
 let Game = {
   player:{
     name:'勇者A', lvl:1, xp:0, atk:0,
@@ -520,9 +610,12 @@ let Game = {
     items:{ potion:3},
     equip:{ weapon:null, armor:null },
     equipFaces:{},
-    box:{ ironSword:1 } // 所持装備
+    box:{ ironSword:0 } // 所持装備
   },
-  progress:{ kills:{slime:0,goblin:0,dragon:0}, unlock:{} }
+  progress:{
+    kills:{slime:0,mutant:0,mushroom:0,waterSlime:0,frog:0,bat:0,giantRat:0,smallGolem:0,ruinsGuardian:0},
+    unlock:{}
+  }
 };
 
 // ======================= ROUTER =======================
@@ -548,18 +641,14 @@ function startStage(stageKey){
   const stage = STAGE_BOOK[stageKey];
   if(!stage) return;
 
-  // スナップショット
-  StageCP = JSON.parse(JSON.stringify(Game));
-
+  StageCP = JSON.parse(JSON.stringify(Game)); // 丸ごと保存（離脱/敗北で復元）
   Game.currentStage = stageKey;
   Game.currentBattle = 0;
-
   Stage = { id: stageKey, remain: stage.battles, cleared: false };
 
-  // 進捗UIを0/合計にリセット
-  setStageProgress(stageKey, 0, stage.battles);
+  setStageProgress(stageKey, 0, stage.battles); // 進捗0/合計
+  applyStageBG(stage.bg);
 
-  // 直前の勝利演出を消す
   winOverlay.classList.remove('show');
   winOverlay.hidden = true;
 
@@ -570,9 +659,18 @@ function nextBattle(){
   const stage = STAGE_BOOK[Game.currentStage];
   if(!stage) return;
 
-  // 敵をランダム選択→戦闘開始
-  const enemyKey = pickEnemy(stage.pool);
+  // st5は最後の一戦を固定ボスに
+  let enemyKey;
+  if (Game.currentStage==='st5' && Stage.remain===1 && stage.boss){
+    enemyKey = stage.boss;
+  }else{
+    enemyKey = pickEnemy(stage.pool);
+  }
+
   startBattle(enemyKey);
+  // 敵の技一覧を更新
+  buildSkillTbl(E.skills, 'e');
+
   goto('battle');
 }
 
@@ -594,26 +692,25 @@ function pickEnemy(pool){
 function leaveBattle(){
   // ステージ中ならスナップショットへ完全復元して離脱
   if (Game.currentStage && StageCP){
-    Game = JSON.parse(JSON.stringify(StageCP)); // XP/アイテム/撃破数なども戻す
+    Game = JSON.parse(JSON.stringify(StageCP));
     Game.player.hp = Game.player.max;
 
-    // ステージ状態のクリア
     Game.currentStage = null;
     Stage = null;
     StageCP = null;
     StageReward = { xp:0, chests:[], items:[], equips:[] };
 
-    // 表示同期
     applyDerivedStats();
     P.max = Game.player.max; 
     P.hp  = Game.player.max; 
     setHp('P');
 
-    // 全ステージの進捗UIを初期化
+    // 進捗UI初期化
     for(const k of Object.keys(STAGE_BOOK)){
       const tot = STAGE_BOOK[k].battles;
       setStageProgress(k, 0, tot);
     }
+    clearStageBG();
 
     saveGame();
     goto('select');
@@ -644,13 +741,19 @@ function resetSave(andStay){
       baseMax:20, max:20, hp:20,
       skills:JSON.parse(JSON.stringify(DEFAULT_SKILLS)),
       items:{potion:3}, equip:{weapon:null,armor:null},
-      equipFaces:{}, box:{ironSword:1}
+      equipFaces:{}, box:{ironSword:0}
     },
-    progress:{ kills:{slime:0,goblin:0,dragon:0}, unlock:{} }
+    progress:{
+      kills:{slime:0,mutant:0,mushroom:0,waterSlime:0,frog:0,bat:0,giantRat:0,smallGolem:0,ruinsGuardian:0},
+      unlock:{}
+    }
   };
   localStorage.removeItem(SAVE_KEY);
+  resetEquipFaces();   // ★ここで出目の装備・画像をリセットする
+  
   saveGame();
   refreshSelect();
+  clearStageBG();
 
   const btn = document.querySelector('.homeBtns .btn.ghost');
   if(btn){
@@ -670,17 +773,27 @@ function refreshSelect(){
   document.getElementById('plHp').textContent   = Game.player.hp;
   document.getElementById('plMax').textContent  = Game.player.max;
   document.getElementById('plAtk').textContent  = Game.player.atk;
-  document.getElementById('plItems').textContent = Object.entries(Game.player.items).map(([k,v])=>{
-    const nm = k==='potion' ? '回復薬' : k;
-    return `${nm}×${v}`;
-  }).join(' / ') || '-';
 
-  // 装備バッジ
-  const badges=document.getElementById('equipBadges'); badges.innerHTML='';
-  const w = Game.player.equip.weapon ? EQUIP_BOOK[Game.player.equip.weapon].name : 'なし';
-  const a = Game.player.equip.armor ? EQUIP_BOOK[Game.player.equip.armor].name   : 'なし';
-  badges.insertAdjacentHTML('beforeend', `<span class="badgeEquip">武器：${w}</span>`);
-  badges.insertAdjacentHTML('beforeend', `<span class="badgeEquip">防具：${a}</span>`);
+    // === 次のレベルまでの経験値 ===
+  const needXp = XP_TABLE[Game.player.lvl];
+  let xpText = "";
+  if(needXp){
+    const remain = Math.max(0, needXp - Game.player.xp);
+    xpText = `（次Lvまで残り ${remain} xp）`;
+  } else {
+    xpText = "(最大レベル)";
+  }
+  document.getElementById('plXp').textContent = `${Game.player.xp} ${xpText}`;
+
+  // === 装備・アイテム欄を非表示にする ===
+  const equipRow = document.getElementById('equipBadges');
+  const itemRow  = document.getElementById('plItems');
+  if(equipRow) equipRow.parentElement.style.display = "none"; // 行ごと非表示
+  if(itemRow)  itemRow.parentElement.style.display  = "none"; // 行ごと非表示
+
+  // （必要なら非表示にせず、テキストだけ変える方法もある）
+  // document.getElementById('plItems').textContent = "-";
+  // document.getElementById('equipBadges').innerHTML = "";
 
   saveGame();
 }
@@ -691,23 +804,11 @@ function openItems(){
   m.hidden=false; m.classList.add('show');
 }
 
-let unequipWeaponHandler=null, unequipArmorHandler=null;
 function openEquip(){
-  // 出目割り当てモーダル
   const m=document.getElementById('equipFaceModal');
   m.hidden=false; m.classList.add('show');
-
   document.getElementById('equipFaceTitle').textContent = "出目を選択してください";
   document.getElementById('equipOptions').style.display = 'none';
-
-  if(!unequipWeaponHandler){
-    unequipWeaponHandler = ()=>{
-      Game.player.equip.weapon = null; refreshSelect(); saveGame();
-    };
-    unequipArmorHandler = ()=>{
-      Game.player.equip.armor  = null; refreshSelect(); saveGame();
-    };
-  }
 }
 
 function equipItem(key){
@@ -745,7 +846,7 @@ const speedSel=$('#speedSel');
 const pName=$('#pName'), pMax=$('#pMax'), pTbl=$('#pSkillsTbl');
 const eName=$('#eName'), eMax=$('#eMax'), eTbl=$('#eSkillsTbl');
 
-// audio
+// audio（必要に応じて使う）
 const audioBgm = document.createElement('audio'); audioBgm.id='bgm'; audioBgm.loop=true;
 const audioWin = document.createElement('audio'); audioWin.id='winbgm'; audioWin.loop=true;
 
@@ -784,8 +885,8 @@ function hitFX(card, dmg){
 function checkComboP(){
   if(P.hist.length<3) return null;
   const h = P.hist.slice(-3);
-  if(h[0]===h[1] && h[1]===h[2]) return {type:'triple', label:'ゾロ目', bonus:2};
-  if(h.includes(4) && h.includes(5) && h.includes(6)) return {type:'456', label:'4-5-6', bonus:2};
+  if(h[0]===h[1] && h[1]===h[2]) return {type:'triple', label:'ゾロ目', bonus:5};
+  if(h.includes(4) && h.includes(5) && h.includes(6)) return {type:'456', label:'4-5-6', bonus:3};
   return null;
 }
 
@@ -799,6 +900,26 @@ function spinDice(n){
   const base=FACE[n];
   dice.style.transform=`rotateX(${rotX+base.x}deg) rotateY(${rotY+base.y}deg)`;
 }
+function resetEquipFaces(){
+  // 出目プレビュー用（diceImg1〜6）
+  for(let i=1;i<=6;i++){
+    const img = document.getElementById(`diceImg${i}`);
+    if (img) img.src = `${i}.png`;  // デフォルト画像に戻す
+  }
+
+  // バトル用の立体サイコロ（.front, .back, ...）
+  const faceMap = {1:'.front',2:'.bottom',3:'.right',4:'.left',5:'.topp',6:'.back'};
+  for(let i=1;i<=6;i++){
+    const el = document.querySelector(faceMap[i]);
+    if (el) el.style.backgroundImage = `url("${i}.png")`; // デフォルトに戻す
+  }
+
+  // ゲームデータもリセット
+  if(Game.player) Game.player.equipFaces = {};
+}
+
+
+
 
 // ======================= ITEMS =======================
 const btnItem=$('#btnItem'), itemModal=$('#itemModal'), itemList=$('#itemList');
@@ -842,6 +963,26 @@ function startBattle(enemyKey){
   // visuals
   resetBattle(true);
   logpre.textContent=`${E.name} が現れた！`;
+  // 敵パッシブをUIに反映
+if (T.passive) {
+  document.querySelector('#badgeE').textContent = 'パッシブ';
+  const modal = document.getElementById('passiveE');
+  modal.querySelector('h4').textContent = `パッシブ：${T.passive.name}`;
+  modal.querySelector('p').textContent  = T.passive.desc;
+  // ★ パッシブボタンにも名前を反映
+  document.querySelector('#cardE .foot .pill').textContent = `パッシブ：${T.passive.name}`;
+  document.querySelector('#cardE .foot .pill').disabled = false;
+} else {
+  document.querySelector('#badgeE').textContent = '-';
+  const modal = document.getElementById('passiveE');
+  modal.querySelector('h4').textContent = 'パッシブ：-';
+  modal.querySelector('p').textContent  = 'この敵にパッシブはありません';
+
+  // ★ ボタンを「-」にして無効化
+  document.querySelector('#cardE .foot .pill').textContent = 'パッシブ：-';
+  document.querySelector('#cardE .foot .pill').disabled = true;
+}
+
 }
 
 function applyDerivedStats(){
@@ -884,7 +1025,12 @@ btnRoll.addEventListener('click', async ()=>{
 
 btnAct.addEventListener('click', async ()=>{
   if(phase!=='rolled' || busy) return; busy=true; phase='acting'; btnAct.disabled=true;
-  const dmgP=Math.max(0, P.skills[rolledP].dmg + P.atk + (P.finisher?2:0));
+  let dmgP = Math.max(0, P.skills[rolledP].dmg + P.atk + (P.finisher ? 2 : 0));
+
+// ★守護者のパッシブ（被ダメージ-1。ただし最低1は保証）
+if (E.key === 'ruinsGuardian') {
+  dmgP = Math.max(1, dmgP - 1);
+}
   E.hp = clamp(E.hp - dmgP, 0, E.max); hitFX(cardE, dmgP); setHp('E'); appendLog('味', rolledP, (P.finisher?'必殺：':'')+P.skills[rolledP].name, dmgP, `${E.hp}/${E.max}`);
   P.finisher=false; actLabel.textContent='技';
 
@@ -909,6 +1055,7 @@ btnAct.addEventListener('click', async ()=>{
     Game.player.hp = Game.player.max;
     Game.currentStage = null;
     Stage = null;
+    clearStageBG();
     saveGame();
 
     btnRoll.disabled=true; btnAct.disabled=true; busy=false;
@@ -927,14 +1074,18 @@ function handleWin(){
   const gainXP = ENEMY_BOOK[currentEnemyKey].xp;
   StageReward.xp += gainXP;
 
-  // 宝箱ドロップ（白80%/青20%）…毎戦50%で出現
+  // ★ 宝箱ドロップ判定（敵ごとの設定を参照）
+  const cfg = ENEMY_BOOK[currentEnemyKey].chest || { rate:0.5, white:0.8 };
   let chest = null;
-  if(Math.random() < 0.5){
-    chest = (Math.random() < 0.8) ? 'white' : 'blue';
+  if (Math.random() < cfg.rate) {
+    chest = (Math.random() < cfg.white) ? 'white' : 'blue';
   }
-  if(chest){ StageReward.chests.push(chest); showChestDrop(chest); }
+  if (chest) {
+    StageReward.chests.push(chest);
+    showChestDrop(chest); // 敵の位置に宝箱演出
+  }
 
-  // 勇者HPを戦闘後に反映
+  // 勇者HPを戦闘後に反映（持ち越し）
   Game.player.hp = clamp(P.hp, 1, Game.player.max);
 
   // 勝利ログ
@@ -957,17 +1108,29 @@ function handleWin(){
         nextBattle(); // HP持ち越し
         goto('battle');
       }else{
-        // クリア処理：XPを反映、結果画面へ（宝箱は結果画面で開封）
+        // クリア処理：XP反映、結果画面へ（宝箱は結果画面で開封）
         Stage.cleared = true;
         Game.player.hp = Game.player.max;
         Game.player.xp += StageReward.xp;
 
-        // レベルアップ（XPしきい値で単純化）
-        let leveled=false;
-        if(Game.player.lvl<2 && Game.player.xp>=3){ Game.player.lvl=2; Game.player.baseMax+=2; Game.player.atk+=1; leveled=true; }
-        if(Game.player.lvl<3 && Game.player.xp>=6){ Game.player.lvl=3; Game.player.baseMax+=3; Game.player.atk+=2; leveled=true; }
-        if(leveled){ applyDerivedStats(); Game.player.hp=Game.player.max; P.hp=P.max; setHp('P'); }
-
+// レベルアップ処理（LEVEL_TABLEを参照）
+let leveled = false;
+for (let targetLv = Game.player.lvl + 1; targetLv <= 10; targetLv++) {
+  const req = LEVEL_TABLE[targetLv];
+  if (!req) break; // 10以上は未設定なら抜ける
+  if (Game.player.xp >= req.xp) {
+    Game.player.lvl = targetLv;
+    Game.player.baseMax += req.hp;   // HP上昇
+    Game.player.atk     += req.atk;  // 攻撃力上昇
+    leveled = true;
+  }
+}
+if (leveled) {
+  applyDerivedStats();
+  Game.player.hp = Game.player.max;
+  P.hp = P.max;
+  setHp('P');
+}
         logpre.insertAdjacentHTML('beforeend', `\n—— ${stage.name} クリア！ 報酬を獲得！ HP全回復！`);
         saveGame();
 
@@ -981,14 +1144,25 @@ function handleWin(){
   }, 900);
 }
 
-// 宝箱演出
+// 宝箱出現演出（敵カードの中央に出す）
 function showChestDrop(chestType){
   if(!chestType) return;
+
+  const enemyCard = document.getElementById('cardE');
+  const rect = enemyCard.getBoundingClientRect();
+  const cx = rect.left + rect.width  / 2;
+  const cy = rect.top  + rect.height / 2;
+
   const chestImg = document.createElement('img');
-  chestImg.src = (chestType === 'white') ? 'white_chest_closed.png' : 'blue_chest_closed.png';
+  chestImg.src = (chestType === 'white')
+    ? 'white_chest_closed.png'
+    : 'blue_chest_closed.png';
   chestImg.className = 'chest-drop';
+  chestImg.style.left = `${cx}px`;
+  chestImg.style.top  = `${cy}px`;
+
   document.body.appendChild(chestImg);
-  setTimeout(()=> chestImg.classList.add('show'), 50);
+  requestAnimationFrame(()=> chestImg.classList.add('show'));
   setTimeout(()=> chestImg.remove(), 1000);
 }
 
@@ -1053,6 +1227,7 @@ function finishResult(){
     const tot = STAGE_BOOK[k].battles;
     setStageProgress(k, 0, tot);
   }
+  clearStageBG();
 
   // 仮保存リセット
   StageReward = { xp:0, chests:[], items:[], equips:[] };
@@ -1061,7 +1236,17 @@ function finishResult(){
   refreshSelect();
 }
 
-// ======================= Settings & Tables =======================
+// ============ 背景（ステージごと） ============
+function applyStageBG(bg){
+  const sec = document.getElementById('battle');
+  sec.style.background = `#000 url('${bg}') center/cover no-repeat`;
+}
+function clearStageBG(){
+  const sec = document.getElementById('battle');
+  sec.style.background = '';
+}
+
+
 btnSettings.addEventListener('click',()=>{
   speedSel.value='normal';
   pName.value=P.name; pMax.value=P.max; eName.value=E.name; eMax.value=E.max;
@@ -1111,23 +1296,7 @@ function collectTbl(prefix){
   buildSkillTbl(out, prefix); return out;
 }
 
-// ======================= Generic modal handlers =======================
-document.querySelectorAll('[data-open]').forEach(b=>{
-  b.addEventListener('click',()=>{
-    const el=document.querySelector(b.getAttribute('data-open'));
-    if(el){ el.hidden=false; el.classList.add('show'); }
-  });
-});
-document.querySelectorAll('[data-close]').forEach(b=>{
-  b.addEventListener('click',()=>{
-    const m=b.closest('.modal'); if(m){ m.classList.remove('show'); m.hidden=true; }
-  });
-});
-document.addEventListener('click', e=>{
-  if(e.target.classList.contains('modal')){ e.target.classList.remove('show'); e.target.hidden=true; }
-});
-
-// ======================= EQUIP FACE ASSIGN =======================
+// ======================= EQUIP FACE（簡易） =======================
 function restoreEquipFaces(){
   if(!Game.player.equipFaces) return;
   const faceMap = { 1:'.front', 2:'.bottom', 3:'.right', 4:'.left', 5:'.topp', 6:'.back' };
@@ -1162,8 +1331,8 @@ function chooseFace(face){
       delete Game.player.equipFaces[face];
       saveGame(); refreshSelect();
       const img = document.getElementById(`diceImg${face}`); if (img) img.src = `${face}.png`;
-      const faceMap = {1:'.front',2:'.bottom',3:'.right',4:'.left',5:'.topp',6:'.back'};
-      const el = document.querySelector(faceMap[face]); if (el) el.style.backgroundImage = `url("${face}.png")`;
+      const fm = {1:'.front',2:'.bottom',3:'.right',4:'.left',5:'.topp',6:'.back'};
+      const el = document.querySelector(fm[face]); if (el) el.style.backgroundImage = `url("${face}.png")`;
       alert(`出目${face} の装備を解除しました`);
       const m = document.getElementById('equipFaceModal'); m.classList.remove('show'); m.hidden = true;
     };
@@ -1172,7 +1341,7 @@ function chooseFace(face){
     area.insertAdjacentHTML('beforeend', `<div style="margin-bottom:8px;color:#bcd1ff">現在：装備なし</div>`);
   }
 
-  // 在庫チェック
+  // 在庫表示
   const equipUsed = {};
   for (const usedKey of Object.values(Game.player.equipFaces || {})) {
     equipUsed[usedKey] = (equipUsed[usedKey] || 0) + 1;
@@ -1218,14 +1387,44 @@ function init(){
   loadGame(); applyDerivedStats();
   document.querySelectorAll('.hp').forEach(hp=>{ if(!hp.querySelector('.ticks')){ const t=document.createElement('span'); t.className='ticks'; hp.appendChild(t); } });
   nameP.textContent=Game.player.name; setHp('P');
-  // 進捗UI初期化
   for(const k of Object.keys(STAGE_BOOK)){
     setStageProgress(k, 0, STAGE_BOOK[k].battles);
   }
   refreshSelect();
   restoreEquipFaces();
+  // Game.player.equipFaces が空でなければ復元
+  if (Game.player.equipFaces && Object.keys(Game.player.equipFaces).length > 0){
+    restoreEquipFaces();
+  }
 }
 init();
+// ====== モーダルを開く共通処理 ======
+document.querySelectorAll('[data-open]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const targetSel = btn.getAttribute('data-open');
+    if(targetSel){
+      const modal = document.querySelector(targetSel);
+      if(modal){
+        modal.hidden = false;
+        modal.classList.add('show');
+      }
+    }
+  });
+});
+
+buildSkillTbl(P.skills, 'p');
+
+// ====== モーダルを閉じる共通処理 ======
+document.querySelectorAll('[data-close]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const modal = btn.closest('.modal');
+    if(modal){
+      modal.classList.remove('show');
+      modal.hidden = true;
+    }
+  });
+});
+
 </script>
 </body>
 </html>
