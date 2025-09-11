@@ -475,43 +475,43 @@ const ENEMY_BOOK = {
   mutant: {
     key:'mutant', name:'変異スライム', img:'スライム1.png', max:12,
     skills:{1:{name:'ぽよん防御',dmg:1},2:{name:'ぽよん防御',dmg:1},3:{name:'のしかかり',dmg:2},4:{name:'のしかかり',dmg:2},5:{name:'硬化',dmg:2},6:{name:'硬化（強）',dmg:2}},
-    xp:1, chest:{ rate:0.40, white:0.70 } // 出現率低め、青寄り
+    xp:2, chest:{ rate:0.40, white:0.70 } // 出現率低め、青寄り
   },
   // 森：初級
   mushroom: {
     key:'mushroom', name:'キノコ', img:'キノコ.png', max:13,
     skills:{1:{name:'胞子',dmg:1},2:{name:'胞子',dmg:1},3:{name:'柄打ち',dmg:2},4:{name:'柄打ち',dmg:2},5:{name:'毒胞子',dmg:2},6:{name:'毒胞子（強）',dmg:3}},
-    xp:1, chest:{ rate:0.45, white:0.80 }
+    xp:2, chest:{ rate:0.45, white:0.80 }
   },
   // 湖畔：水辺差分
   waterSlime: {
     key:'waterSlime', name:'水スライム', img:'水スライム.png', max:12,
     skills:{1:{name:'水しぶき',dmg:1},2:{name:'水しぶき',dmg:1},3:{name:'水弾',dmg:2},4:{name:'水弾',dmg:2},5:{name:'水流タックル',dmg:2},6:{name:'渦打ち',dmg:3}},
-    xp:1, chest:{ rate:0.50, white:0.75 }
+    xp:2, chest:{ rate:0.50, white:0.75 }
   },
   // 湖畔：初級アタッカー
   frog: {
     key:'frog', name:'カエル', img:'カエル.png', max:14,
     skills:{1:{name:'舌ペチ',dmg:2},2:{name:'舌ペチ',dmg:2},3:{name:'跳び蹴り',dmg:2},4:{name:'跳び蹴り',dmg:3},5:{name:'毒舌',dmg:3},6:{name:'体当たり',dmg:4}},
-    xp:2, chest:{ rate:0.60, white:0.70 }
+    xp:3, chest:{ rate:0.60, white:0.70 }
   },
   // 洞窟：コウモリ（回避寄り）
   bat: {
     key:'bat', name:'コウモリ', img:'コウモリ.png', max:16,
     skills:{1:{name:'噛みつき',dmg:2},2:{name:'噛みつき',dmg:2},3:{name:'急降下',dmg:2},4:{name:'急降下',dmg:3},5:{name:'超音波',dmg:3},6:{name:'狂乱連撃',dmg:4}},
-    xp:2, chest:{ rate:0.55, white:0.65 }
+    xp:3, chest:{ rate:0.55, white:0.65 }
   },
   // 洞窟：巨鼠（毒気味）
   giantRat: {
     key:'giantRat', name:'巨鼠', img:'巨鼠.png', max:18,
     skills:{1:{name:'かじりつき',dmg:2},2:{name:'かじりつき',dmg:2},3:{name:'突進',dmg:2},4:{name:'毒噛み',dmg:3},5:{name:'毒噛み',dmg:3},6:{name:'牙の連打',dmg:4}},
-    xp:2, chest:{ rate:0.58, white:0.60 }
+    xp:3, chest:{ rate:0.58, white:0.60 }
   },
   // 洞窟：小ゴーレム（硬い・重い）
   smallGolem: {
     key:'smallGolem', name:'小ゴーレム', img:'小ゴーレム.png', max:20,
     skills:{1:{name:'岩拳',dmg:2},2:{name:'岩拳',dmg:2},3:{name:'瓦礫投げ',dmg:3},4:{name:'瓦礫投げ',dmg:3},5:{name:'地響き',dmg:4},6:{name:'地割れ',dmg:5}},
-    xp:3, chest:{ rate:0.65, white:0.55 } // ややレア寄り
+    xp:5, chest:{ rate:0.65, white:0.55 } // ややレア寄り
   },
   // 廃墟：中ボス
   ruinsGuardian: {
@@ -1025,12 +1025,22 @@ btnRoll.addEventListener('click', async ()=>{
 
 btnAct.addEventListener('click', async ()=>{
   if(phase!=='rolled' || busy) return; busy=true; phase='acting'; btnAct.disabled=true;
-  let dmgP = Math.max(0, P.skills[rolledP].dmg + P.atk + (P.finisher ? 2 : 0));
+  let bonus = 0;
+  if (Game.player.equipFaces && Game.player.equipFaces[rolledP]) {
+  const key = Game.player.equipFaces[rolledP];
+  const equip = EQUIP_BOOK[key];
+  if (equip?.atk) bonus += equip.atk;
+  }
 
-// ★守護者のパッシブ（被ダメージ-1。ただし最低1は保証）
-if (E.key === 'ruinsGuardian') {
+  let dmgP = Math.max(
+  0,
+  P.skills[rolledP].dmg + P.atk + bonus + (P.finisher ? 2 : 0)
+  );
+
+  // ★守護者のパッシブ（被ダメージ-1。ただし最低1は保証）
+  if (E.key === 'ruinsGuardian') {
   dmgP = Math.max(1, dmgP - 1);
-}
+  }
   E.hp = clamp(E.hp - dmgP, 0, E.max); hitFX(cardE, dmgP); setHp('E'); appendLog('味', rolledP, (P.finisher?'必殺：':'')+P.skills[rolledP].name, dmgP, `${E.hp}/${E.max}`);
   P.finisher=false; actLabel.textContent='技';
 
