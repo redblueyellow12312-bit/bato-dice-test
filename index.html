@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>BatoDice – シングルページ版（Home/Select/Battle）</title>
+<title>BatoDice – シングルページ版（Home/Select/Battle/Result）</title>
 <style>
 :root{
   --bg:#0e1224; --bg2:#0a1022;
@@ -28,14 +28,7 @@ section#home {
   min-height:100vh;
   background:#000 url('home.png') center/cover no-repeat;
 }
-.homeWrap {
-  display:grid;
-  place-items:center;
-  text-align:center;
-  color:#fff;
-  text-shadow:0 2px 12px #000;
-}
-.homeWrap{text-align:center;color:#fff;text-shadow:0 2px 12px #000}
+.homeWrap { display:grid; place-items:center; text-align:center; color:#fff; text-shadow:0 2px 12px #000; }
 .homeWrap h1{font-size:56px;margin:0 0 18px}
 .homeWrap p{opacity:.92;margin:0 0 18px}
 .homeBtns{display:flex;gap:12px;justify-content:center}
@@ -56,7 +49,7 @@ section#select{min-height:100vh;padding:18px}
 .equipList{display:flex;gap:8px;flex-wrap:wrap}
 .badgeEquip{border:1px solid #3e4dbb;background:#18205a;padding:6px 10px;border-radius:10px}
 
-/* ====== Battle (original UI) ====== */
+/* ====== Battle ====== */
 section#battle{min-height:100vh}
 .wrap{max-width:1200px;margin:14px auto;padding:0 14px;display:grid;gap:12px;grid-template-columns: 1fr 280px}
 .top{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between}
@@ -74,7 +67,6 @@ section#battle{min-height:100vh}
 .hp .ticks{position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;background:repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 1px, transparent 1px 20%),repeating-linear-gradient(90deg, rgba(255,255,255,.28) 0 2px, transparent 2px 100%)}
 .badge{padding:2px 8px;border:1px solid var(--line);border-radius:999px;background:#0f1536;font-size:12px;color:#c9d6ff}
 .foot{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:8px;z-index:2}
-.passive{flex:1;min-height:36px;display:flex;align-items:center;padding:8px 10px;border-radius:10px;border:1px dashed var(--line);background:linear-gradient(180deg,rgba(14,20,48,.84),rgba(14,20,48,.68));font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pill{background:#20306b;border:1px solid var(--line);color:#dbe6ff;padding:8px 10px;border-radius:10px;font-size:13px}
 .ribbon{position:absolute;left:0;right:0;top:58px;display:flex;justify-content:center;pointer-events:none;z-index:4}
 .ribbon .lab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:linear-gradient(180deg,#2440c2,#1b2d7f); box-shadow:0 10px 24px rgba(0,0,0,.28); font-weight:900}
@@ -144,21 +136,33 @@ section#battle{min-height:100vh}
 .item{display:flex;justify-content:space-between;gap:8px;padding:6px;border:1px solid #39458b;background:#17204a;border-radius:8px}
 @media (max-height:740px){:root{ --lowerH: 200px } .img{ height: clamp(240px, 32vh, 360px) } .foot{ bottom:6px } .pill{ padding:6px 8px; font-size:12px }}
 @media (max-height:620px){:root{ --lowerH: 180px } .img{ height: clamp(200px, 28vh, 320px) } .top .title{ font-size:16px }}
-.passive { cursor: pointer }
 
-/* small helpers */
+/* helpers */
 hr.sep{border:none;border-top:1px solid #2a3474;margin:10px 0}
 .note{font-size:12px;color:#b8c6ff}
-section {
-  display: none;   /* デフォルト非表示 */
-}
-section.active {
-  display: block;  /* activeが付いてる画面だけ表示 */
-}
+section { display: none; }
+section.active { display: block; }
 
+/* ===== 宝箱演出 ===== */
+.chest-drop {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px; height: 120px;
+  opacity: 0; transition: opacity 0.8s ease-out;
+  z-index: 150;
+}
+.chest-drop.show { opacity: 1; }
+.result-chest {
+  width: 100px; height: 100px; margin: 0 6px;
+  cursor: pointer; transition: transform 0.2s;
+}
+.result-chest:hover { transform: scale(1.1); }
 </style>
 </head>
 <body>
+
 <!-- ===================== HOME ===================== -->
 <section id="home" class="active">
   <div class="homeWrap">
@@ -177,44 +181,47 @@ section.active {
     <div class="selLeft">
       <h3 class="selTitle">ステージ選択</h3>
       <div class="stageGrid">
-        <!-- Slime -->
+        <!-- Stage1: 草原 -->
         <div class="stage">
-          <div class="prog">スライム討伐 <span id="progSlime">0/3</span></div>
-          <img src="スライム.png" alt="スライム">
-          <button id="btnStageSlime" class="btn" onclick="gotoStage('slime')">スライム狩り</button>
+          <div class="prog">草原 進行 <span id="prog_st1">0/3</span></div>
+          <img src="stage1.png" alt="草原">
+          <button class="btn" onclick="gotoStage('st1')">草原へ</button>
         </div>
-        <!-- Goblin -->
+        <!-- Stage2: 洞窟 -->
         <div class="stage">
-          <div class="prog">ゴブリン討伐 <span id="progGoblin">0/3</span></div>
-          <img src="ゴブリン.png" alt="ゴブリン">
-          <button id="btnStageGoblin" class="btn" onclick="gotoStage('goblin')">ゴブリン挑戦</button>
-          <span id="lockGoblin" class="lock">Lv2 または スライム×3</span>
+          <div class="prog">洞窟 進行 <span id="prog_st2">0/4</span></div>
+          <img src="stage2.png" alt="洞窟">
+          <button class="btn" onclick="gotoStage('st2')">洞窟へ</button>
         </div>
-        <!-- Dragon -->
+        <!-- Stage3: 竜の山 -->
         <div class="stage">
-          <div class="prog">ドラゴン討伐 <span id="progDragon">0/1</span></div>
-          <img src="ドラゴン.png" alt="ドラゴン">
-          <button id="btnStageDragon" class="btn" onclick="gotoStage('dragon')">ドラゴン挑戦</button>
-          <span id="lockDragon" class="lock">Lv3 または ゴブリン×3</span>
+          <div class="prog">竜の山 進行 <span id="prog_st3">0/1</span></div>
+          <img src="stage3.png" alt="竜の山">
+          <button class="btn" onclick="gotoStage('st3')">竜の山へ</button>
         </div>
       </div>
+
       <hr class="sep">
+
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" onclick="openEquip()">装備を変更</button>
         <button class="btn" onclick="openItems()">アイテムを確認</button>
         <button class="btn ghost" onclick="goto('home')">ホームへ戻る</button>
       </div>
     </div>
+
     <div class="selRight">
       <h3 class="selTitle">勇者情報</h3>
       <div class="row"><div>名前</div><div><span id="plName">勇者A</span></div></div>
       <div class="row"><div>レベル</div><div>Lv.<span id="plLv">1</span> <span class="statBadge">経験値 <span id="plXp">0</span></span></div></div>
-      <div class="row"><div>HP</div><div><span id="plHp">10</span> / <span id="plMax">10</span></div></div>
+      <div class="row"><div>HP</div><div><span id="plHp">20</span> / <span id="plMax">20</span></div></div>
       <div class="row"><div>攻撃力</div><div><span id="plAtk">0</span></div></div>
       <div class="row"><div>装備</div><div class="equipList" id="equipBadges"></div></div>
       <div class="row"><div>所持アイテム</div><div id="plItems">-</div></div>
-      <p class="note">※ スライム3体でLv2解放、ゴブリン3体でLv3解放（または同等レベル到達）。
-        装備やアイテムはバトル勝利時にドロップすることがあります。</p>
+
+      <div style="text-align:center; margin-top:12px;">
+        <img src="勇者.jpg" alt="勇者" style="max-width:160px; border-radius:12px; box-shadow:0 0 10px #0008;">
+      </div>
     </div>
   </div>
 </section>
@@ -230,7 +237,6 @@ section.active {
       </div>
     </div>
 
-    <!-- 左：メイン -->
     <div class="main">
       <!-- 上段：勇者 vs 敵 -->
       <section class="arena">
@@ -284,7 +290,6 @@ section.active {
       </section>
     </div>
 
-    <!-- 右：縦ドック -->
     <aside class="sidebar" aria-label="コマンド">
       <button class="bigbtn" id="btnRoll">
         <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -359,7 +364,7 @@ section.active {
         <fieldset class="fieldset">
           <legend>味方設定</legend>
           <div class="ctlrow"><label>名前</label><input id="pName" class="txt" value="勇者A"></div>
-          <div class="ctlrow"><label>最大HP</label><input id="pMax" type="number" class="num" min="1" value="10"></div>
+          <div class="ctlrow"><label>最大HP</label><input id="pMax" type="number" class="num" min="1" value="20"></div>
           <div class="ctlrow"><label>技（1〜6）</label><div class="skilltbl" id="pSkillsTbl"></div></div>
         </fieldset>
         <fieldset class="fieldset">
@@ -377,22 +382,75 @@ section.active {
     </div>
   </div>
 
-  <!-- 技/必殺/敵技 モーダル（簡易版） -->
+  <!-- 簡易モーダル -->
   <div class="modal" id="passiveP" ><div class="card"><h4>パッシブ：先制</h4><p>最初の出目に+1判定（演出のみ）</p><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
   <div class="modal" id="skillP" ><div class="card"><h4>技一覧（出目1〜6）</h4><div class="list" id="skillPList"></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
   <div class="modal" id="comboP" ><div class="card"><h4>必殺（コンボ一覧）</h4><div class="list"><div class="item"><span>ゾロ目：「王者の三連撃」</span><span>固定ダメージ3</span></div><div class="item"><span>4-5-6：「昇天連斬」</span><span>固定ダメージ4</span></div></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
   <div class="modal" id="passiveE"><div class="card"><h4>パッシブ：-</h4><p>デモでは無効</p><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
   <div class="modal" id="skillE" ><div class="card"><h4>敵の技（参考）</h4><div class="list" id="skillEList"></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
+</section>
 
-  <!-- アイテムモーダル（共通UI） -->
-  <div class="modal" id="itemModal">
-    <div class="card">
-      <h4>アイテム</h4>
-      <div class="list" id="itemList"></div>
-      <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
+<!-- ===================== RESULT ===================== -->
+<section id="result">
+  <div class="selWrap" style="grid-template-columns:1fr;">
+    <h2 id="resultStageName" style="margin:8px 0 4px">ステージクリア！</h2>
+    <p id="resultXp" style="margin:0 0 8px">経験値 +0</p>
+
+    <div id="chestArea" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:8px 0;"></div>
+
+    <h3 style="margin:8px 0 6px">獲得アイテム</h3>
+    <ul id="rewardList" style="margin:0 0 12px"></ul>
+
+    <div style="margin-top:12px; display:flex; gap:8px">
+      <button class="btn" onclick="openAllChests()">すべて開封</button>
+      <button class="btn" onclick="finishResult()">OK</button>
     </div>
   </div>
 </section>
+
+<!-- ===================== アイテムモーダル ===================== -->
+<div class="modal" id="itemModal">
+  <div class="card">
+    <h4>アイテム</h4>
+    <div class="list" id="itemList"></div>
+    <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<!-- ===================== 出目に装備割当モーダル ===================== -->
+<div class="modal" id="equipFaceModal">
+  <div class="card">
+    <h4>出目に装備を割り当て</h4>
+    <p id="equipFaceTitle">出目を選択してください</p>
+
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0;">
+      <button class="pill2" onclick="chooseFace(1)">出目1</button>
+      <button class="pill2" onclick="chooseFace(2)">出目2</button>
+      <button class="pill2" onclick="chooseFace(3)">出目3</button>
+      <button class="pill2" onclick="chooseFace(4)">出目4</button>
+      <button class="pill2" onclick="chooseFace(5)">出目5</button>
+      <button class="pill2" onclick="chooseFace(6)">出目6</button>
+    </div>
+
+    <div id="dicePreview" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+      <div><div>出目1</div><img id="diceImg1" src="1.png" style="width:60px"></div>
+      <div><div>出目2</div><img id="diceImg2" src="2.png" style="width:60px"></div>
+      <div><div>出目3</div><img id="diceImg3" src="3.png" style="width:60px"></div>
+      <div><div>出目4</div><img id="diceImg4" src="4.png" style="width:60px"></div>
+      <div><div>出目5</div><img id="diceImg5" src="5.png" style="width:60px"></div>
+      <div><div>出目6</div><img id="diceImg6" src="6.png" style="width:60px"></div>
+    </div>
+
+    <div id="equipOptions" style="margin-top:12px; display:none;">
+      <h4>装備を選択</h4>
+      <div id="equipButtons" style="display:flex; gap:8px; flex-wrap:wrap;"></div>
+    </div>
+
+    <div style="text-align:right;margin-top:12px;">
+      <button class="pill2 ghost" data-close>閉じる</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ======================= APP STATE =======================
@@ -400,6 +458,11 @@ const ENEMY_BOOK = {
   slime: {
     key:'slime', name:'スライム', img:'スライム.png', max:10,
     skills:{1:{name:'ぺちぺち',dmg:1},2:{name:'ぺちぺち',dmg:1},3:{name:'ぺちぺち',dmg:1},4:{name:'のしかかり',dmg:2},5:{name:'のしかかり',dmg:2},6:{name:'どろ弾（強）',dmg:2}},
+    xp:1
+  },
+  mutant: {
+    key:'mutant', name:'変異スライム', img:'スライム1.png', max:11,
+    skills:{1:{name:'ぺちぺち',dmg:1},2:{name:'ぺちぺち',dmg:1},3:{name:'のしかかり',dmg:2},4:{name:'のしかかり',dmg:2},5:{name:'のしかかり',dmg:2},6:{name:'のしかかり',dmg:2}},
     xp:1
   },
   goblin: {
@@ -412,405 +475,757 @@ const ENEMY_BOOK = {
     skills:{1:{name:'かみつき',dmg:3},2:{name:'かみつき',dmg:3},3:{name:'しっぽ',dmg:4},4:{name:'炎ブレス',dmg:6},5:{name:'炎ブレス',dmg:6},6:{name:'メガフレア',dmg:8}},
     xp:5
   }
-}
+};
+
+// ステージ図鑑
+const STAGE_BOOK = {
+  st1: { // 草原：スライム主体 3戦
+    key:'st1', name:'草原', bg:'stage1.png',
+    battles:3,
+    pool:[ {key:'slime', w:70}, {key:'mutant', w:30} ],
+    xp:2
+  },
+  st2: { // 洞窟：ゴブリン中心 4戦
+    key:'st2', name:'洞窟', bg:'stage2.png',
+    battles:4,
+    pool:[ {key:'goblin', w:70}, {key:'mutant', w:30} ],
+    xp:3
+  },
+  st3: { // 竜の山：ボス1戦
+    key:'st3', name:'竜の山', bg:'stage3.png',
+    battles:1,
+    pool:[ {key:'dragon', w:100} ],
+    xp:5
+  }
+};
+
 const EQUIP_BOOK = {
-  ironSword: {slot:'weapon', name:'鉄の剣', atk:1},
-  leatherArmor: {slot:'armor', name:'革の鎧', hp:5}
-}
-const DEFAULT_SKILLS = {1:{name:'小攻撃',dmg:1},2:{name:'小攻撃',dmg:1},3:{name:'小攻撃',dmg:1},4:{name:'強攻撃',dmg:2},5:{name:'強攻撃',dmg:2},6:{name:'強攻撃',dmg:2}}
+  ironSword:   {slot:'weapon', name:'鉄の剣',   atk:1},
+  leatherArmor:{slot:'armor',  name:'革の鎧',   hp:5}
+};
+const DEFAULT_SKILLS = {
+  1:{name:'弱攻撃',dmg:1},
+  2:{name:'弱攻撃',dmg:1},
+  3:{name:'中攻撃',dmg:2},
+  4:{name:'中攻撃',dmg:2},
+  5:{name:'強攻撃',dmg:3},
+  6:{name:'強攻撃',dmg:3}
+};
 
 let Game = {
-  player:{ name:'勇者A', lvl:1, xp:0, atk:0, baseMax:10, max:10, hp:10, skills:JSON.parse(JSON.stringify(DEFAULT_SKILLS)),
-    items:{ potion:3, diceBoost:1 }, equip:{ weapon:null, armor:null }, box:[] },
-  progress:{ kills:{slime:0,goblin:0,dragon:0}, unlock:{ goblin:false, dragon:false } }
-}
+  player:{
+    name:'勇者A', lvl:1, xp:0, atk:0,
+    baseMax:20, max:20, hp:20,
+    skills:JSON.parse(JSON.stringify(DEFAULT_SKILLS)),
+    items:{ potion:3},
+    equip:{ weapon:null, armor:null },
+    equipFaces:{},
+    box:{ ironSword:1 } // 所持装備
+  },
+  progress:{ kills:{slime:0,goblin:0,dragon:0}, unlock:{} }
+};
 
 // ======================= ROUTER =======================
 function goto(id){
   document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
   document.getElementById(id).classList.add("active");
 }
-function gotoStage(enemyKey){ startBattle(enemyKey); goto('battle') }
-function leaveBattle(){ goto('select') }
+function gotoStage(stageKey){
+  if(STAGE_BOOK[stageKey]){
+    startStage(stageKey);
+  }else{
+    startBattle(stageKey);
+    goto('battle');
+  }
+}
+
+// ======================= STAGE RUNNER =======================
+let StageCP = null; // ステージ突入前スナップショット
+let Stage = null;   // ランタイムのステージ状態
+let StageReward = { xp:0, chests:[], items:[], equips:[] }; // 仮保存（結果画面で消化）
+
+function startStage(stageKey){
+  const stage = STAGE_BOOK[stageKey];
+  if(!stage) return;
+
+  // スナップショット
+  StageCP = JSON.parse(JSON.stringify(Game));
+
+  Game.currentStage = stageKey;
+  Game.currentBattle = 0;
+
+  Stage = { id: stageKey, remain: stage.battles, cleared: false };
+
+  // 進捗UIを0/合計にリセット
+  setStageProgress(stageKey, 0, stage.battles);
+
+  // 直前の勝利演出を消す
+  winOverlay.classList.remove('show');
+  winOverlay.hidden = true;
+
+  nextBattle();
+}
+
+function nextBattle(){
+  const stage = STAGE_BOOK[Game.currentStage];
+  if(!stage) return;
+
+  // 敵をランダム選択→戦闘開始
+  const enemyKey = pickEnemy(stage.pool);
+  startBattle(enemyKey);
+  goto('battle');
+}
+
+function setStageProgress(stageKey, cleared, total){
+  const el = document.getElementById(`prog_${stageKey}`);
+  if(el) el.textContent = `${cleared}/${total}`;
+}
+
+function pickEnemy(pool){
+  let total = pool.reduce((a,b)=>a+b.w,0);
+  let r = Math.random() * total;
+  for(const e of pool){
+    if(r < e.w) return e.key;
+    r -= e.w;
+  }
+  return pool[0].key;
+}
+
+function leaveBattle(){
+  // ステージ中ならスナップショットへ完全復元して離脱
+  if (Game.currentStage && StageCP){
+    Game = JSON.parse(JSON.stringify(StageCP)); // XP/アイテム/撃破数なども戻す
+    Game.player.hp = Game.player.max;
+
+    // ステージ状態のクリア
+    Game.currentStage = null;
+    Stage = null;
+    StageCP = null;
+    StageReward = { xp:0, chests:[], items:[], equips:[] };
+
+    // 表示同期
+    applyDerivedStats();
+    P.max = Game.player.max; 
+    P.hp  = Game.player.max; 
+    setHp('P');
+
+    // 全ステージの進捗UIを初期化
+    for(const k of Object.keys(STAGE_BOOK)){
+      const tot = STAGE_BOOK[k].battles;
+      setStageProgress(k, 0, tot);
+    }
+
+    saveGame();
+    goto('select');
+    refreshSelect();
+    return;
+  }
+  // ステージ外
+  goto('select');
+  refreshSelect();
+}
 
 // ======================= SAVE / LOAD =======================
-const SAVE_KEY='batoDiceSaveV1'
+const SAVE_KEY='batoDiceSaveV1';
 function saveGame(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(Game)) }catch(e){} }
 function loadGame(){
   try{
-    const raw=localStorage.getItem(SAVE_KEY)
+    const raw=localStorage.getItem(SAVE_KEY);
     if(raw){
-      const g=JSON.parse(raw)
-      // shallow validate
+      const g=JSON.parse(raw);
       if(g?.player && g?.progress){ Game=g }
     }
   }catch(e){}
 }
 function resetSave(andStay){
   Game = { 
-    player:{ name:'勇者A', lvl:1, xp:0, atk:0, baseMax:10, max:10, hp:10,
+    player:{
+      name:'勇者A', lvl:1, xp:0, atk:0,
+      baseMax:20, max:20, hp:20,
       skills:JSON.parse(JSON.stringify(DEFAULT_SKILLS)),
-      items:{potion:3,diceBoost:1}, equip:{weapon:null,armor:null}, box:[] },
-    progress:{ kills:{slime:0,goblin:0,dragon:0}, unlock:{goblin:false,dragon:false} }
-  }
-  localStorage.removeItem(SAVE_KEY); // ← ここを追加
-  saveGame();                        // ← 新しい初期データを保存
-  refreshSelect();                   // ← これを追加してUIを更新
-  // ✅ ボタンラベルを一時的に変える
+      items:{potion:3}, equip:{weapon:null,armor:null},
+      equipFaces:{}, box:{ironSword:1}
+    },
+    progress:{ kills:{slime:0,goblin:0,dragon:0}, unlock:{} }
+  };
+  localStorage.removeItem(SAVE_KEY);
+  saveGame();
+  refreshSelect();
+
   const btn = document.querySelector('.homeBtns .btn.ghost');
   if(btn){
-    btn.textContent = "初期化完了！";
-    btn.disabled = true;
-    setTimeout(()=>{
-      btn.textContent = "セーブ初期化";
-      btn.disabled = false;
-    }, 2000); // 2秒後に戻す
+    btn.textContent = "初期化完了！"; btn.disabled = true;
+    setTimeout(()=>{ btn.textContent="セーブ初期化"; btn.disabled=false }, 2000);
   }
-
-
   if(andStay){ goto('home') }
 }
 window.resetSave = resetSave;
 
 // ======================= SELECT UI =======================
 function refreshSelect(){
-  // Level gating by kills OR level
-  const u=Game.progress.unlock
-  u.goblin = u.goblin || Game.progress.kills.slime>=3 || Game.player.lvl>=2
-  u.dragon = u.dragon || Game.progress.kills.goblin>=3 || Game.player.lvl>=3
-
-  // Update buttons
-  const bG=document.getElementById('btnStageGoblin'), bD=document.getElementById('btnStageDragon')
-  bG.disabled = !u.goblin; bD.disabled = !u.dragon
-  document.getElementById('lockGoblin').style.display = u.goblin? 'none':'inline-block'
-  document.getElementById('lockDragon').style.display = u.dragon? 'none':'inline-block'
-
-  // Progress text
-  document.getElementById('progSlime').textContent = `${Game.progress.kills.slime}/3`
-  document.getElementById('progGoblin').textContent = `${Game.progress.kills.goblin}/3`
-  document.getElementById('progDragon').textContent = `${Game.progress.kills.dragon}/1`
-
-  // Player panel
-  document.getElementById('plName').textContent = Game.player.name
-  document.getElementById('plLv').textContent = Game.player.lvl
-  document.getElementById('plXp').textContent = Game.player.xp
-  document.getElementById('plHp').textContent = Game.player.hp
-  document.getElementById('plMax').textContent = Game.player.max
-  document.getElementById('plAtk').textContent = Game.player.atk
+  // プレイヤー情報
+  document.getElementById('plName').textContent = Game.player.name;
+  document.getElementById('plLv').textContent   = Game.player.lvl;
+  document.getElementById('plXp').textContent   = Game.player.xp;
+  document.getElementById('plHp').textContent   = Game.player.hp;
+  document.getElementById('plMax').textContent  = Game.player.max;
+  document.getElementById('plAtk').textContent  = Game.player.atk;
   document.getElementById('plItems').textContent = Object.entries(Game.player.items).map(([k,v])=>{
-    const nm = k==='potion'? '回復薬': (k==='diceBoost'? '出目+1':'?');
-    return `${nm}×${v}`
-  }).join(' / ') || '-'
+    const nm = k==='potion' ? '回復薬' : k;
+    return `${nm}×${v}`;
+  }).join(' / ') || '-';
 
-  const badges=document.getElementById('equipBadges'); badges.innerHTML=''
-  const w = Game.player.equip.weapon ? EQUIP_BOOK[Game.player.equip.weapon].name : 'なし'
-  const a = Game.player.equip.armor ? EQUIP_BOOK[Game.player.equip.armor].name : 'なし'
-  badges.insertAdjacentHTML('beforeend', `<span class="badgeEquip">武器：${w}</span>`)
-  badges.insertAdjacentHTML('beforeend', `<span class="badgeEquip">防具：${a}</span>`)
-  saveGame()
+  // 装備バッジ
+  const badges=document.getElementById('equipBadges'); badges.innerHTML='';
+  const w = Game.player.equip.weapon ? EQUIP_BOOK[Game.player.equip.weapon].name : 'なし';
+  const a = Game.player.equip.armor ? EQUIP_BOOK[Game.player.equip.armor].name   : 'なし';
+  badges.insertAdjacentHTML('beforeend', `<span class="badgeEquip">武器：${w}</span>`);
+  badges.insertAdjacentHTML('beforeend', `<span class="badgeEquip">防具：${a}</span>`);
+
+  saveGame();
 }
 
-function openItems(){ renderItems(); const m=document.getElementById('itemModal'); m.hidden=false; m.classList.add('show') }
+function openItems(){
+  renderItems();
+  const m=document.getElementById('itemModal');
+  m.hidden=false; m.classList.add('show');
+}
+
+let unequipWeaponHandler=null, unequipArmorHandler=null;
 function openEquip(){
-  // simple equip chooser using item modal UI
-  const list=document.getElementById('itemList'); list.innerHTML=''
-  const title=document.createElement('div'); title.className='item'; title.innerHTML='<b>装備変更</b><span></span>'; list.appendChild(title)
-  ;['ironSword','leatherArmor'].forEach(key=>{
-    const e=EQUIP_BOOK[key]
-    const owned = Game.player.box.includes(key)
-    const equipped = Game.player.equip[e.slot]===key
-    const row=document.createElement('div'); row.className='item'
-    const eff = e.atk? `攻撃+${e.atk}` : `HP+${e.hp}`
-    row.innerHTML = `<span>${e.name}（${eff}）${owned? '':' <span style="opacity:.7">未入手</span>'}</span><span>${equipped? '装備中':''}</span>`
-    if(owned && !equipped){
-      const b=document.createElement('button'); b.className='pill2'; b.textContent='装備'
-      b.onclick=()=>{ equipItem(key); renderItems(); openEquip() }
-      row.appendChild(b)
-    }
-    list.appendChild(row)
-  })
-  const m=document.getElementById('itemModal'); m.hidden=false; m.classList.add('show')
+  // 出目割り当てモーダル
+  const m=document.getElementById('equipFaceModal');
+  m.hidden=false; m.classList.add('show');
+
+  document.getElementById('equipFaceTitle').textContent = "出目を選択してください";
+  document.getElementById('equipOptions').style.display = 'none';
+
+  if(!unequipWeaponHandler){
+    unequipWeaponHandler = ()=>{
+      Game.player.equip.weapon = null; refreshSelect(); saveGame();
+    };
+    unequipArmorHandler = ()=>{
+      Game.player.equip.armor  = null; refreshSelect(); saveGame();
+    };
+  }
 }
+
 function equipItem(key){
   const e=EQUIP_BOOK[key];
-  // unequip same slot
-  Game.player.equip[e.slot]=key
-  applyDerivedStats()
-  refreshSelect(); saveGame()
+  Game.player.equip[e.slot]=key;
+  applyDerivedStats();
+  refreshSelect(); saveGame();
 }
 
 // ======================= BATTLE STATE =======================
-let currentEnemyKey=null
-const P = { name:'勇者A', baseMax:10, max:10, hp:10, atk:0, hist:[], finisher:false, skills:JSON.parse(JSON.stringify(DEFAULT_SKILLS)) }
-const E = { key:'slime', name:'スライム', max:10, hp:10, img:'スライム.png', skills: ENEMY_BOOK.slime.skills, hist:[] }
+let currentEnemyKey=null;
+const P = { name:'勇者A', baseMax:20, max:20, hp:20, atk:0, hist:[], finisher:false, skills:JSON.parse(JSON.stringify(DEFAULT_SKILLS)) };
+const E = { key:'slime', name:'スライム', max:10, hp:10, img:'スライム.png', skills: ENEMY_BOOK.slime.skills, hist:[] };
 
-let rolledP=null, rolledE=null, phase='ready', busy=false
-const SPEEDS={ fast:{dice:450, pause:320, enemyPause:420}, normal:{dice:700, pause:420, enemyPause:520}, slow:{dice:950, pause:520, enemyPause:620} }
-let timing={...SPEEDS.normal}
+let rolledP=null, rolledE=null, phase='ready', busy=false;
+const SPEEDS={ fast:{dice:450, pause:320, enemyPause:420}, normal:{dice:700, pause:420, enemyPause:520}, slow:{dice:950, pause:520, enemyPause:620} };
+let timing={...SPEEDS.normal};
 
-const $ = s=>document.querySelector(s)
-const hpP=$('#hpP'), hpE=$('#hpE')
-const cardP=$('#cardP'), cardE=$('#cardE')
-const ribP=$('#ribbonP'), ribPText=$('#ribbonPText')
-const ribE=$('#ribbonE'), ribEText=$('#ribbonEText')
-const logpre=$('#logpre')
-const allyChips=$('#allyChips'), enemyChips=$('#enemyChips')
-const btnRoll=$('#btnRoll'), btnAct=$('#btnAct'), actLabel=$('#actLabel')
-const winOverlay=$('#winOverlay')
-const nameP=$('#nameP'), nameE=$('#nameE')
+const $ = s=>document.querySelector(s);
+const hpP=$('#hpP'), hpE=$('#hpE');
+const cardP=$('#cardP'), cardE=$('#cardE');
+const ribP=$('#ribbonP'), ribPText=$('#ribbonPText');
+const ribE=$('#ribbonE'), ribEText=$('#ribbonEText');
+const logpre=$('#logpre');
+const allyChips=$('#allyChips'), enemyChips=$('#enemyChips');
+const btnRoll=$('#btnRoll'), btnAct=$('#btnAct'), actLabel=$('#actLabel');
+const winOverlay=$('#winOverlay');
+const nameP=$('#nameP'), nameE=$('#nameE');
 
-const btnSettings=$('#btnSettings')
-const settingsModal=$('#settingsModal')
-const closeSettings=$('#closeSettings')
-const applySettings=$('#applySettings')
-const speedSel=$('#speedSel')
-const pName=$('#pName'), pMax=$('#pMax'), pTbl=$('#pSkillsTbl')
-const eName=$('#eName'), eMax=$('#eMax'), eTbl=$('#eSkillsTbl')
-const bgm=$('#bgm'), winbgm=$('#winbgm')
-const bgmFile=$('#bgmFile'), bgmPlay=$('#bgmPlay'), bgmStop=$('#bgmStop'), bgmVol=$('#bgmVol')
-const winFile=$('#winFile'), winTest=$('#winTest'), winStop=$('#winStop'), winVol=$('#winVol')
+const btnSettings=$('#btnSettings');
+const settingsModal=$('#settingsModal');
+const closeSettings=$('#closeSettings');
+const applySettings=$('#applySettings');
+const speedSel=$('#speedSel');
+const pName=$('#pName'), pMax=$('#pMax'), pTbl=$('#pSkillsTbl');
+const eName=$('#eName'), eMax=$('#eMax'), eTbl=$('#eSkillsTbl');
 
-// audio tags for battle (created in settings modal section of HTML)
-const audioBgm = document.createElement('audio'); audioBgm.id='bgm'; audioBgm.loop=true
-const audioWin = document.createElement('audio'); audioWin.id='winbgm'; audioWin.loop=true
+// audio
+const audioBgm = document.createElement('audio'); audioBgm.id='bgm'; audioBgm.loop=true;
+const audioWin = document.createElement('audio'); audioWin.id='winbgm'; audioWin.loop=true;
 
 // ====== Utils ======
-const clamp=(n,min,max)=>Math.max(min,Math.min(max,n))
-const pct=(v,tot)=>Math.round((v/tot)*100)
-const wait=ms=>new Promise(r=>setTimeout(r,ms))
+const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
+const pct=(v,tot)=>Math.round((v/tot)*100);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
 function setHp(who){
-  if(who==='P'){ hpP.style.width=pct(P.hp,P.max)+'%'; hpP.parentElement.classList.toggle('warn', P.hp/P.max<=.4) }
-  else { hpE.style.width=pct(E.hp,E.max)+'%'; hpE.parentElement.classList.toggle('warn', E.hp/E.max<=.4) }
+  if(who==='P'){ hpP.style.width=pct(P.hp,P.max)+'%'; hpP.parentElement.classList.toggle('warn', P.hp/P.max<=.4); }
+  else { hpE.style.width=pct(E.hp,E.max)+'%'; hpE.parentElement.classList.toggle('warn', E.hp/E.max<=.4); }
 }
 function pushChip(container,n,cls){
-  const kids=[...container.children]; kids.forEach(c=>c.classList.remove('last'))
-  if(kids.length>=3) container.removeChild(kids[0])
-  const el=document.createElement('div'); el.className='chip '+cls+' last'; el.textContent=n; container.appendChild(el)
+  const kids=[...container.children]; kids.forEach(c=>c.classList.remove('last'));
+  if(kids.length>=3) container.removeChild(kids[0]);
+  const el=document.createElement('div'); el.className='chip '+cls+' last'; el.textContent=n; container.appendChild(el);
 }
 function appendLog(side, n, name, dmg, remain){
-  const span=document.createElement('span')
-  span.className='t '+(side==='味'?'tA':'tE'); span.textContent=side
-  logpre.appendChild(document.createTextNode('\n')); logpre.appendChild(span)
-  const dmgTxt = dmg!=null ? ` → <span class="red">-${dmg}</span>（残HP <span class="gray">${remain}</span>）` : ''
-  logpre.insertAdjacentHTML('beforeend', `【${n}】 ${name}${dmgTxt}`)
-  logpre.scrollTop=logpre.scrollHeight
+  const span=document.createElement('span');
+  span.className='t '+(side==='味'?'tA':'tE'); span.textContent=side;
+  logpre.appendChild(document.createTextNode('\n')); logpre.appendChild(span);
+  const dmgTxt = dmg!=null ? ` → <span class="red">-${dmg}</span>（残HP <span class="gray">${remain}</span>）` : '';
+  logpre.insertAdjacentHTML('beforeend', `【${n}】 ${name}${dmgTxt}`);
+  logpre.scrollTop=logpre.scrollHeight;
 }
 function showRibbon(who, text, ult=false){
-  const rib = who==='P'? ribP : ribE; const t = who==='P'? ribPText : ribEText
-  t.textContent = text; rib.style.display='flex'; rib.classList.toggle('ult', ult)
-  rib.classList.remove('show'); void rib.offsetWidth; rib.classList.add('show')
-  setTimeout(()=>{ rib.style.display='none' }, 900)
+  const rib = who==='P'? ribP : ribE; const t = who==='P'? ribPText : ribEText;
+  t.textContent = text; rib.style.display='flex'; rib.classList.toggle('ult', ult);
+  rib.classList.remove('show'); void rib.offsetWidth; rib.classList.add('show');
+  setTimeout(()=>{ rib.style.display='none' }, 900);
 }
 function hitFX(card, dmg){
-  const f=document.createElement('div'); f.className='flash'; f.style.zIndex=2; card.appendChild(f); setTimeout(()=>f.remove(),350)
-  const d=document.createElement('div'); d.className='dmg'; d.textContent='-'+dmg; card.appendChild(d); setTimeout(()=>d.remove(),820)
-  card.classList.remove('hitShake'); void card.offsetWidth; card.classList.add('hitShake')
+  const f=document.createElement('div'); f.className='flash'; f.style.zIndex=2; card.appendChild(f); setTimeout(()=>f.remove(),350);
+  const d=document.createElement('div'); d.className='dmg'; d.textContent='-'+dmg; card.appendChild(d); setTimeout(()=>d.remove(),820);
+  card.classList.remove('hitShake'); void card.offsetWidth; card.classList.add('hitShake');
 }
 function checkComboP(){
-  if(P.hist.length<3) return null
-  const h=P.hist.slice(-3), set=new Set(h)
-  if(h[0]===h[1] && h[1]===h[2]) return {type:'triple', label:'ゾロ目', bonus:2}
-  if(set.size===3 && set.has(4)&&set.has(5)&&set.has(6)) return {type:'456', label:'4-5-6', bonus:2}
-  return null
+  if(P.hist.length<3) return null;
+  const h = P.hist.slice(-3);
+  if(h[0]===h[1] && h[1]===h[2]) return {type:'triple', label:'ゾロ目', bonus:2};
+  if(h.includes(4) && h.includes(5) && h.includes(6)) return {type:'456', label:'4-5-6', bonus:2};
+  return null;
 }
 
 // dice visuals
-let rotX=0, rotY=0
+let rotX=0, rotY=0;
 function spinDice(n){
-  const dice=document.getElementById('dice')
-  rotX += 360 * (2 + Math.floor(Math.random()*2))
-  rotY += 360 * (2 + Math.floor(Math.random()*2))
-  const FACE={1:{x:0,y:0},2:{x:90,y:0},3:{x:0,y:-90},4:{x:0,y:90},5:{x:-90,y:0},6:{x:0,y:180}}
-  const base=FACE[n]
-  dice.style.transform=`rotateX(${rotX+base.x}deg) rotateY(${rotY+base.y}deg)`
+  const dice=document.getElementById('dice');
+  rotX += 360 * (2 + Math.floor(Math.random()*2));
+  rotY += 360 * (2 + Math.floor(Math.random()*2));
+  const FACE={1:{x:0,y:0},2:{x:90,y:0},3:{x:0,y:-90},4:{x:0,y:90},5:{x:-90,y:0},6:{x:0,y:180}};
+  const base=FACE[n];
+  dice.style.transform=`rotateX(${rotX+base.x}deg) rotateY(${rotY+base.y}deg)`;
 }
 
 // ======================= ITEMS =======================
-const btnItem=$('#btnItem'), itemModal=$('#itemModal'), itemList=$('#itemList')
-let diceBoostActive=false
-
+const btnItem=$('#btnItem'), itemModal=$('#itemModal'), itemList=$('#itemList');
 function renderItems(){
-  itemList.innerHTML=''
-  const items=Game.player.items
+  itemList.innerHTML='';
+  const items=Game.player.items;
   for(const [key,count] of Object.entries(items)){
-    let label=''; if(key==='potion') label='回復薬（HP+3）'; if(key==='diceBoost') label='出目+1（次のサイコロのみ）'
-    const div=document.createElement('div'); div.className='item'; div.innerHTML=`<span>${label}</span><span>残り ${count}</span>`
-    if(count>0){ const btn=document.createElement('button'); btn.className='pill2'; btn.textContent='使う'; btn.onclick=()=>useItem(key); div.appendChild(btn) }
-    itemList.appendChild(div)
+    let label=''; if(key==='potion') label='回復薬（HP+3）';
+    const div=document.createElement('div'); div.className='item';
+    div.innerHTML=`<span>${label||key}</span><span>残り ${count}</span>`;
+    if(count>0){ const btn=document.createElement('button'); btn.className='pill2'; btn.textContent='使う'; btn.onclick=()=>useItem(key); div.appendChild(btn); }
+    itemList.appendChild(div);
   }
 }
 function useItem(type){
-  const items=Game.player.items
-  if(items[type]<=0) return
+  const items=Game.player.items;
+  if(items[type]<=0) return;
   if(type==='potion'){
-    const heal=3; P.hp=clamp(P.hp+heal,0,P.max); setHp('P'); appendLog('味','-','回復薬を使用',null,`${P.hp}/${P.max}`)
+    const heal=3; P.hp=clamp(P.hp+heal,0,P.max); setHp('P'); appendLog('味','-','回復薬を使用',null,`${P.hp}/${P.max}`);
   }
-  if(type==='diceBoost'){ diceBoostActive=true; appendLog('味','-','出目+1アイテムを使用',null,`${P.hp}/${P.max}`) }
-  items[type]--; renderItems(); itemModal.classList.remove('show'); itemModal.hidden=true; saveGame()
+  items[type]--; renderItems(); itemModal.classList.remove('show'); itemModal.hidden=true; saveGame();
 }
-btnItem.addEventListener('click',()=>{ renderItems(); itemModal.hidden=false; itemModal.classList.add('show') })
+btnItem.addEventListener('click',()=>{ renderItems(); itemModal.hidden=false; itemModal.classList.add('show'); });
 
-// hook rollOne for diceBoost
 function rollOneBase(){ return Math.floor(Math.random()*6)+1 }
-function rollOne(){ let n=rollOneBase(); if(diceBoostActive){ n=Math.min(6, n+1); diceBoostActive=false } return n }
+function rollOne(){ return rollOneBase(); }
 
 // ======================= BATTLE CORE =======================
 function startBattle(enemyKey){
-  // sync player from save
-  P.name=Game.player.name; P.baseMax=Game.player.baseMax; P.max=Game.player.max; P.hp=Math.min(Game.player.hp, P.max); P.atk=Game.player.atk; P.skills=JSON.parse(JSON.stringify(Game.player.skills))
-  // apply derived (equip)
-  applyDerivedStats()
+  // sync player
+  P.name=Game.player.name; P.baseMax=Game.player.baseMax; P.max=Game.player.max; P.hp=Math.min(Game.player.hp, P.max);
+  P.atk=Game.player.atk; P.skills=JSON.parse(JSON.stringify(Game.player.skills));
+  applyDerivedStats();
 
-  // setup enemy
-  currentEnemyKey=enemyKey
-  const T=ENEMY_BOOK[enemyKey]
-  E.key=T.key; E.name=T.name; E.max=T.max; E.hp=T.max; E.img=T.img; E.skills=T.skills; E.hist=[]
-  $('#imgE').src=E.img; $('#nameE').textContent=E.name; $('#eName').value=E.name; $('#eMax').value=E.max
+  // enemy
+  currentEnemyKey=enemyKey;
+  const T=ENEMY_BOOK[enemyKey];
+  E.key=T.key; E.name=T.name; E.max=T.max; E.hp=T.max; E.img=T.img; E.skills=T.skills; E.hist=[];
+  $('#imgE').src=E.img; $('#nameE').textContent=E.name; $('#eName').value=E.name; $('#eMax').value=E.max;
 
-  // reset visuals
-  resetBattle(true)
-  logpre.textContent=`${E.name} が現れた！`
+  // visuals
+  resetBattle(true);
+  logpre.textContent=`${E.name} が現れた！`;
 }
 
 function applyDerivedStats(){
-  // base
-  let max = Game.player.baseMax
-  let atk = Game.player.atk
-  // equip bonuses
-  const wKey=Game.player.equip.weapon; const aKey=Game.player.equip.armor
-  if(wKey){ const w=EQUIP_BOOK[wKey]; atk += (w.atk||0) }
-  if(aKey){ const a=EQUIP_BOOK[aKey]; max += (a.hp||0) }
-  Game.player.max = max; Game.player.atk = atk
-  // push to P if in battle
-  P.max=max; P.atk=atk; if(P.hp>max) P.hp=max
+  let max = Game.player.baseMax;
+  let atk = Game.player.atk;
+  const wKey=Game.player.equip.weapon; const aKey=Game.player.equip.armor;
+  if(wKey){ const w=EQUIP_BOOK[wKey]; atk += (w.atk||0); }
+  if(aKey){ const a=EQUIP_BOOK[aKey]; max += (a.hp||0); }
+  Game.player.max = max; Game.player.atk = atk;
+  P.max=max; P.atk=atk; if(P.hp>max) P.hp=max;
 }
 
 function resetBattle(keepAudio=true){
-  busy=false; phase='ready'; rolledP=null; rolledE=null; P.finisher=false
-  setHp('P'); setHp('E'); nameP.textContent=P.name; nameE.textContent=E.name
-  $('#imgE').classList.remove('vanish'); winOverlay.classList.remove('show'); winOverlay.hidden=true
-  allyChips.innerHTML=''; enemyChips.innerHTML=''
-  btnRoll.disabled=false; btnAct.disabled=true; actLabel.textContent='技'
-  if(!keepAudio){ try{ bgm.pause(); winbgm.pause() }catch(e){} }
+  busy=false; phase='ready'; rolledP=null; rolledE=null; P.finisher=false;
+  P.hist=[]; E.hist=[];
+  setHp('P'); setHp('E'); nameP.textContent=P.name; nameE.textContent=E.name;
+  $('#imgE').classList.remove('vanish'); winOverlay.classList.remove('show'); winOverlay.hidden=true;
+  allyChips.innerHTML=''; enemyChips.innerHTML='';
+  btnRoll.disabled=false; btnAct.disabled=true; actLabel.textContent='技';
+  if(!keepAudio){ try{ audioBgm.pause(); audioWin.pause(); }catch(e){} }
 }
 
 btnRoll.addEventListener('click', async ()=>{
-  if(phase!=='ready' || busy) return; busy=true; phase='rolled'; btnRoll.disabled=true; btnAct.disabled=true
-  const nP=rollOne(); rolledP=nP; spinDice(nP)
-  setTimeout(()=>{ P.hist.push(nP); if(P.hist.length>3) P.hist.shift(); pushChip(allyChips,nP,'ally') },1000)
-  const base=P.skills[nP].dmg + P.atk
-  const combo=checkComboP(); if(combo){ P.finisher=true; showRibbon('P',`コンボ成立！ ${combo.label}`,true) }
-  const shown= base + (P.finisher?2:0)
-  await wait(timing.pause+300)
-  showRibbon('P',`技${nP}：${P.skills[nP].name}（${shown}）`, P.finisher)
-  actLabel.textContent = (P.finisher? '必殺：':'技：') + `${P.skills[nP].name}（${shown}）`
-  await wait(timing.pause); btnAct.disabled=false; busy=false
-})
+  if(phase!=='ready' || busy) return; busy=true; phase='rolled'; btnRoll.disabled=true; btnAct.disabled=true;
+  const nP=rollOne(); rolledP=nP; spinDice(nP);
+
+  P.hist.push(nP); if(P.hist.length>60) P.hist.shift();
+  setTimeout(()=>{ pushChip(allyChips,nP,'ally') },1000);
+
+  const base=P.skills[nP].dmg + P.atk;
+  const combo=checkComboP();
+  if(combo){ P.finisher=true; showRibbon('P',`コンボ成立！ ${combo.label}`,true); }
+  const shown= base + (P.finisher?2:0);
+
+  await wait(timing.pause+300);
+  showRibbon('P',`技${nP}：${P.skills[nP].name}（${shown}）`, P.finisher);
+  actLabel.textContent = (P.finisher? '必殺：':'技：') + `${P.skills[nP].name}（${shown}）`;
+  await wait(timing.pause); btnAct.disabled=false; busy=false;
+});
 
 btnAct.addEventListener('click', async ()=>{
-  if(phase!=='rolled' || busy) return; busy=true; phase='acting'; btnAct.disabled=true
-  const dmgP=Math.max(0, P.skills[rolledP].dmg + P.atk + (P.finisher?2:0))
-  E.hp = clamp(E.hp - dmgP, 0, E.max); hitFX(cardE, dmgP); setHp('E'); appendLog('味', rolledP, (P.finisher?'必殺：':'')+P.skills[rolledP].name, dmgP, `${E.hp}/${E.max}`)
-  P.finisher=false; actLabel.textContent='技'
+  if(phase!=='rolled' || busy) return; busy=true; phase='acting'; btnAct.disabled=true;
+  const dmgP=Math.max(0, P.skills[rolledP].dmg + P.atk + (P.finisher?2:0));
+  E.hp = clamp(E.hp - dmgP, 0, E.max); hitFX(cardE, dmgP); setHp('E'); appendLog('味', rolledP, (P.finisher?'必殺：':'')+P.skills[rolledP].name, dmgP, `${E.hp}/${E.max}`);
+  P.finisher=false; actLabel.textContent='技';
 
   if(E.hp<=0){
-    await wait(350); $('#imgE').classList.add('vanish'); await wait(800); handleWin(); return
+    await wait(350); $('#imgE').classList.add('vanish'); await wait(800); handleWin(); return;
   }
 
-  await wait(timing.enemyPause)
-  rolledE=rollOne(); spinDice(rolledE)
-  setTimeout(()=>{ E.hist.push(rolledE); if(E.hist.length>3) E.hist.shift(); pushChip(enemyChips,rolledE,'enemy') },1000)
-  await wait(timing.pause+300); showRibbon('E',`技${rolledE}：${E.skills[rolledE].name}`,false)
-  await wait(timing.pause+500)
-  const dmgE=Math.max(0, E.skills[rolledE].dmg)
-  P.hp = clamp(P.hp - dmgE, 0, P.max); hitFX(cardP, dmgE); setHp('P'); appendLog('敵', rolledE, E.skills[rolledE].name, dmgE, `${P.hp}/${P.max}`)
-  if(P.hp<=0){ await wait(350); try{ bgm.pause() }catch(e){}; winOverlay.querySelector('span').textContent='LOSE'; winOverlay.hidden=false; winOverlay.classList.add('show'); btnRoll.disabled=true; btnAct.disabled=true; busy=false; return }
-  phase='ready'; btnRoll.disabled=false; btnAct.disabled=true; busy=false
-})
+  await wait(timing.enemyPause);
+  rolledE=rollOne(); spinDice(rolledE);
+  setTimeout(()=>{ E.hist.push(rolledE); if(E.hist.length>3) E.hist.shift(); pushChip(enemyChips,rolledE,'enemy') },1000);
+  await wait(timing.pause+300); showRibbon('E',`技${rolledE}：${E.skills[rolledE].name}`,false);
+  await wait(timing.pause+500);
+  const dmgE=Math.max(0, E.skills[rolledE].dmg);
+  P.hp = clamp(P.hp - dmgE, 0, P.max); hitFX(cardP, dmgE); setHp('P'); appendLog('敵', rolledE, E.skills[rolledE].name, dmgE, `${P.hp}/${P.max}`);
+  if(P.hp<=0){
+    await wait(350);
+    try{ audioBgm.pause() }catch(e){}
+    winOverlay.querySelector('span').textContent='LOSE';
+    winOverlay.hidden=false; winOverlay.classList.add('show');
+
+    // 負けたらHP全快・ステージ中断
+    Game.player.hp = Game.player.max;
+    Game.currentStage = null;
+    Stage = null;
+    saveGame();
+
+    btnRoll.disabled=true; btnAct.disabled=true; busy=false;
+    return;
+  }
+
+  phase='ready'; btnRoll.disabled=false; btnAct.disabled=true; busy=false;
+});
 
 function handleWin(){
-  // Win overlay
-  winOverlay.querySelector('span').textContent='WIN'; winOverlay.hidden=false; winOverlay.classList.add('show')
+  // 勝利演出
+  winOverlay.querySelector('span').textContent='WIN'; winOverlay.hidden=false; winOverlay.classList.add('show');
 
-  // Update meta progress
-  Game.progress.kills[currentEnemyKey]++
-  const gainXP = ENEMY_BOOK[currentEnemyKey].xp
-  Game.player.xp += gainXP
+  // 撃破数・経験値（仮保存）
+  Game.progress.kills[currentEnemyKey] = (Game.progress.kills[currentEnemyKey]||0) + 1;
+  const gainXP = ENEMY_BOOK[currentEnemyKey].xp;
+  StageReward.xp += gainXP;
 
-  // Level up thresholds example: Lv2 at >=3 XP OR slime×3; Lv3 at >=6 XP OR goblin×3
-  let leveled=false
-  if(Game.player.lvl<2 && (Game.player.xp>=3 || Game.progress.kills.slime>=3)){
-    Game.player.lvl=2; Game.player.baseMax+=2; Game.player.atk+=1; leveled=true
+  // 宝箱ドロップ（白80%/青20%）…毎戦50%で出現
+  let chest = null;
+  if(Math.random() < 0.5){
+    chest = (Math.random() < 0.8) ? 'white' : 'blue';
   }
-  if(Game.player.lvl<3 && (Game.player.xp>=6 || Game.progress.kills.goblin>=3)){
-    Game.player.lvl=3; Game.player.baseMax+=3; Game.player.atk+=2; leveled=true
+  if(chest){ StageReward.chests.push(chest); showChestDrop(chest); }
+
+  // 勇者HPを戦闘後に反映
+  Game.player.hp = clamp(P.hp, 1, Game.player.max);
+
+  // 勝利ログ
+  logpre.insertAdjacentHTML('beforeend',
+    `\n—— 勝利！ 経験値+${gainXP} ${chest ? '/ 宝箱出現！' : ''}`);
+
+  saveGame();
+
+  // ステージ進行
+  setTimeout(()=>{
+    if(Game.currentStage){
+      const stage = STAGE_BOOK[Game.currentStage];
+
+      // 残り戦闘を減らし進捗更新
+      Stage.remain -= 1;
+      const cleared = stage.battles - Stage.remain;
+      setStageProgress(Game.currentStage, cleared, stage.battles);
+
+      if(Stage.remain > 0){
+        nextBattle(); // HP持ち越し
+        goto('battle');
+      }else{
+        // クリア処理：XPを反映、結果画面へ（宝箱は結果画面で開封）
+        Stage.cleared = true;
+        Game.player.hp = Game.player.max;
+        Game.player.xp += StageReward.xp;
+
+        // レベルアップ（XPしきい値で単純化）
+        let leveled=false;
+        if(Game.player.lvl<2 && Game.player.xp>=3){ Game.player.lvl=2; Game.player.baseMax+=2; Game.player.atk+=1; leveled=true; }
+        if(Game.player.lvl<3 && Game.player.xp>=6){ Game.player.lvl=3; Game.player.baseMax+=3; Game.player.atk+=2; leveled=true; }
+        if(leveled){ applyDerivedStats(); Game.player.hp=Game.player.max; P.hp=P.max; setHp('P'); }
+
+        logpre.insertAdjacentHTML('beforeend', `\n—— ${stage.name} クリア！ 報酬を獲得！ HP全回復！`);
+        saveGame();
+
+        // リザルトへ
+        showResultScreen(Game.currentStage);
+      }
+    }else{
+      // 単発
+      goto('select'); refreshSelect();
+    }
+  }, 900);
+}
+
+// 宝箱演出
+function showChestDrop(chestType){
+  if(!chestType) return;
+  const chestImg = document.createElement('img');
+  chestImg.src = (chestType === 'white') ? 'white_chest_closed.png' : 'blue_chest_closed.png';
+  chestImg.className = 'chest-drop';
+  document.body.appendChild(chestImg);
+  setTimeout(()=> chestImg.classList.add('show'), 50);
+  setTimeout(()=> chestImg.remove(), 1000);
+}
+
+// リザルト画面
+function showResultScreen(stageKey){
+  goto('result');
+  const stage = STAGE_BOOK[stageKey];
+  document.getElementById('resultStageName').textContent = `${stage.name} クリア！`;
+  document.getElementById('resultXp').textContent       = `経験値 +${StageReward.xp}`;
+
+  const area = document.getElementById('chestArea');
+  area.innerHTML = '';
+  StageReward.chests.forEach(type => {
+    const img = document.createElement('img');
+    img.src = (type==='white') ? 'white_chest_closed.png' : 'blue_chest_closed.png';
+    img.className = 'result-chest';
+    img.dataset.type = type;
+    img.dataset.opened = 'false';
+    img.onclick = () => openResultChest(img, type);
+    area.appendChild(img);
+  });
+
+  document.getElementById('rewardList').innerHTML = '';
+}
+
+function openResultChest(el, type){
+  if(el.dataset.opened === 'true') return;
+  el.dataset.opened = 'true';
+  el.src = (type==='white') ? 'white_chest_open.png' : 'blue_chest_open.png';
+
+  let item;
+  if(type==='white'){
+    item = '回復薬';
+    Game.player.items.potion = (Game.player.items.potion||0)+1;
+  }else{
+    item = '鉄の剣';
+    Game.player.box.ironSword = (Game.player.box.ironSword||0)+1;
   }
-  applyDerivedStats()
+  const li = document.createElement('li');
+  li.textContent = item;
+  document.getElementById('rewardList').appendChild(li);
+  saveGame();
+}
 
-  // simple drops
-  const drops=[]
-  if(Math.random()<0.55){ Game.player.items.potion=(Game.player.items.potion||0)+1; drops.push('回復薬+1') }
-  if(Math.random()<0.25){ Game.player.items.diceBoost=(Game.player.items.diceBoost||0)+1; drops.push('出目+1+1') }
-  if(currentEnemyKey==='goblin' && Math.random()<0.35 && !Game.player.box.includes('ironSword')){ Game.player.box.push('ironSword'); drops.push('鉄の剣') }
-  if(currentEnemyKey==='slime' && Math.random()<0.25 && !Game.player.box.includes('leatherArmor')){ Game.player.box.push('leatherArmor'); drops.push('革の鎧') }
+function openAllChests(){
+  document.querySelectorAll('#chestArea img').forEach(img=>{
+    if(img.dataset.opened === 'false'){
+      openResultChest(img, img.dataset.type);
+    }
+  });
+}
 
-  // Persist hero HP after battle (clamped)
-  Game.player.hp = clamp(P.hp, 1, Game.player.max) // 勇者は瀕死で生還（0は負け処理で戻る）
+function finishResult(){
+  // ステージ終了：状態片付けてセレクトへ
+  const finishedStage = Game.currentStage;
+  Game.currentStage = null;
+  Stage = null;
+  StageCP = null;
 
-  // Log rewards
-  logpre.insertAdjacentHTML('beforeend', `\n—— 勝利！ 経験値+${gainXP} ${drops.length? ' / ドロップ：'+drops.join(', '): ''}`)
-  if(leveled){ logpre.insertAdjacentHTML('beforeend', `\n—— レベルアップ！ 現在Lv${Game.player.lvl}（HP上限+ / 攻撃+）`) }
+  // 進捗UIを初期化
+  for(const k of Object.keys(STAGE_BOOK)){
+    const tot = STAGE_BOOK[k].battles;
+    setStageProgress(k, 0, tot);
+  }
 
-  saveGame()
-  setTimeout(()=>{ goto('select') }, 1000)
+  // 仮保存リセット
+  StageReward = { xp:0, chests:[], items:[], equips:[] };
+
+  goto('select');
+  refreshSelect();
 }
 
 // ======================= Settings & Tables =======================
 btnSettings.addEventListener('click',()=>{
-  speedSel.value='normal'
-  pName.value=P.name; pMax.value=P.max; eName.value=E.name; eMax.value=E.max
-  pTbl.innerHTML = buildSkillTbl(P.skills,'p')
-  eTbl.innerHTML = buildSkillTbl(E.skills,'e')
-  settingsModal.hidden=false; settingsModal.classList.add('show')
-})
-closeSettings.addEventListener('click',()=>{ settingsModal.classList.remove('show'); settingsModal.hidden=true })
+  speedSel.value='normal';
+  pName.value=P.name; pMax.value=P.max; eName.value=E.name; eMax.value=E.max;
+  pTbl.innerHTML = buildSkillTbl(P.skills,'p');
+  eTbl.innerHTML = buildSkillTbl(E.skills,'e');
+  settingsModal.hidden=false; settingsModal.classList.add('show');
+});
+closeSettings.addEventListener('click',()=>{ settingsModal.classList.remove('show'); settingsModal.hidden=true });
 applySettings.addEventListener('click',()=>{
-  P.name=(pName.value||'勇者A').trim(); Game.player.name=P.name
-  Game.player.baseMax = Math.max(1, parseInt(pMax.value||10)); applyDerivedStats(); P.hp=P.max
-  P.skills = collectTbl('p'); Game.player.skills = JSON.parse(JSON.stringify(P.skills))
-  E.name=(eName.value||E.name).trim(); E.max=Math.max(1, parseInt(eMax.value||E.max)); E.hp=E.max
-  E.skills = collectTbl('e')
-  resetBattle(true)
-  settingsModal.classList.remove('show'); settingsModal.hidden=true; saveGame()
-})
+  P.name=(pName.value||'勇者A').trim(); Game.player.name=P.name;
+  Game.player.baseMax = Math.max(1, parseInt(pMax.value||20)); applyDerivedStats(); P.hp=P.max;
+  P.skills = collectTbl('p'); Game.player.skills = JSON.parse(JSON.stringify(P.skills));
+  E.name=(eName.value||E.name).trim(); E.max=Math.max(1, parseInt(eMax.value||E.max)); E.hp=E.max;
+  E.skills = collectTbl('e');
+  resetBattle(true);
+  settingsModal.classList.remove('show'); settingsModal.hidden=true; saveGame();
+});
 
 function buildSkillTbl(skills, prefix){
   if(prefix==='p'){
-    const list=document.getElementById('skillPList'); list.innerHTML=''
-    for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1}; const row=document.createElement('div'); row.className='item'; row.innerHTML=`<span>${i}：${s.name}</span><span>敵にダメージ${s.dmg} + 攻撃</span>`; list.appendChild(row) }
+    const list=document.getElementById('skillPList'); list.innerHTML='';
+    for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1};
+      const row=document.createElement('div'); row.className='item';
+      row.innerHTML=`<span>${i}：${s.name}</span><span>敵にダメージ${s.dmg} + 攻撃</span>`; list.appendChild(row);
+    }
   }else{
-    const list=document.getElementById('skillEList'); list.innerHTML=''
-    for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1}; const row=document.createElement('div'); row.className='item'; row.innerHTML=`<span>${i}：${s.name}</span><span>味方にダメージ${s.dmg}</span>`; list.appendChild(row) }
+    const list=document.getElementById('skillEList'); list.innerHTML='';
+    for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1};
+      const row=document.createElement('div'); row.className='item';
+      row.innerHTML=`<span>${i}：${s.name}</span><span>味方にダメージ${s.dmg}</span>`; list.appendChild(row);
+    }
   }
-  let html=''; for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1}; html+=`<div class="cell"><div style="font-weight:700;margin-bottom:4px">${i}</div><input id="${prefix}_name_${i}" class="txt" placeholder="技名" value="${s.name}"><div style="margin-top:4px"><input id="${prefix}_dmg_${i}" class="num" type="number" min="0" value="${s.dmg}"></div></div>` }
-  return html
+  let html=''; for(let i=1;i<=6;i++){
+    const s=skills[i]||{name:`技${i}`,dmg:1};
+    html+=`<div class="cell"><div style="font-weight:700;margin-bottom:4px">${i}</div>
+    <input id="${prefix}_name_${i}" class="txt" placeholder="技名" value="${s.name}">
+    <div style="margin-top:4px"><input id="${prefix}_dmg_${i}" class="num" type="number" min="0" value="${s.dmg}"></div></div>`;
+  }
+  return html;
 }
-function collectTbl(prefix){ const out={}; for(let i=1;i<=6;i++){ const nm=(document.getElementById(prefix+'_name_'+i)?.value||`技${i}`).trim(); const dm=Math.max(0, parseInt(document.getElementById(prefix+'_dmg_'+i)?.value||0)); out[i]={name:nm,dmg:dm} } buildSkillTbl(out, prefix); return out }
+function collectTbl(prefix){
+  const out={}; for(let i=1;i<=6;i++){
+    const nm=(document.getElementById(prefix+'_name_'+i)?.value||`技${i}`).trim();
+    const dm=Math.max(0, parseInt(document.getElementById(prefix+'_dmg_'+i)?.value||0));
+    out[i]={name:nm,dmg:dm};
+  }
+  buildSkillTbl(out, prefix); return out;
+}
 
 // ======================= Generic modal handlers =======================
-document.querySelectorAll('[data-open]').forEach(b=>{ b.addEventListener('click',()=>{ const el=document.querySelector(b.getAttribute('data-open')); if(el){ el.hidden=false; el.classList.add('show') } }) })
-document.querySelectorAll('[data-close]').forEach(b=>{ b.addEventListener('click',()=>{ const m=b.closest('.modal'); if(m){ m.classList.remove('show'); m.hidden=true } }) })
-document.addEventListener('click', e=>{ if(e.target.classList.contains('modal')){ e.target.classList.remove('show'); e.target.hidden=true } })
+document.querySelectorAll('[data-open]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const el=document.querySelector(b.getAttribute('data-open'));
+    if(el){ el.hidden=false; el.classList.add('show'); }
+  });
+});
+document.querySelectorAll('[data-close]').forEach(b=>{
+  b.addEventListener('click',()=>{
+    const m=b.closest('.modal'); if(m){ m.classList.remove('show'); m.hidden=true; }
+  });
+});
+document.addEventListener('click', e=>{
+  if(e.target.classList.contains('modal')){ e.target.classList.remove('show'); e.target.hidden=true; }
+});
+
+// ======================= EQUIP FACE ASSIGN =======================
+function restoreEquipFaces(){
+  if(!Game.player.equipFaces) return;
+  const faceMap = { 1:'.front', 2:'.bottom', 3:'.right', 4:'.left', 5:'.topp', 6:'.back' };
+  for(const [face, key] of Object.entries(Game.player.equipFaces)){
+    const img = document.getElementById(`diceImg${face}`);
+    if (img) img.src = `dice_${key}${face}.png`;
+    const selector = faceMap[face];
+    if (selector) {
+      const el = document.querySelector(selector);
+      if (el) el.style.backgroundImage = `url("dice_${key}${face}.png")`;
+    }
+  }
+}
+let pendingFace=null;
+function chooseFace(face){
+  pendingFace = face;
+  const title = document.getElementById('equipFaceTitle');
+  const area  = document.getElementById('equipButtons');
+  const options = document.getElementById('equipOptions');
+
+  title.textContent = `出目${face} に装備を割り当て`;
+  area.innerHTML = '';
+
+  const currentKey = Game.player.equipFaces?.[face];
+  if (currentKey) {
+    const equipName = EQUIP_BOOK[currentKey]?.name || '不明';
+    area.insertAdjacentHTML('beforeend', `<div style="margin-bottom:8px;color:#bcd1ff">現在：${equipName} が装備されています</div>`);
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'pill2 ghost';
+    removeBtn.textContent = '装備を解除';
+    removeBtn.onclick = () => {
+      delete Game.player.equipFaces[face];
+      saveGame(); refreshSelect();
+      const img = document.getElementById(`diceImg${face}`); if (img) img.src = `${face}.png`;
+      const faceMap = {1:'.front',2:'.bottom',3:'.right',4:'.left',5:'.topp',6:'.back'};
+      const el = document.querySelector(faceMap[face]); if (el) el.style.backgroundImage = `url("${face}.png")`;
+      alert(`出目${face} の装備を解除しました`);
+      const m = document.getElementById('equipFaceModal'); m.classList.remove('show'); m.hidden = true;
+    };
+    area.appendChild(removeBtn);
+  } else {
+    area.insertAdjacentHTML('beforeend', `<div style="margin-bottom:8px;color:#bcd1ff">現在：装備なし</div>`);
+  }
+
+  // 在庫チェック
+  const equipUsed = {};
+  for (const usedKey of Object.values(Game.player.equipFaces || {})) {
+    equipUsed[usedKey] = (equipUsed[usedKey] || 0) + 1;
+  }
+  for (const key of Object.keys(Game.player.box)) {
+    const owned = Game.player.box[key] || 0;
+    if (owned <= 0) continue;
+    const used = equipUsed[key] || 0;
+    const remain = owned - used;
+    const name = EQUIP_BOOK[key]?.name || key;
+    const label = `${name}（残り ${remain}）`;
+
+    const btn = document.createElement('button');
+    btn.className = 'pill2';
+    btn.textContent = label;
+    btn.disabled = remain <= 0;
+    btn.onclick = () => assignEquipToFace(face, key);
+    area.appendChild(btn);
+  }
+
+  options.style.display = 'block';
+}
+
+function assignEquipToFace(face, key){
+  if (!Game.player.equipFaces) Game.player.equipFaces = {};
+  Game.player.equipFaces[face] = key;
+  saveGame(); refreshSelect();
+
+  const img = document.getElementById(`diceImg${face}`);
+  if (img) img.src = `dice_${key}${face}.png`;
+
+  const faceMap = {1:'.front',2:'.bottom',3:'.right',4:'.left',5:'.topp',6:'.back'};
+  const el = document.querySelector(faceMap[face]);
+  if (el) el.style.backgroundImage = `url("dice_${key}${face}.png")`;
+
+  alert(`出目${face} に ${EQUIP_BOOK[key].name} を装備しました！`);
+  const m=document.getElementById('equipFaceModal'); m.classList.remove('show'); m.hidden=true;
+  pendingFace = null;
+}
 
 // ======================= INIT =======================
 function init(){
-  loadGame(); applyDerivedStats()
-  // prepare HP bars
-  document.querySelectorAll('.hp').forEach(hp=>{ if(!hp.querySelector('.ticks')){ const t=document.createElement('span'); t.className='ticks'; hp.appendChild(t) } })
+  loadGame(); applyDerivedStats();
+  document.querySelectorAll('.hp').forEach(hp=>{ if(!hp.querySelector('.ticks')){ const t=document.createElement('span'); t.className='ticks'; hp.appendChild(t); } });
   nameP.textContent=Game.player.name; setHp('P');
-  refreshSelect()
+  // 進捗UI初期化
+  for(const k of Object.keys(STAGE_BOOK)){
+    setStageProgress(k, 0, STAGE_BOOK[k].battles);
+  }
+  refreshSelect();
+  restoreEquipFaces();
 }
-init()
+init();
 </script>
 </body>
 </html>
