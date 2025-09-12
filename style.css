@@ -230,13 +230,19 @@ section.active { display: block; }
 }
 
 @media (max-width: 768px) {
-  /* バトルログとサイコロの幅比率を変更 */
+  /* バトルログとサイコロの幅比率を調整 */
   .row {
-    grid-template-columns: 1fr 0.6fr; /* ← サイコロを縮小 */
+    grid-template-columns: 1fr 0.45fr;
   }
 
-  /* バトルログの高さも少し縮める（必要なら） */
+  /* バトルログ縮小 */
   .log {
-    height: 160px; /* ← デフォ220pxを小さく */
+    height: 140px;
+  }
+
+  /* サイコロ本体縮小 */
+  .scene, .dice {
+    width: 85px;
+    height: 85px;
   }
 }
