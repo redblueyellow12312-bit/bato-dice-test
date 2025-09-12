@@ -241,8 +241,7 @@ section.active { display: block; }
   }
 
   /* サイコロ本体縮小 */
-  .scene, .dice {
-    width: 85px;
-    height: 85px;
+  :root {
+    --dice-size: 85px;  /* ← 基準を更新 */
   }
 }
