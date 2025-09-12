@@ -99,10 +99,10 @@ section#battle{min-height:100vh; transition: background .3s ease}
   border-radius:10px;
 
   display:inline-block;
-  font-size: clamp(4px, 1.8vw, 13px); 
+  font-size: clamp(4px, 1.2vw, 13px); 
   /* ← 最小4px〜最大13pxで可変 */
   
-  max-width: 140px; 
+  max-width: 120px; 
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
