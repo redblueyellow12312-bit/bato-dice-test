@@ -87,6 +87,68 @@
           <img src="stage10.png" alt="ドラゴン">
           <button class="btn" onclick="gotoStage('st10')">竜の間へ</button>
         </div>
+
+        <!-- ===== 11〜20: 中盤エリア ===== -->
+        <!-- 11 墓地 -->
+        <div class="stage">
+          <div class="prog">墓地 進行 <span id="prog_st11">0/5</span></div>
+          <img src="stage11.png" alt="墓地">
+          <button class="btn" onclick="gotoStage('st11')">墓地へ</button>
+        </div>
+        <!-- 12 火山深層 -->
+        <div class="stage">
+          <div class="prog">火山深層 進行 <span id="prog_st12">0/3</span></div>
+          <img src="stage12.png" alt="火山深層">
+          <button class="btn" onclick="gotoStage('st12')">火山深層へ</button>
+        </div>
+        <!-- 13 魔導塔 -->
+        <div class="stage">
+          <div class="prog">魔導塔 進行 <span id="prog_st13">0/6</span></div>
+          <img src="stage13.png" alt="魔導塔">
+          <button class="btn" onclick="gotoStage('st13')">魔導塔へ</button>
+        </div>
+        <!-- 14 空中庭園 -->
+        <div class="stage">
+          <div class="prog">空中庭園 進行 <span id="prog_st14">0/4</span></div>
+          <img src="stage14.png" alt="空中庭園">
+          <button class="btn" onclick="gotoStage('st14')">空中庭園へ</button>
+        </div>
+        <!-- 15 砂漠遺跡 -->
+        <div class="stage">
+          <div class="prog">砂漠遺跡 進行 <span id="prog_st15">0/2</span></div>
+          <img src="stage15.png" alt="砂漠遺跡">
+          <button class="btn" onclick="gotoStage('st15')">砂漠遺跡へ</button>
+        </div>
+        <!-- 16 火山外縁 -->
+        <div class="stage">
+          <div class="prog">火山外縁 進行 <span id="prog_st16">0/5</span></div>
+          <img src="stage16.png" alt="火山外縁">
+          <button class="btn" onclick="gotoStage('st16')">火山外縁へ</button>
+        </div>
+        <!-- 17 黒翼の祭壇 -->
+        <div class="stage">
+          <div class="prog">黒翼の祭壇 進行 <span id="prog_st17">0/3</span></div>
+          <img src="stage17.png" alt="黒翼の祭壇">
+          <button class="btn" onclick="gotoStage('st17')">黒翼の祭壇へ</button>
+        </div>
+        <!-- 18 黒竜の間 -->
+        <div class="stage">
+          <div class="prog">黒竜の間 進行 <span id="prog_st18">0/2</span></div>
+          <img src="stage18.png" alt="黒竜の間">
+          <button class="btn" onclick="gotoStage('st18')">黒竜の間へ</button>
+        </div>
+        <!-- 19 魔王城前庭 -->
+        <div class="stage">
+          <div class="prog">魔王城前庭 進行 <span id="prog_st19">0/7</span></div>
+          <img src="stage19.png" alt="魔王城前庭">
+          <button class="btn" onclick="gotoStage('st19')">魔王城前庭へ</button>
+        </div>
+        <!-- 20 魔族将軍の間（中盤ボス） -->
+        <div class="stage">
+          <div class="prog">将軍の間 進行 <span id="prog_st20">0/3</span></div>
+          <img src="stage20.png" alt="魔族将軍の間">
+          <button class="btn" onclick="gotoStage('st20')">将軍の間へ</button>
+        </div>
       </div>
 
       <hr class="sep">
@@ -146,8 +208,8 @@
         <article class="card" id="cardE">
           <img class="img" id="imgE" src="スライム.png" alt="敵">
           <div class="topbar">
-          <div class="name" id="nameE">スライム</div>
-          <div class="hp"><i id="hpE" style="width:100%"></i><span class="ticks"></span></div>
+            <div class="name" id="nameE">スライム</div>
+            <div class="hp"><i id="hpE" style="width:100%"></i><span class="ticks"></span></div>
           </div>
           <span class="badge" id="badgeE">-</span>
           <div class="ribbon" id="ribbonE" style="display:none"><div class="lab" id="ribbonEText"></div></div>
@@ -189,7 +251,7 @@
       </button>
       <button class="bigbtn" id="btnAct" disabled>
         <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" fill="#fff" opacity=".95"/></svg>
-        <span class="label"><span class="jp" id="actLabel">技</span> </span>
+        <span class="label"><span class="jp" id="actLabel">技</span></span>
       </button>
       <button class="bigbtn" id="btnItem">
         <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2h4v2l2 3v2l-1 1v8a3 3 0 01-3 3H12a3 3 0 01-3-3V10L8 9V7l2-3V2z" fill="#fff" opacity=".95"/></svg>
