@@ -46,9 +46,7 @@ section#battle{min-height:100vh; transition: background .3s ease}
   padding:0 14px;
   display:grid;
   gap:12px;
-  grid-template-columns: 1fr minmax(180px, 25%); 
-  /* 左カラム：余り全部（1fr）
-     右カラム：最小180px〜最大25% */
+  grid-template-columns: 1fr minmax(180px, 25%);
 }
 .top{grid-column:1 / -1;display:flex;align-items:center;justify-content:space-between}
 .title{font-weight:800}
@@ -66,14 +64,10 @@ section#battle{min-height:100vh; transition: background .3s ease}
   flex-direction:column;
   gap:4px;
   padding:6px 10px;
-  background:rgba(8,12,28,.72); /* ← 半透明の帯 */
+  background:rgba(8,12,28,.72);
   z-index:3;
 }
-
-.topbar .name {
-  font-weight:800;
-}
-
+.topbar .name { font-weight:800; }
 .topbar .hp {
   width:100%;
   height:12px;
@@ -82,11 +76,7 @@ section#battle{min-height:100vh; transition: background .3s ease}
   border-radius:999px;
   overflow:hidden;
 }
-.topbar .hp i {
-  display:block;
-  height:100%;
-  background:linear-gradient(90deg,var(--hpG),#2ad1c8);
-}
+.topbar .hp i { display:block; height:100%; background:linear-gradient(90deg,var(--hpG),#2ad1c8); }
 .hp.warn i{background:linear-gradient(90deg,var(--hpW),#ffb800)}
 .hp .ticks{position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;background:repeating-linear-gradient(90deg, rgba(255,255,255,.18) 0 1px, transparent 1px 20%),repeating-linear-gradient(90deg, rgba(255,255,255,.28) 0 2px, transparent 2px 100%)}
 .badge{padding:2px 8px;border:1px solid var(--line);border-radius:999px;background:#0f1536;font-size:12px;color:#c9d6ff}
@@ -97,16 +87,13 @@ section#battle{min-height:100vh; transition: background .3s ease}
   color:#dbe6ff;
   padding:8px 10px;
   border-radius:10px;
-
   display:inline-block;
-  font-size: clamp(4px, 1.2vw, 13px); 
-  /* ← 最小4px〜最大13pxで可変 */
-  
-  max-width: 120px; 
+  font-size: clamp(4px, 1.2vw, 13px);
+  max-width: 120px;
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* 念のため長すぎるときは「…」 */
+  text-overflow: ellipsis;
 }
 .ribbon{position:absolute;left:0;right:0;top:58px;display:flex;justify-content:center;pointer-events:none;z-index:4}
 .ribbon .lab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:linear-gradient(180deg,#2440c2,#1b2d7f); box-shadow:0 10px 24px rgba(0,0,0,.28); font-weight:900}
@@ -114,8 +101,7 @@ section#battle{min-height:100vh; transition: background .3s ease}
 .ribbon.show{animation:rib .9s ease both}
 @keyframes rib{0%{transform:translateY(-16px);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateY(-32px);opacity:0}}
 .hitShake{animation:shake .25s ease}
-@keyframes shake{20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}100%{transform:translateX(0)}
-}
+@keyframes shake{20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}100%{transform:translateX(0)}}
 .flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.22), transparent 60%);animation:flash .35s ease;z-index:2}
 @keyframes flash{from{opacity:0}50%{opacity:1}to{opacity:0}}
 .dmg{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);font-size:42px;font-weight:900;color:#fff;text-shadow:0 0 14px rgba(255,80,80,.85),0 0 3px #000;opacity:0;animation:dpop .8s ease both;z-index:5}
@@ -131,37 +117,19 @@ section#battle{min-height:100vh; transition: background .3s ease}
 .tE{background:rgba(255,109,109,.2);border:1px solid var(--enemy);color:#ffd1d1}
 .red{color:#ff8f8f} .gray{color:#b5c2ff}
 .dicePanel{border: 1px solid var(--line);border-radius: 12px;background: linear-gradient(180deg, var(--panel), var(--panel2));padding: 10px;height: var(--lowerH);display: grid;place-items: center}
-:root {
-  --dice-size: 120px; /* サイコロの基本サイズ（ここを変えれば全体調整可能） */
-}
 
-.scene {
-  width: var(--dice-size);
-  height: var(--dice-size);
-  perspective: 800px;
-}
-
-.dice {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform 1s ease-in-out;
-}
-
-.face {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-}
+/* ===== 3D Dice ===== */
+:root { --dice-size: 120px; }
+.scene { width: var(--dice-size); height: var(--dice-size); perspective: 800px; }
+.dice { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 1s ease-in-out; }
+.face { position: absolute; width: 100%; height: 100%; background-size: cover; background-position: center; }
 .front  { transform: rotateY(0deg) translateZ(calc(var(--dice-size) / 2));  background-image: url("1.png") }
 .back   { transform: rotateY(180deg) translateZ(calc(var(--dice-size) / 2)); background-image: url("6.png") }
 .right  { transform: rotateY(90deg) translateZ(calc(var(--dice-size) / 2)); background-image: url("3.png") }
 .left   { transform: rotateY(-90deg) translateZ(calc(var(--dice-size) / 2)); background-image: url("4.png") }
 .topp   { transform: rotateX(90deg) translateZ(calc(var(--dice-size) / 2));  background-image: url("5.png") }
 .bottom { transform: rotateX(-90deg) translateZ(calc(var(--dice-size) / 2)); background-image: url("2.png") }
+
 .sidebar{position:sticky;top:8px;align-self:start;display:grid;gap:16px}
 .bigbtn{width:100%; min-height:72px; padding:14px 18px; display:flex; align-items:center; gap:12px; color:#fff;border-radius:16px; border:1px solid #2240b2;background:linear-gradient(180deg,var(--btn),var(--btn2)); box-shadow:0 10px 24px rgba(37,66,210,.35), inset 0 1px 0 rgba(255,255,255,.15);font-weight:800; letter-spacing:.02em; white-space:nowrap}
 .bigbtn:hover{background:linear-gradient(180deg,var(--btnH),#2f55ff)}
@@ -180,9 +148,11 @@ section#battle{min-height:100vh; transition: background .3s ease}
 .ally{border-color:var(--ally)} .enemy{border-color:var(--enemy)}
 .last{box-shadow:0 0 0 3px rgba(255,255,255,.12);animation:pulse 1.2s ease-out 1}
 @keyframes pulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,.28)}100%{transform:scale(1.06);box-shadow:0 0 0 8px rgba(255,255,255,0)}}
+
 .win-overlay{pointer-events:none;position:fixed;inset:0;display:grid;place-items:center;font-size:72px;font-weight:900;letter-spacing:.06em;color:transparent;-webkit-text-stroke:2px #fff;text-shadow:0 0 18px rgba(255,255,255,.6);background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.08), transparent 55%);opacity:0;transform:scale(.9);transition:opacity .35s,transform .35s;z-index:80}
 .win-overlay.show{opacity:1;transform:scale(1)}
 .win-overlay span{background:linear-gradient(180deg,#fff,#ffe28a 60%,#ffb84d);-webkit-background-clip:text;background-clip:text;color:transparent}
+
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:90}
 .modal.show{display:flex}
 .modal .card{width:min(1080px,96vw);max-height:92vh;overflow:auto;background:#0e1537;border:1px solid #2a3571;border-radius:12px;padding:12px}
@@ -197,8 +167,19 @@ section#battle{min-height:100vh; transition: background .3s ease}
 .cell{padding:6px;background:#17204a;border:1px solid #39458b;border-radius:8px}
 .list{display:grid;gap:6px}
 .item{display:flex;justify-content:space-between;gap:8px;padding:6px;border:1px solid #39458b;background:#17204a;border-radius:8px}
-@media (max-height:740px){:root{ --lowerH: 200px } .img{ height: clamp(240px, 32vh, 360px) } .foot{ bottom:6px } .pill{ padding:6px 8px; font-size:12px }}
-@media (max-height:620px){:root{ --lowerH: 180px } .img{ height: clamp(200px, 28vh, 320px) } .top .title{ font-size:16px }}
+
+@media (max-height:740px){
+  :root{ --lowerH: 200px }
+  .img{ height: clamp(240px, 32vh, 360px) }
+  .foot{ bottom:6px }
+  .pill{ padding:6px 8px; font-size:12px }
+}
+@media (max-height:620px){
+  :root{ --lowerH: 180px }
+  .img{ height: clamp(200px, 28vh, 320px) }
+  .top .title{ font-size:16px }
+}
+
 hr.sep{border:none;border-top:1px solid #2a3474;margin:10px 0}
 section { display: none; }
 section.active { display: block; }
@@ -208,40 +189,24 @@ section.active { display: block; }
   transform: translate(-50%, -50%); opacity: 0;
   transition: opacity .25s ease-out, transform .35s ease-out;
   z-index: 150; pointer-events: none; }
-.prog { display: none; } /* 進捗UIは隠したい場合はこのまま */
 .chest-drop.show { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
 .result-chest { width: 100px; height: 100px; margin: 0 6px; cursor: pointer; transition: transform .2s }
 .result-chest:hover { transform: scale(1.1); }
 
-/* 任意（キラキラ演出をCSSでも少し雰囲気付け） */
+/* キラキラ演出 */
 .sparkle {
   filter: drop-shadow(0 0 8px rgba(120,200,255,.65)) drop-shadow(0 0 14px rgba(120,200,255,.35));
 }
-#badgeE {
-  display: none !important;
-}
 
-#badgeP {
-  display: none !important;
-}
+/* バッジ非表示（演出を控えめにしたい時） */
+#badgeE, #badgeP { display: none !important; }
 
-.hp .ticks {
-  display: none;
-}
+/* HP目盛りの装飾を抑える場合 */
+.hp .ticks { display: none; }
 
+/* ===== Responsive ===== */
 @media (max-width: 768px) {
-  /* バトルログとサイコロの幅比率を調整 */
-  .row {
-    grid-template-columns: 1fr 0.45fr;
-  }
-
-  /* バトルログ縮小 */
-  .log {
-    height: 140px;
-  }
-
-  /* サイコロ本体縮小 */
-  :root {
-    --dice-size: 85px;  /* ← 基準を更新 */
-  }
+  .row { grid-template-columns: 1fr 0.45fr; }
+  .log { height: 140px; }
+  :root { --dice-size: 85px; }
 }
