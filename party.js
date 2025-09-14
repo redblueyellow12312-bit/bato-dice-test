@@ -47,27 +47,29 @@ const PT_XP_NEED={}; for(let lv=1; lv<PARTY_MAX_LEVEL; lv++){ PT_XP_NEED[lv]=(lv
 const ROLES = { ATK:'アタッカー', TANK:'タンク', SUP:'サポート' };
 // ソロと同等の技構成
 const SKILLS_LEON = {
-  1:{name:'一閃',dmg:2}, 2:{name:'連撃',dmg:3}, 3:{name:'強斬',dmg:4},
-  4:{name:'急所突き',dmg:5}, 5:{name:'全力斬り',dmg:6}, 6:{name:'昇天斬',dmg:7}
+  1:{name:'つつき',dmg:1}, 2:{name:'つつき',dmg:1},
+  3:{name:'きりさく',dmg:2}, 4:{name:'きりさく',dmg:2},
+  5:{name:'スラッシュ',dmg:3}, 6:{name:'スラッシュ',dmg:3}
 };
 const SKILLS_GARO = {
   1:{name:'盾打ち',dmg:1},
-  2:{name:'防御の構え',guard:2},
-  3:{name:'挑発',guard:2},
-  4:{name:'全体挑発',guard:2, aoeGuard:true}, // 表示用フラグ（ロジックは単体スタック）
-  5:{name:'鉄壁',guard:3},
-  6:{name:'不屈の護り',guard:4}
+  2:{name:'防御の構え',guard:1},
+  3:{name:'中盾打ち',dmg:2},
+  4:{name:'挑発の構え',guard:2},
+  5:{name:'大盾打ち',dmg:3},
+  6:{name:'鉄壁',guard:3}
 };
+// ミナ：回復型（一人旅なので単体回復のみでOK）
 const SKILLS_MINA = {
-  1:{name:'癒しのさざめき',heal:2},
+  1:{name:'杖打ち',dmg:1},                 // 低ロールでも削れる
   2:{name:'小癒し',heal:3},
-  3:{name:'祝福',heal:3,buffAtk:1},
-  4:{name:'全体小回復',heal:2,aoe:true},
+  3:{name:'祝福',heal:2,buffAtk:1},
+  4:{name:'光線',dmg:2},
   5:{name:'大回復',heal:6},
-  6:{name:'天啓',heal:4,aoe:true,buffAtk:2}
+  6:{name:'聖なる光',dmg:3}  
 };
 const PRESETS = {
-  leon:{ id:'leon', name:'剣士レオン', role:ROLES.ATK, baseMax:22, atk:1, guardPower:0, healPower:0,
+  leon:{ id:'leon', name:'剣士レオン', role:ROLES.ATK, baseMax:22, atk:0, guardPower:0, healPower:0,
     passive:{ label:'猛攻：ゾロ目で+2' }, skills:SKILLS_LEON },
   garo:{ id:'garo', name:'盾騎士ガロ', role:ROLES.TANK, baseMax:28, atk:0, guardPower:0, healPower:0,
     passive:{ label:'守護：被ダメ-1（最低1）', harden:1 }, skills:SKILLS_GARO },
@@ -185,14 +187,20 @@ function loadParty(){
 function readSolo(){ try{ const r=localStorage.getItem(SOLO_SAVE_KEY); return r?JSON.parse(r):null }catch(e){ return null } }
 function writeSolo(g){ try{ localStorage.setItem(SOLO_SAVE_KEY, JSON.stringify(g)) }catch(e){} }
 
+// ---- lv/lvl & exp/xp 両対応ヘルパ ----
+function getLevel(v){ return (v && (v.lvl ?? v.lv)) ?? 1; }
+function getXp(v){ return (v && (v.xp ?? v.exp)) ?? 0; }
+function putLevel(obj, lv){ obj.lvl = lv; obj.lv = lv; }
+function putXp(obj, xp){ obj.xp = xp; obj.exp = xp; }
+
 // ソロ→パーティ 取り込み
 function syncFromSolo(){
   const g=readSolo(); if(!g) return;
   // Leon
   const L = Party.roster[0];
   L.name = g.player?.name ?? L.name;
-  L.lvl  = g.player?.lvl  ?? L.lvl;
-  L.xp   = g.player?.xp   ?? L.xp;
+  L.lvl  = getLevel(g.player)  ?? L.lvl;
+  L.xp   = getXp(g.player)     ?? L.xp;
   L.baseMax = g.player?.baseMax ?? L.baseMax;
   L.max  = g.player?.max ?? L.max;
   L.hp   = clamp(g.player?.hp ?? L.max, 0, L.max);
@@ -204,7 +212,8 @@ function syncFromSolo(){
   // Garo
   const G = Party.roster[1];
   const gs=g.party?.garo||{};
-  G.name=gs.name??G.name; G.lvl=gs.lvl??G.lvl; G.xp=gs.xp??G.xp;
+  G.name=gs.name??G.name;
+  G.lvl=getLevel(gs)??G.lvl; G.xp=getXp(gs)??G.xp;
   G.baseMax=gs.baseMax??G.baseMax; G.max=gs.max??G.max; G.hp=clamp(gs.hp??G.max,0,G.max);
   G.atk=gs.atk??G.atk; G.guardPower=gs.guardPower??0; G.healPower=gs.healPower??0;
   G.skills=JSON.parse(JSON.stringify(gs.skills||G.skills));
@@ -212,7 +221,8 @@ function syncFromSolo(){
   // Mina
   const M = Party.roster[2];
   const ms=g.party?.mina||{};
-  M.name=ms.name??M.name; M.lvl=ms.lvl??M.lvl; M.xp=ms.xp??M.xp;
+  M.name=ms.name??M.name;
+  M.lvl=getLevel(ms)??M.lvl; M.xp=getXp(ms)??M.xp;
   M.baseMax=ms.baseMax??M.baseMax; M.max=ms.max??M.max; M.hp=clamp(ms.hp??M.max,0,M.max);
   M.atk=ms.atk??M.atk; M.guardPower=ms.guardPower??0; M.healPower=ms.healPower??0;
   M.skills=JSON.parse(JSON.stringify(ms.skills||M.skills));
@@ -221,18 +231,28 @@ function syncFromSolo(){
 function syncToSolo(){
   const g = readSolo() || { player:{}, party:{}, progress:{}, unlock:{} };
   const L=Party.roster[0], G=Party.roster[1], M=Party.roster[2];
-  g.player.name=L.name; g.player.lvl=L.lvl; g.player.xp=L.xp;
+
+  g.player = g.player || {};
+  g.player.name=L.name;
+  putLevel(g.player, L.lvl);
+  putXp(g.player, L.xp);
   g.player.baseMax=L.baseMax; g.player.max=L.max; g.player.hp=L.hp;
   g.player.atk=L.atk; g.player.skills=JSON.parse(JSON.stringify(L.skills));
   g.player.guardPower=L.guardPower||0; g.player.healPower=L.healPower||0;
 
   g.party=g.party||{};
-  g.party.garo={ name:G.name,lvl:G.lvl,xp:G.xp, baseMax:G.baseMax,max:G.max,hp:G.hp, atk:G.atk,
-                 guardPower:G.guardPower||0, healPower:G.healPower||0,
-                 skills:JSON.parse(JSON.stringify(G.skills)) };
-  g.party.mina={ name:M.name,lvl:M.lvl,xp:M.xp, baseMax:M.baseMax,max:M.max,hp:M.hp, atk:M.atk,
-                 guardPower:M.guardPower||0, healPower:M.healPower||0,
-                 skills:JSON.parse(JSON.stringify(M.skills)) };
+  const garo={ name:G.name, baseMax:G.baseMax,max:G.max,hp:G.hp, atk:G.atk,
+               guardPower:G.guardPower||0, healPower:G.healPower||0,
+               skills:JSON.parse(JSON.stringify(G.skills)) };
+  putLevel(garo, G.lvl); putXp(garo, G.xp);
+  g.party.garo=garo;
+
+  const mina={ name:M.name, baseMax:M.baseMax,max:M.max,hp:M.hp, atk:M.atk,
+               guardPower:M.guardPower||0, healPower:M.healPower||0,
+               skills:JSON.parse(JSON.stringify(M.skills)) };
+  putLevel(mina, M.lvl); putXp(mina, M.xp);
+  g.party.mina=mina;
+
   writeSolo(g);
 }
 
@@ -252,12 +272,11 @@ function refreshAllyCards(){
   const A=Party.roster;
   $('#pName1').textContent=A[0].name; $('#pName2').textContent=A[1].name; $('#pName3').textContent=A[2].name;
   setHpBar('#pHp1',A[0].hp,A[0].max); setHpBar('#pHp2',A[1].hp,A[1].max); setHpBar('#pHp3',A[2].hp,A[2].max);
- // 画像反映（#pImg1〜3 がHTMLにある前提）
- const img1 = $('#pImg1'), img2 = $('#pImg2'), img3 = $('#pImg3');
- if (img1) img1.src = CHAR_ASSETS[A[0].id] || CHAR_ASSETS.leon;
- if (img2) img2.src = CHAR_ASSETS[A[1].id] || CHAR_ASSETS.garo;
- if (img3) img3.src = CHAR_ASSETS[A[2].id] || CHAR_ASSETS.mina;
-
+  // 画像反映（#pImg1〜3 がHTMLにある前提）
+  const img1 = $('#pImg1'), img2 = $('#pImg2'), img3 = $('#pImg3');
+  if (img1) img1.src = CHAR_ASSETS[A[0].id] || CHAR_ASSETS.leon;
+  if (img2) img2.src = CHAR_ASSETS[A[1].id] || CHAR_ASSETS.garo;
+  if (img3) img3.src = CHAR_ASSETS[A[2].id] || CHAR_ASSETS.mina;
 }
 function refreshEnemyCards(){
   if(!PSquad) return;
@@ -277,6 +296,9 @@ function appendPartyLog(side,msg){
 
 // ====== ステージ進行 ======
 function gotoPartyStage(key){
+  // ソロの最新進行を毎回取り込む
+  syncFromSolo();
+  saveParty();
   const st = STAGE[key]; if(!st) return;
   Party.currentStage=key;
   PStage={ id:key, remain:st.battles, idx:0, cleared:false };
@@ -636,11 +658,38 @@ function leavePartyBattle(){
 
 // ====== 進捗UI ======
 function refreshPartySelect(){
+  try{ syncFromSolo(); saveParty(); }catch(e){}
   Object.values(STAGE).forEach(st=>{
     const el=$(`#${PROG_ID[st.key]}`); if(el) el.textContent = `0/${st.battles}`;
   });
-  // 右ペインの簡易情報（必要ならここで拡張）
+  // 右ペインの簡易情報
+  const A = Party.roster || [];
+  updatePartyInfoRow('#pinfo1', A[0]);
+  updatePartyInfoRow('#pinfo2', A[1]);
+  updatePartyInfoRow('#pinfo3', A[2]);
 }
+// 情報欄1行分の描画（存在した要素だけ更新）
+function updatePartyInfoRow(rootSel, ch){
+  if (ch.id === 'leon') {
+    $('#p1Lv').textContent = ch.lvl;
+    $('#p1Xp').textContent = ch.xp;
+    $('#p1Hp').textContent = `${ch.hp}/${ch.max}`;
+    $('#p1Atk').textContent = ch.atk;
+  }
+  if (ch.id === 'garo') {
+    $('#p2Lv').textContent = ch.lvl;
+    $('#p2Xp').textContent = ch.xp;
+    $('#p2Hp').textContent = `${ch.hp}/${ch.max}`;
+    $('#p2Atk').textContent = ch.atk;
+  }
+  if (ch.id === 'mina') {
+    $('#p3Lv').textContent = ch.lvl;
+    $('#p3Xp').textContent = ch.xp;
+    $('#p3Hp').textContent = `${ch.hp}/${ch.max}`;
+    $('#p3Atk').textContent = ch.atk;
+  }
+}
+
 
 // ====== 宝箱 ======
 function rollChest(){
@@ -731,7 +780,7 @@ function fillSkillLists(){
   // 敵（参考）
   const ebox=$('#partyEnemySkillList'); if(ebox){ ebox.innerHTML='';
     if(PSquad){
-      const unique = {}; // 重複名は1回だけ表示
+      const unique = {};
       for(const e of PSquad){
         for(let i=1;i<=6;i++){
           const s=e.skills[i]; const key=e.name+'_'+s.name+'_'+i;
@@ -774,4 +823,63 @@ function partyInit(){
 }
 partyInit();
 
-})(); 
+// ==== パーティ：装備一覧（簡易） ====
+// カウント制（自動適用）の現状を見せるだけのモーダル
+function renderPartyEquip(){
+  const e = Party.equip || {};
+  const list = document.getElementById('partyEquipList');
+  if(!list) return;
+  list.innerHTML = '';
+
+  const rows = [
+    ['鉄の剣',        e.ironSword||0,   'アタッカーの与ダメ+1（自動適用）'],
+    ['蒼鉄の剣',      e.blueSword||0,   'アタッカーの与ダメ+2（自動適用）'],
+    ['ドラゴンの剣',  e.dragonSword||0, 'アタッカーの与ダメ+3（自動適用）'],
+    ['ソル',          e.sol||0,         '与ダメ+3 / 回復+1（自動適用）'],
+    ['鉄の盾',        e.ironShield||0,  'タンクの被ダメ軽減+1（自動適用）'],
+    ['蒼鉄の盾',      e.blueShield||0,  'タンクの被ダメ軽減+2（自動適用）'],
+    ['レガリア',      e.regalia||0,     'タンクの被ダメ軽減+3 / 回復+1（自動適用）'],
+  ];
+  for(const [name, cnt, note] of rows){
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `<span>${name}</span><span>所持 ${cnt}</span>`;
+    list.appendChild(div);
+
+    const sub = document.createElement('div');
+    sub.style.cssText = 'margin:-6px 0 8px 0; font-size:12px; opacity:.85;';
+    sub.textContent = note;
+    list.appendChild(sub);
+  }
+
+  const hint = document.createElement('div');
+  hint.style.cssText = 'margin-top:6px; font-size:12px; opacity:.85;';
+  hint.textContent = '※現在はカウント分が自動的に効果に加算されます（個別割り当ては今後の拡張で対応予定）';
+  list.appendChild(hint);
+}
+function openPartyEquip(){
+  renderPartyEquip();
+  const m = document.getElementById('partyEquipModal');
+  if(m){ m.hidden = false; m.classList.add('show'); }
+}
+
+// ==== グローバル公開（HTMLの onclick から呼べるようにする） ====
+window.openPartyItems = openPartyItems;  // 「パーティのアイテム」ボタン
+window.openPartyEquip = openPartyEquip;  // 装備ボタン
+
+// ==== 追加：ソロ⇄パーティ切替の極薄ラッパ ====
+// ソロ→パーティ（入る前にソロの最新成長を取り込んでからパーティ選択へ）
+window.gotoParty = function gotoParty(){
+  try { syncFromSolo(); saveParty(); } catch(e){}
+  goto('party-select');
+  if (typeof refreshPartySelect === 'function') refreshPartySelect();
+};
+
+// パーティ→ソロ（戻る前にパーティの成長をソロへ書き戻してからソロ選択へ）
+window.gotoSolo = function gotoSolo(){
+  try { saveParty(); syncToSolo(); } catch(e){}
+  goto('select');
+  if (typeof refreshSelect === 'function') refreshSelect();
+};
+window.Party = Party;
+})();
