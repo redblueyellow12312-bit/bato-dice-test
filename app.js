@@ -105,17 +105,17 @@ const SKILLS_LEON = JSON.parse(JSON.stringify(DEFAULT_SKILLS));
 const SKILLS_GARO = {
   1:{name:'盾打ち',dmg:1},
   2:{name:'防御の構え',guard:1},
-  3:{name:'かばう',guard:2},
+  3:{name:'中盾打ち',dmg:2},
   4:{name:'挑発の構え',guard:2},
-  5:{name:'鉄壁',guard:3},
-  6:{name:'大盾打ち',dmg:3}
+  5:{name:'大盾打ち',dmg:3},
+  6:{name:'鉄壁',guard:3}
 };
 // ミナ：回復型（一人旅なので単体回復のみでOK）
 const SKILLS_MINA = {
   1:{name:'杖打ち',dmg:1},                 // 低ロールでも削れる
   2:{name:'小癒し',heal:3},
   3:{name:'祝福',heal:2,buffAtk:1},
-  4:{name:'守護の祈り',guard:2},
+  4:{name:'光線',dmg:2},
   5:{name:'大回復',heal:6},
   6:{name:'聖なる光',dmg:3}  
 };
@@ -342,7 +342,7 @@ const STAGE_BOOK = {
 // ------------------ ゲーム状態 ------------------
 let Game = {
   player:{
-    name:'剣士レオン', lvl:1, xp:1, atk:1,
+    name:'剣士レオン', lvl:1, xp:1, atk:0,
     baseMax:20, max:20, hp:20,
     guardPower:0, healPower:0, // ★役割補正
     skills:JSON.parse(JSON.stringify(SKILLS_LEON)),
@@ -354,8 +354,8 @@ let Game = {
   },
   // 仲間（個別Lv30表）
   party:{
-    garo:{ name:'盾騎士ガロ', lvl:1, xp:1, atk:1, baseMax:24, max:24, hp:24, guardPower:0, healPower:0, skills:JSON.parse(JSON.stringify(SKILLS_GARO)) },
-    mina:{ name:'僧侶ミナ',   lvl:1, xp:1, atk:1, baseMax:18, max:18, hp:18, guardPower:0, healPower:0, skills:JSON.parse(JSON.stringify(SKILLS_MINA)) }
+    garo:{ name:'盾騎士ガロ', lvl:1, xp:1, atk:0, baseMax:24, max:24, hp:24, guardPower:0, healPower:0, skills:JSON.parse(JSON.stringify(SKILLS_GARO)) },
+    mina:{ name:'僧侶ミナ',   lvl:1, xp:1, atk:0, baseMax:18, max:18, hp:18, guardPower:0, healPower:0, skills:JSON.parse(JSON.stringify(SKILLS_MINA)) }
   },
   progress:{ kills:{}, unlock:{} },
   activeChar: 'leon' // 'leon'|'garo'|'mina'
