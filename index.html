@@ -15,7 +15,7 @@
     <p>ダイスで戦う小さなRPG。装備とアイテムで攻略ルートを選ぼう。</p>
     <div class="homeBtns">
       <button class="btn" onclick="goto('select')">ゲーム開始！（ソロ）</button>
-      <button class="btn" onclick="goto('party-select')">パーティ戦で遊ぶ</button>
+      <button class="btn" onclick="gotoParty()">パーティ戦で遊ぶ</button>
       <button class="btn ghost" onclick="resetSave(true)">セーブ初期化</button>
     </div>
   </div>
@@ -158,7 +158,7 @@
         <button class="btn" onclick="openEquip()">装備を変更</button>
         <button class="btn" onclick="openItems()">アイテムを確認</button>
         <button class="btn ghost" onclick="goto('home')">ホームへ戻る</button>
-        <button class="btn" onclick="goto('party-select')">▶ パーティ戦に切替</button>
+        <button class="btn" onclick="gotoParty()">▶ パーティ戦に切替</button>
       </div>
     </div>
 
@@ -430,8 +430,9 @@
 
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn" onclick="openPartyItems()">パーティのアイテム</button>
+        <button class="btn" onclick="openPartyEquip()">パーティの装備</button>
         <button class="btn ghost" onclick="goto('home')">ホームへ戻る</button>
-        <button class="btn" onclick="goto('select')">▶ ソロ戦に切替</button>
+        <button class="btn" onclick="gotoSolo()">▶ ソロ戦に切替</button>
       </div>
     </div>
 
@@ -639,6 +640,8 @@
   <div class="modal" id="partyEnemySkills"><div class="card"><h4>敵の技（参考）</h4><div class="list" id="partyEnemySkillList"></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
 
   <!-- アイテムモーダル（パーティ） -->
+
+</section>
   <div class="modal" id="partyItemModal">
     <div class="card">
       <h4>パーティアイテム</h4>
@@ -646,8 +649,6 @@
       <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
     </div>
   </div>
-</section>
-
 <!-- ===================== PARTY RESULT（パーティ） ===================== -->
 <section id="party-result">
   <div class="selWrap" style="grid-template-columns:1fr;">
@@ -709,10 +710,24 @@
     <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
   </div>
 </div>
+<!-- パーティ装備モーダル -->
+<div class="modal" id="partyEquipModal">
+  <div class="card">
+    <h4>パーティ装備（自動適用）</h4>
+    <div class="list" id="partyEquipList"></div>
+    <div style="text-align:right;margin-top:8px">
+      <button class="pill2 ghost" data-close>閉じる</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- ===================== Scripts ===================== -->
 <script src="app.js"></script>
 <!-- パーティ戦ロジック -->
 <script src="party.js"></script>
+
+
+
 </body>
 </html>
