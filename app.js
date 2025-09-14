@@ -1,6 +1,11 @@
 // =====================================================
-// BatoDice – app.js（Lv30 / St1-20 / 中盤ギミック対応）
+// BatoDice – app.js（Lv30 / St1-20 / 中盤ギミック対応 + ソロ切替/ロスター連携）
 // 画像想定：stage1〜20.png、各敵png、white_chest_*、blue_chest_*、blue_sparkle_*、yellow_chest_*、1.png〜6.pngほか
+// ★修正点（要約）
+//  - ソロの「ガロ＝ガード型」「ミナ＝回復型」スキルセットを導入（レオンは従来の攻撃）
+//  - レベルアップで HP/ATK に加え、ガロは guardPower、ミナは healPower が上昇
+//  - 杖装備（司祭/祝福）は「回復量+」に変更、盾は従来どおり「次被ダメ軽減」
+//  - 技表示/設定UIのプレビューも回復/ガード値を表示
 // =====================================================
 
 // ------------------ 定数・ユーティリティ ------------------
@@ -17,42 +22,102 @@ const pct=(v,tot)=>Math.round((v/tot)*100);
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const $ = s=>document.querySelector(s);
 
-// ------------------ レベルテーブル（Lv30仕様） ------------------
-// 必要XP（累計）= Lv^2
-// HP：Lv1=20、Lv2以降25まで+2/レベル（Lv25=68）、Lv26以降は据え置き
-// ATK：+1タイミング = 2,4,7,10,13,16,19,22,25,28,30
-const ATK_UP_LEVELS = [2,4,7,10,13,16,19,22,25,28,30];
-
-const LEVEL_TABLE = {}; // { L: { xp:累計, hp:+2 or 0, atk:0/1 } }
+// ------------------ レベルテーブル共通ヘルパ ------------------
 const XP_TABLE = {};    // UI用：次レベルに必要な累計 (=(L+1)^2)
+for (let lv=1; lv<MAX_LEVEL; lv++){ XP_TABLE[lv] = (lv+1)*(lv+1) }
 
-for (let lv=2; lv<=MAX_LEVEL; lv++){
-  LEVEL_TABLE[lv] = {
-    xp: lv*lv,
-    hp: (lv<=25 ? 2 : 0),
-    atk: ATK_UP_LEVELS.includes(lv) ? 1 : 0
-  };
-}
-for (let lv=1; lv<MAX_LEVEL; lv++){
-  XP_TABLE[lv] = (lv+1)*(lv+1);
+// ★Lv成長：ATK/HPに加え、ガロ=guard、ミナ=heal
+function buildLevelTable(atkUpLevels, guardUpLevels = [], healUpLevels = []){
+  const T={};
+  for(let lv=2; lv<=MAX_LEVEL; lv++){
+    T[lv] = { 
+      xp: lv*lv, 
+      hp: (lv<=25?2:0), 
+      atk: atkUpLevels.includes(lv)?1:0,
+      guard: guardUpLevels.includes(lv)?1:0,
+      heal: healUpLevels.includes(lv)?1:0
+    };
+  }
+  return T;
 }
 
-// ------------------ 装備（出目割り当て対応：剣=atk加算、盾=次の被ダメ軽減一回） ------------------
+// ★キャラ別のATK上昇レベル
+const ATK_UP_LEON = [2,4,7,10,13,16,19,22,25,28,30];
+const ATK_UP_GARO = [4,8,12,16,20,24,28,30];
+const ATK_UP_MINA = [3,6,10,14,18,22,26,30];
+
+// ★ガロ/ミナの役割成長レベル
+const GUARD_UP_GARO = [4,8,12,16,20,24,28,30];
+const HEAL_UP_MINA  = [3,6,10,14,18,22,26,30];
+
+// ★キャラ別レベルテーブル
+const LEVEL_TABLE_LEON = buildLevelTable(ATK_UP_LEON);
+const LEVEL_TABLE_GARO = buildLevelTable(ATK_UP_GARO, GUARD_UP_GARO, []);
+const LEVEL_TABLE_MINA = buildLevelTable(ATK_UP_MINA, [], HEAL_UP_MINA);
+
+// ------------------ 装備（出目割り当て対応） ------------------
+// 盾=次の被ダメ軽減一回（defOnce）、杖=回復量+（healPlus）に変更
 const EQUIP_BOOK = {
-  ironSword:   {slot:'face', name:'鉄の剣',       atk:1},
-  ironShield:  {slot:'face', name:'鉄の盾',       defOnce:1},
-  blueSword:   {slot:'face', name:'蒼鉄の剣',     atk:2},
-  blueShield:  {slot:'face', name:'蒼鉄の盾',     defOnce:2},
-  dragonSword: {slot:'face', name:'ドラゴンの剣', atk:3},       // キラ青限定
-  sol:         {slot:'face', name:'ソル',         atk:3},       // 黄
-  regalia:     {slot:'face', name:'レガリア',     defOnce:3}    // 黄
+  ironSword:    {slot:'face', name:'鉄の剣',       atk:1},
+  ironShield:   {slot:'face', name:'鉄の盾',       defOnce:1},
+  blueSword:    {slot:'face', name:'蒼鉄の剣',     atk:2},
+  blueShield:   {slot:'face', name:'蒼鉄の盾',     defOnce:2},
+  dragonSword:  {slot:'face', name:'ドラゴンの剣', atk:3},       // キラ青限定
+  sol:          {slot:'face', name:'ソル',         atk:3},       // 黄
+  regalia:      {slot:'face', name:'レガリア',     defOnce:3},   // 黄
+  // 新規（ガロ＆ミナ用）
+  scaleShield:  {slot:'face', name:'竜鱗の盾',     defOnce:3},   // キラ青（ガロ向け）
+  priestStaff:  {slot:'face', name:'司祭の杖',     healPlus:1},  // 白（ミナ向け）
+  blessedStaff: {slot:'face', name:'祝福の杖',     healPlus:2}   // 青（ミナ向け）
 };
 
-// ------------------ デフォ技 ------------------
+// --- キャラ画像マップ ---
+const CHAR_ASSETS = {
+  leon: { img:'勇者.jpg', label:'剣士レオン' },
+  garo: { img:'ガロ.png', label:'盾騎士ガロ' },
+  mina: { img:'ミナ.png', label:'僧侶ミナ' },
+};
+
+// --- アクティブキャラの画像をUIに反映（HTML変更不要） ---
+function applyActiveCharVisuals(){
+  const who = Game.activeChar || 'leon';
+  const src = (CHAR_ASSETS[who]?.img) || CHAR_ASSETS.leon.img;
+
+  // バトル画面の味方画像
+  const battleImg = document.getElementById('imgP');
+  if (battleImg) battleImg.src = src;
+
+  // セレクト画面 右ペインのポートレート（1枚想定）
+  const selImg = document.querySelector('#select .selRight img');
+  if (selImg) selImg.src = src;
+}
+
+// ------------------ スキルセット（ソロ用） ------------------
+// 既存 DEFAULT はフォールバックとして保持
 const DEFAULT_SKILLS = {
   1:{name:'つつき',dmg:1}, 2:{name:'つつき',dmg:1},
   3:{name:'きりさく',dmg:2}, 4:{name:'きりさく',dmg:2},
   5:{name:'スラッシュ',dmg:3}, 6:{name:'スラッシュ',dmg:3}
+};
+// レオン：従来の攻撃型（そのまま）
+const SKILLS_LEON = JSON.parse(JSON.stringify(DEFAULT_SKILLS));
+// ガロ：ガード型（軽い打撃+ガード積み）
+const SKILLS_GARO = {
+  1:{name:'盾打ち',dmg:1},
+  2:{name:'防御の構え',guard:1},
+  3:{name:'かばう',guard:2},
+  4:{name:'挑発の構え',guard:2},
+  5:{name:'鉄壁',guard:3},
+  6:{name:'大盾打ち',dmg:3}
+};
+// ミナ：回復型（一人旅なので単体回復のみでOK）
+const SKILLS_MINA = {
+  1:{name:'杖打ち',dmg:1},                 // 低ロールでも削れる
+  2:{name:'小癒し',heal:3},
+  3:{name:'祝福',heal:2,buffAtk:1},
+  4:{name:'守護の祈り',guard:2},
+  5:{name:'大回復',heal:6},
+  6:{name:'聖なる光',dmg:3}  
 };
 
 // ------------------ 状態管理（プレイヤー） ------------------
@@ -211,10 +276,9 @@ const ENEMY_BOOK = {
     xp:15, chest:{ rate:1.00, yellow:1.00 }
   },
 
-
-  // ===== 組み合わせ/強化バリエーション（1体想定で再現） =====
-  ghostPair:   { ...this?.ghost,   key:'ghostPair',   name:'幽霊（ペア）', max:28,  skills:{1:{name:'怨念',dmg:2},2:{name:'怨念',dmg:3},3:{name:'連怨',dmg:3},4:{name:'連怨',dmg:4},5:{name:'呪気',dmg:5},6:{name:'呪気・強',dmg:5}}, passive:{ intangible:0.20, label:'半透明（-20%）' }, xp:6, chest:{rate:0.35, white:0.7} },
-  deathKnightEX:{ ...this?.deathKnight, key:'deathKnightEX', name:'デスナイト（強）', max:38, skills:{1:{name:'暗黒斬',dmg:3},2:{name:'暗黒斬',dmg:4},3:{name:'死の剣',dmg:4},4:{name:'死の剣',dmg:5},5:{name:'滅撃',dmg:6},6:{name:'滅撃・強',dmg:7}}, passive:{poisonOnHit:3,label:'攻撃時毒3T'} , xp:8, chest:{rate:0.30, white:0.6} },
+  // ===== 組み合わせ/強化バリエーション =====
+  ghostPair:   { key:'ghostPair',   name:'幽霊（ペア）', img:'ghost_pair.png', max:28,  skills:{1:{name:'怨念',dmg:2},2:{name:'怨念',dmg:3},3:{name:'連怨',dmg:3},4:{name:'連怨',dmg:4},5:{name:'呪気',dmg:5},6:{name:'呪気・強',dmg:5}}, passive:{ intangible:0.20, label:'半透明（-20%）' }, xp:6, chest:{rate:0.35, white:0.7} },
+  deathKnightEX:{ key:'deathKnightEX', name:'デスナイト（強）', img:'deathKnight_ex.png', max:38, skills:{1:{name:'暗黒斬',dmg:3},2:{name:'暗黒斬',dmg:4},3:{name:'死の剣',dmg:4},4:{name:'死の剣',dmg:5},5:{name:'滅撃',dmg:6},6:{name:'滅撃・強',dmg:7}}, passive:{poisonOnHit:3,label:'攻撃時毒3T'}, xp:8, chest:{rate:0.30, white:0.6} },
   ghostKnight: { key:'ghostKnight', name:'幽霊＋デスナイト（隊）', img:'幽霊＋デス.png', max:34,
     skills:{1:{name:'連携斬',dmg:3},2:{name:'連携斬',dmg:4},3:{name:'呪斬',dmg:4},4:{name:'呪斬',dmg:5},5:{name:'滅呪',dmg:6},6:{name:'滅呪・強',dmg:7}},
     passive:{ intangible:0.20, poisonOnHit:2, label:'半透明＆攻撃時毒' }, xp:8, chest:{rate:0.35, white:0.6}
@@ -222,8 +286,8 @@ const ENEMY_BOOK = {
   lizardPack:  { key:'lizardPack', name:'火トカゲ軍団', img:'火トカゲ群.png', max:26,
     skills:{1:{name:'群噛み',dmg:3},2:{name:'群噛み',dmg:3},3:{name:'火花乱舞',dmg:3},4:{name:'火花乱舞',dmg:4},5:{name:'火炎雨',dmg:5},6:{name:'火炎雨・強',dmg:5}}, xp:6, chest:{ rate:0.32, white:0.6 }
   },
-  lichPlus:    { ...this?.lich,     key:'lichPlus', name:'リッチ（強）', max:40, skills:{1:{name:'闇弾',dmg:4},2:{name:'闇弾',dmg:4},3:{name:'吸精',dmg:5},4:{name:'吸精',dmg:6},5:{name:'死霊術',dmg:7},6:{name:'冥府門',dmg:8}}, passive:{lifesteal:3,label:'攻撃時HP+3'}, xp:9, chest:{rate:0.35, white:0.6} },
-  golemPlus:   { ...this?.golemEX,  key:'golemPlus', name:'強化ゴーレム（特）', max:38, skills:{1:{name:'岩拳',dmg:3},2:{name:'岩拳',dmg:3},3:{name:'瓦礫投げ',dmg:4},4:{name:'瓦礫投げ',dmg:5},5:{name:'地響き',dmg:6},6:{name:'地割れ',dmg:7}}, passive:{harden:2,label:'被ダメ-2'}, xp:9, chest:{rate:0.30, white:0.55} },
+  lichPlus:    { key:'lichPlus', name:'リッチ（強）', img:'lich_plus.png', max:40, skills:{1:{name:'闇弾',dmg:4},2:{name:'闇弾',dmg:4},3:{name:'吸精',dmg:5},4:{name:'吸精',dmg:6},5:{name:'死霊術',dmg:7},6:{name:'冥府門',dmg:8}}, passive:{lifesteal:3,label:'攻撃時HP+3'}, xp:9, chest:{rate:0.35, white:0.6} },
+  golemPlus:   { key:'golemPlus', name:'強化ゴーレム（特）', img:'golem_plus.png', max:38, skills:{1:{name:'岩拳',dmg:3},2:{name:'岩拳',dmg:3},3:{name:'瓦礫投げ',dmg:4},4:{name:'瓦礫投げ',dmg:5},5:{name:'地響き',dmg:6},6:{name:'地割れ',dmg:7}}, passive:{harden:2,label:'被ダメ-2'}, xp:9, chest:{rate:0.30, white:0.55} },
   lichGolem:   { key:'lichGolem', name:'リッチ＋ゴーレム', img:'リッチゴーレム.png', max:42,
     skills:{1:{name:'闇打',dmg:4},2:{name:'闇打',dmg:4},3:{name:'呪砲',dmg:5},4:{name:'呪砲',dmg:6},5:{name:'冥砕',dmg:7},6:{name:'冥砕・強',dmg:8}},
     passive:{ lifesteal:2, harden:1, label:'吸収+被ダメ-1' }, xp:10, chest:{ rate:0.36, white:0.55 }
@@ -252,7 +316,7 @@ const STAGE_BOOK = {
   // 10
   st10:{ key:'st10', name:'竜の間', bg:'stage10.png', battles:1, playlist:['dragon'], boss:'dragon', xp:12 },
 
-  // ===== 中盤 11〜20（最適化版の並びをplaylistで再現） =====
+  // ===== 中盤 11〜20（playlist） =====
   st11:{ key:'st11', name:'墓地', bg:'stage11.png', battles:5,
     playlist:['ghost','ghostPair','deathKnight','ghostKnight','deathKnightEX'], xp:8 },
   st12:{ key:'st12', name:'火山深層', bg:'stage12.png', battles:3,
@@ -278,20 +342,23 @@ const STAGE_BOOK = {
 // ------------------ ゲーム状態 ------------------
 let Game = {
   player:{
-    name:'勇者A', lvl:1, xp:1, atk:1, // ★ATK=1で開始＆XP=1（Lv1の下限）
+    name:'剣士レオン', lvl:1, xp:1, atk:1,
     baseMax:20, max:20, hp:20,
-    skills:JSON.parse(JSON.stringify(DEFAULT_SKILLS)),
-    // 所持アイテム
-    items:{
-      potion3:3, potion10:0, potion25:0,
-      antidote:0, eyedrops:0, dispel:0,
-      atkPot:0, defPot:0
-    },
-    // 出目割当用の所持装備（箱から増える）
-    box:{ ironSword:0, ironShield:0, blueSword:0, blueShield:0, dragonSword:0, sol:0, regalia:0 },
+    guardPower:0, healPower:0, // ★役割補正
+    skills:JSON.parse(JSON.stringify(SKILLS_LEON)),
+    // 所持アイテム（全員共有）
+    items:{ potion3:3, potion10:0, potion25:0, antidote:0, eyedrops:0, dispel:0, atkPot:0, defPot:0 },
+    // 出目割当用の所持装備（箱から増える） ※全員共有
+    box:{ ironSword:0, ironShield:0, blueSword:0, blueShield:0, dragonSword:0, sol:0, regalia:0, scaleShield:0, priestStaff:0, blessedStaff:0 },
     equipFaces:{} // { face(1-6): key }
   },
-  progress:{ kills:{}, unlock:{} }
+  // 仲間（個別Lv30表）
+  party:{
+    garo:{ name:'盾騎士ガロ', lvl:1, xp:1, atk:1, baseMax:24, max:24, hp:24, guardPower:0, healPower:0, skills:JSON.parse(JSON.stringify(SKILLS_GARO)) },
+    mina:{ name:'僧侶ミナ',   lvl:1, xp:1, atk:1, baseMax:18, max:18, hp:18, guardPower:0, healPower:0, skills:JSON.parse(JSON.stringify(SKILLS_MINA)) }
+  },
+  progress:{ kills:{}, unlock:{} },
+  activeChar: 'leon' // 'leon'|'garo'|'mina'
 };
 
 // ------------------ ルーター ------------------
@@ -369,11 +436,15 @@ function pickEnemy(pool){
 function leaveBattle(){
   if (Game.currentStage && StageCP){
     Game = JSON.parse(JSON.stringify(StageCP));
-    Game.player.hp = Game.player.max;
+    const who = Game.activeChar || 'leon';
+    if(who==='leon'){ Game.player.hp = Game.player.max; }
+    else{ Game.party[who].hp = Game.party[who].max; }
+
     Game.currentStage = null; Stage = null; StageCP = null;
     StageReward = { xp:0, chests:[], items:[], equips:[] };
     applyDerivedStats();
-    P.max = Game.player.max; P.hp  = Game.player.max; setHp('P');
+    P.max = (who==='leon' ? Game.player.max : Game.party[who].max);
+    P.hp  = P.max; setHp('P');
 
     for(const k of Object.keys(STAGE_BOOK)){
       setStageProgress(k, 0, STAGE_BOOK[k].battles);
@@ -388,24 +459,57 @@ const SAVE_KEY='batoDiceSaveV3';
 function saveGame(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(Game)) }catch(e){} }
 function loadGame(){
   try{
-    const raw=localStorage.getItem(SAVE_KEY);
+    const raw = localStorage.getItem(SAVE_KEY);
     if(raw){
-      const g=JSON.parse(raw);
-      if(g?.player && g?.progress){ Game=g }
+      const g = JSON.parse(raw);
+      if (g?.player && g?.progress) { Game = g; }
+    }
+    if (!Game.activeChar) Game.activeChar = 'leon';
+
+    // ------- ③ 互換パッチ：ガロ/ミナの技を役割型へ補正、ミナATK最低値を保障 -------
+    const onlyDmg = (skills) => {
+      if (!skills) return true;                 // skillsなし→補正対象
+      const arr = Object.values(skills);
+      if (arr.length === 0) return true;        // 空→補正対象
+      // すべて「dmgのみ（heal/guardなし）」なら旧レオン型と判定
+      return arr.every(s => s && typeof s === 'object' && s.dmg != null && s.heal == null && s.guard == null);
+    };
+
+    if (Game.party) {
+      // ガロ
+      if (Game.party.garo) {
+        if (!Game.party.garo.skills || onlyDmg(Game.party.garo.skills)) {
+          Game.party.garo.skills = JSON.parse(JSON.stringify(SKILLS_GARO));
+        }
+      }
+      // ミナ
+      if (Game.party.mina) {
+        if (!Game.party.mina.skills || onlyDmg(Game.party.mina.skills)) {
+          Game.party.mina.skills = JSON.parse(JSON.stringify(SKILLS_MINA));
+        }
+        // 攻撃0だと詰むので最低1を保障
+        if ((Game.party.mina.atk || 0) < 1) Game.party.mina.atk = 1;
+      }
     }
   }catch(e){}
 }
 function resetSave(andStay){
   Game = { 
     player:{
-      name:'勇者A', lvl:1, xp:1, atk:1,
+      name:'剣士レオン', lvl:1, xp:1, atk:1,
       baseMax:20, max:20, hp:20,
-      skills:JSON.parse(JSON.stringify(DEFAULT_SKILLS)),
+      guardPower:0, healPower:0,
+      skills:JSON.parse(JSON.stringify(SKILLS_LEON)),
       items:{ potion3:3, potion10:0, potion25:0, antidote:0, eyedrops:0, dispel:0, atkPot:0, defPot:0 },
-      box:{ ironSword:0, ironShield:0, blueSword:0, blueShield:0, dragonSword:0, sol:0, regalia:0 },
+      box:{ ironSword:0, ironShield:0, blueSword:0, blueShield:0, dragonSword:0, sol:0, regalia:0, scaleShield:0, priestStaff:0, blessedStaff:0 },
       equipFaces:{}
     },
-    progress:{ kills:{}, unlock:{} }
+    party:{
+      garo:{ name:'盾騎士ガロ', lvl:1, xp:1, atk:1, baseMax:24, max:24, hp:24, guardPower:0, healPower:0, skills:JSON.parse(JSON.stringify(SKILLS_GARO)) },
+      mina:{ name:'僧侶ミナ',   lvl:1, xp:1, atk:1, baseMax:18, max:18, hp:18, guardPower:0, healPower:0, skills:JSON.parse(JSON.stringify(SKILLS_MINA)) }
+    },
+    progress:{ kills:{}, unlock:{} },
+    activeChar:'leon'
   };
   localStorage.removeItem(SAVE_KEY);
   resetEquipFaces();
@@ -422,22 +526,23 @@ window.resetSave = resetSave;
 
 // ------------------ SELECT UI ------------------
 function refreshSelect(){
-  $('#plName').textContent = Game.player.name;
-  $('#plLv').textContent   = Game.player.lvl;
-  $('#plXp').textContent   = Game.player.xp;
-  $('#plHp').textContent   = Game.player.hp;
-  $('#plMax').textContent  = Game.player.max;
-  $('#plAtk').textContent  = Game.player.atk;
+  const snap = snapshotActiveChar();
+  $('#plName').textContent = snap.name;
+  $('#plLv').textContent   = snap.lvl;
+  $('#plXp').textContent   = snap.xp;
+  $('#plHp').textContent   = snap.hp;
+  $('#plMax').textContent  = snap.max;
+  $('#plAtk').textContent  = snap.atk;
 
-  const needXp = XP_TABLE[Game.player.lvl];
+  const needXp = XP_TABLE[snap.lvl];
   let xpText = "";
   if(needXp){
-    const remain = Math.max(0, needXp - Game.player.xp);
+    const remain = Math.max(0, needXp - snap.xp);
     xpText = `（次Lvまで残り ${remain} xp）`;
   } else {
     xpText = "(最大レベル)";
   }
-  $('#plXp').textContent = `${Game.player.xp} ${xpText}`;
+  $('#plXp').textContent = `${snap.xp} ${xpText}`;
 
   // 右ペインの装備/アイテム欄はデモでは非表示のまま
   const equipRow = document.getElementById('equipBadges');
@@ -446,6 +551,12 @@ function refreshSelect(){
   if(itemRow)  itemRow.parentElement.style.display  = "none";
 
   saveGame();
+  highlightActiveSoloButtons();
+}
+function snapshotActiveChar(){
+  const who = Game.activeChar || 'leon';
+  const s = (who==='leon') ? Game.player : (Game.party[who] || Game.player);
+  return { name:s.name, lvl:s.lvl, xp:s.xp, hp:s.hp, max:s.max, atk:s.atk };
 }
 
 function openItems(){
@@ -463,7 +574,7 @@ function openEquip(){
 
 // ------------------ BATTLE STATE ------------------
 let currentEnemyKey=null;
-const P = { name:'勇者A', baseMax:20, max:20, hp:20, atk:1, hist:[], finisher:false, skills:JSON.parse(JSON.stringify(DEFAULT_SKILLS)) };
+const P = { name:'剣士レオン', baseMax:20, max:20, hp:20, atk:1, guardPower:0, healPower:0, hist:[], finisher:false, skills:JSON.parse(JSON.stringify(SKILLS_LEON)) };
 const E = { key:'slime', name:'スライム', max:10, hp:10, img:'スライム.png', skills: ENEMY_BOOK.slime?.skills || JSON.parse(JSON.stringify(DEFAULT_SKILLS)), hist:[] };
 let rolledP=null, rolledE=null, phase='ready', busy=false;
 
@@ -584,17 +695,13 @@ function useItem(type){
   }
   it[type]--; renderItems(); itemModal.classList.remove('show'); itemModal.hidden=true; setHp('P'); saveGame();
 }
-btnItem.addEventListener('click',()=>{ renderItems(); itemModal.hidden=false; itemModal.classList.add('show'); });
+btnItem?.addEventListener('click',()=>{ renderItems(); itemModal.hidden=false; itemModal.classList.add('show'); });
 
 // ------------------ バトルコア ------------------
 function startBattle(enemyKey){
-  // sync player from save
-  P.name=Game.player.name; P.baseMax=Game.player.baseMax; P.max=Game.player.max;
-  P.hp=Math.min(Game.player.hp, P.max);
-  P.atk=Game.player.atk; P.skills=JSON.parse(JSON.stringify(Game.player.skills));
-  P.equipFaces = {...Game.player.equipFaces};
-  applyDerivedStats();
-
+  // アクティブキャラをPへロード
+  loadActiveCharIntoP();
+  applyActiveCharVisuals(); 
   // reset statuses
   PStatus.poison=0; PStatus.burn=0; PStatus.curse=0; PStatus.guard=0; PStatus.atkBuff=0; // trueSightは保持
 
@@ -635,6 +742,29 @@ function startBattle(enemyKey){
   }
 }
 
+function loadActiveCharIntoP(){
+  const k = Game.activeChar || 'leon';
+  if(k==='leon'){
+    P.name=Game.player.name; P.baseMax=Game.player.baseMax;
+    applyDerivedStats();
+    P.max=Game.player.max; P.hp=Math.min(Game.player.hp, P.max);
+    P.atk=Game.player.atk; 
+    P.guardPower = Game.player.guardPower||0;
+    P.healPower  = Game.player.healPower||0;
+    P.skills=JSON.parse(JSON.stringify(Game.player.skills));
+    P.equipFaces = {...Game.player.equipFaces};
+  }else{
+    const r = Game.party[k];
+    P.name=r.name; P.baseMax=r.baseMax; P.max=r.max; P.hp=Math.min(r.hp, r.max);
+    P.atk=r.atk; 
+    P.guardPower = r.guardPower||0;
+    P.healPower  = r.healPower||0;
+    P.skills=JSON.parse(JSON.stringify(r.skills));
+    P.equipFaces = {...Game.player.equipFaces}; // 出目装備は共通運用
+  }
+  buildSkillTbl(P.skills, 'p');
+}
+
 function applyDerivedStats(){
   // permanent装備加算（今回は使わない想定だが互換保持）
   let max = Game.player.baseMax;
@@ -653,7 +783,7 @@ function resetBattle(keepAudio=true){
   if(!keepAudio){ try{ audioBgm.pause(); audioWin.pause(); }catch(e){} }
 }
 
-btnRoll.addEventListener('click', async ()=>{
+btnRoll?.addEventListener('click', async ()=>{
   if(phase!=='ready' || busy) return; busy=true; phase='rolled'; btnRoll.disabled=true; btnAct.disabled=true;
 
   // DOT（自分側）をターン開始時に処理
@@ -663,13 +793,15 @@ btnRoll.addEventListener('click', async ()=>{
   P.hist.push(nP); if(P.hist.length>60) P.hist.shift();
   setTimeout(()=>{ pushChip(allyChips,nP,'ally') },1000);
 
-  // 出目装備（剣=atk、盾=guard）
+  // 出目装備（剣=atk、盾=guard）※盾は「次の被ダメ軽減」を即座にスタック
   let equipAtk = 0;
+  let equipHealPlus = 0;
   if (P.equipFaces && P.equipFaces[nP]) {
     const key = P.equipFaces[nP];
     const equip = EQUIP_BOOK[key];
     if (equip?.atk) equipAtk += equip.atk;
     if (equip?.defOnce) PStatus.guard += equip.defOnce; // 次の被ダメ軽減をセット
+    if (equip?.healPlus) equipHealPlus += equip.healPlus;
   }
 
   // コンボ
@@ -677,24 +809,54 @@ btnRoll.addEventListener('click', async ()=>{
   const combo=checkComboP();
   if(combo){ P.finisher=true; comboBonus = 2; showRibbon('P',`コンボ成立！ ${combo.label}`,true); }
 
-  const shownBase = Math.max(0, P.skills[nP].dmg + P.atk + equipAtk + comboBonus + PStatus.atkBuff - PStatus.curse);
+  // プレビュー（ダメ/回復/ガード）
+  const s = P.skills[nP] || {};
+  let shownBase = 0;
+  if (s.heal != null){
+    shownBase = Math.max(0, (s.heal||0) + (P.healPower||0) + (equipHealPlus||0));
+  } else if (s.guard != null){
+    shownBase = Math.max(0, (s.guard||0) + (P.guardPower||0));
+  } else {
+    shownBase = Math.max(0, (s.dmg||0) + P.atk + equipAtk + comboBonus + PStatus.atkBuff - PStatus.curse);
+  }
+
   await wait(timing.pause+300);
-  showRibbon('P',`技${nP}：${P.skills[nP].name}（${shownBase}）`, P.finisher);
-  actLabel.textContent = (P.finisher? '必殺：':'技：') + `${P.skills[nP].name}（${shownBase}）`;
+  showRibbon('P',`技${nP}：${s.name||`技${nP}`}（${shownBase}）`, P.finisher);
+  actLabel.textContent = (P.finisher? '必殺：':'技：') + `${s.name||`技${nP}`}（${shownBase}）`;
   await wait(timing.pause); btnAct.disabled=false; busy=false;
 });
 
-btnAct.addEventListener('click', async ()=>{
+btnAct?.addEventListener('click', async ()=>{
   if(phase!=='rolled' || busy) return; busy=true; phase='acting'; btnAct.disabled=true;
-  let bonus = 0;
 
-  // 出目に割り当てた装備（剣）
-  if (P.equipFaces && P.equipFaces[rolledP]) {
-    const key = P.equipFaces[rolledP];
-    const equip = EQUIP_BOOK[key];
-    if (equip?.atk) bonus += equip.atk;
-    if (equip?.defOnce) {/* 盾は既にロール時にPStatus.guard付与済み */}
+  const s = P.skills[rolledP] || {};
+  const equipKey = P.equipFaces?.[rolledP];
+  const equip    = equipKey ? EQUIP_BOOK[equipKey] : null;
+
+  // === 回復技 ===
+  if (s.heal != null){
+    const plusEquip = equip?.healPlus || 0;
+    const healAmt = Math.max(0, (s.heal||0) + (P.healPower||0) + plusEquip);
+    const before = P.hp;
+    P.hp = clamp(P.hp + healAmt, 0, P.max);
+    setHp('P');
+    appendLog('味', rolledP, `${s.name}（回復 +${P.hp-before}）`, null, `${P.hp}/${P.max}`);
+    phase='ready'; btnRoll.disabled=false; btnAct.disabled=true; busy=false;
+    return;
   }
+
+  // === ガード技 ===
+  if (s.guard != null){
+    const add = Math.max(0, (s.guard||0) + (P.guardPower||0));
+    PStatus.guard += add;
+    appendLog('味', rolledP, `${s.name}（ガード +${add}）`, null, `${P.hp}/${P.max}`);
+    phase='ready'; btnRoll.disabled=false; btnAct.disabled=true; busy=false;
+    return;
+  }
+
+  // === 攻撃技 ===
+  let bonus = 0;
+  if (equip?.atk) bonus += equip.atk;
 
   // コンボ（逆鱗持ちは無効）
   let comboBonus = (P.finisher ? 2 : 0);
@@ -705,7 +867,7 @@ btnAct.addEventListener('click', async ()=>{
   // 幽霊の命中低下（ただし目薬中は無視）
   if (E.passive?.intangible && PStatus.trueSight<=0){
     if(Math.random() < E.passive.intangible){
-      appendLog('味', rolledP, `${P.skills[rolledP].name}（ミス）`, 0, `${E.hp}/${E.max}`);
+      appendLog('味', rolledP, `${s.name||`技${rolledP}`}（ミス）`, 0, `${E.hp}/${E.max}`);
       PStatus.atkBuff = 0; // 使い切る
       phase='ready'; btnRoll.disabled=false; btnAct.disabled=true; busy=false;
       return;
@@ -713,7 +875,7 @@ btnAct.addEventListener('click', async ()=>{
   }
 
   // プレイヤー与ダメ
-  let dmgP = Math.max(0, P.skills[rolledP].dmg + P.atk + bonus + comboBonus + PStatus.atkBuff - PStatus.curse);
+  let dmgP = Math.max(0, (s.dmg||0) + P.atk + bonus + comboBonus + PStatus.atkBuff - PStatus.curse);
   PStatus.atkBuff = 0; // 使い切り
 
   // 敵の被ダメ軽減
@@ -721,7 +883,7 @@ btnAct.addEventListener('click', async ()=>{
 
   E.hp = clamp(E.hp - dmgP, 0, E.max);
   hitFX(cardE, dmgP); setHp('E');
-  appendLog('味', rolledP, (comboBonus? '必殺：':'')+P.skills[rolledP].name, dmgP, `${E.hp}/${E.max}`);
+  appendLog('味', rolledP, (comboBonus? '必殺：':'')+(s.name||`技${rolledP}`), dmgP, `${E.hp}/${E.max}`);
   actLabel.textContent='技';
 
   // 黒竜・将軍の形態変化
@@ -731,7 +893,7 @@ btnAct.addEventListener('click', async ()=>{
     showRibbon('E','黒竜：逆鱗に触れた！(強化)',true);
   }
   if(!E.enraged && E.passive?.enrageHalfAtk && E.hp <= Math.floor(E.max/2)){
-    E.enraged=true; // Enrageフラグ
+    E.enraged=true;
     showRibbon('E','将軍：戦意高揚！(ATK+2)',true);
   }
 
@@ -745,6 +907,32 @@ btnAct.addEventListener('click', async ()=>{
 
   phase='ready'; btnRoll.disabled=false; btnAct.disabled=true; busy=false;
 });
+
+// アクティブキャラへXPを適用（キャラ別Lv30表）＋ guard/heal 成長
+function applyXpToActiveChar(totalXp){
+  const who = Game.activeChar || 'leon';
+  const ch  = (who==='leon') ? Game.player : Game.party[who];
+
+  ch.hp = ch.max;
+  ch.xp = Math.max(ch.xp||1, 1) + totalXp;
+
+  const table = (who==='leon') ? LEVEL_TABLE_LEON : (who==='garo' ? LEVEL_TABLE_GARO : LEVEL_TABLE_MINA);
+
+  for(let t=ch.lvl+1; t<=MAX_LEVEL; t++){
+    const req = table[t]; if(!req) break;
+    if(ch.xp>=req.xp){
+      ch.lvl=t; 
+      ch.baseMax+=(req.hp||0); 
+      ch.atk+=(req.atk||0);
+      ch.guardPower = (ch.guardPower||0) + (req.guard||0);
+      ch.healPower  = (ch.healPower ||0) + (req.heal ||0);
+    }
+  }
+  ch.max = ch.baseMax; ch.hp = ch.max;
+
+  if(who==='leon'){ Game.player = ch; applyDerivedStats(); Game.player.hp=Game.player.max; }
+  else{ Game.party[who] = ch; }
+}
 
 async function enemyAttackTurn(isPreemptive=false){
   await wait(isPreemptive? 200 : timing.enemyPause);
@@ -780,8 +968,12 @@ async function enemyAttackTurn(isPreemptive=false){
     winOverlay.querySelector('span').textContent='LOSE';
     winOverlay.hidden=false; winOverlay.classList.add('show');
 
-    // 負け：HP全快・中断
-    Game.player.hp = Game.player.max; Game.currentStage = null; Stage = null; clearStageBG(); saveGame();
+    // 負け：HP全快・中断（アクティブキャラへ反映）
+    const who = Game.activeChar || 'leon';
+    if(who==='leon'){ Game.player.hp = Game.player.max; }
+    else{ Game.party[who].hp = Game.party[who].max; }
+
+    Game.currentStage = null; Stage = null; clearStageBG(); saveGame();
     btnRoll.disabled=true; btnAct.disabled=true; busy=false;
     return;
   }
@@ -838,7 +1030,11 @@ function handleWin(){
     showChestDrop(chest);
   }
 
-  Game.player.hp = clamp(P.hp, 1, Game.player.max);
+  // HP保存はアクティブキャラへ
+  const who = Game.activeChar || 'leon';
+  if(who==='leon'){ Game.player.hp = clamp(P.hp, 1, Game.player.max); }
+  else{ Game.party[who].hp = clamp(P.hp, 1, Game.party[who].max); }
+
   logpre.insertAdjacentHTML('beforeend', `\n—— 勝利！ 経験値+${gainXP} ${chest ? '/ 宝箱出現！' : ''}`);
   saveGame();
 
@@ -853,27 +1049,9 @@ function handleWin(){
       if(Stage.remain > 0){
         nextBattle(); goto('battle');
       }else{
-        // クリア処理：XP反映、結果画面へ
+        // クリア処理：アクティブキャラに経験値を配布し、結果画面へ
         Stage.cleared = true;
-        Game.player.hp = Game.player.max;
-        Game.player.xp = Math.max(Game.player.xp, 1) + StageReward.xp;
-
-        // レベルアップ（Lv30まで）
-        let leveled = false;
-        for (let targetLv = Game.player.lvl + 1; targetLv <= MAX_LEVEL; targetLv++) {
-          const req = LEVEL_TABLE[targetLv];
-          if (!req) break;
-          if (Game.player.xp >= req.xp) {
-            Game.player.lvl = targetLv;
-            Game.player.baseMax += req.hp;
-            Game.player.atk     += req.atk;
-            leveled = true;
-          }
-        }
-        // Lv26+のHP据え置きはhp:0インクリで表現済み
-        applyDerivedStats();
-        if (leveled){ Game.player.hp = Game.player.max; P.hp = P.max; setHp('P'); }
-
+        applyXpToActiveChar(StageReward.xp);
         logpre.insertAdjacentHTML('beforeend', `\n—— ${stage.name} クリア！ 報酬を獲得！ HP全回復！`);
         saveGame(); showResultScreen(Game.currentStage);
       }
@@ -918,7 +1096,7 @@ function showResultScreen(stageKey){
     const img = document.createElement('img');
     img.src = type==='white'      ? 'white_chest_closed.png'
           : type==='blueSparkle'  ? 'blue_sparkle_closed.png'
-          : type==='yellow'       ? 'yellow_chest_closed.png'
+          : type==='yellow'        ? 'yellow_chest_closed.png'
           : 'blue_chest_closed.png';
     if (type==='blueSparkle') img.classList.add('sparkle');
     img.className += ' result-chest';
@@ -959,7 +1137,7 @@ function finishResult(){
   goto('select'); refreshSelect();
 }
 
-// ----- 宝箱中身（仕様準拠：内訳例を実装） -----
+// ----- 宝箱中身（キャラ別テーブル実装） -----
 function grantItem(key){
   const it=Game.player.items;
   it[key]=(it[key]||0)+1;
@@ -967,22 +1145,25 @@ function grantItem(key){
 function grantEquip(key){
   Game.player.box[key]=(Game.player.box[key]||0)+1;
 }
+
 function rollChestContent(type){
-  // それぞれの箱の内訳（％は箱を開けたときの全体分布）
-  // 画像テキストに合わせて調整：白は装備10%、青は20%、キラ青は装備20%、黄は装備20%
+  const who = Game.activeChar || 'leon';
+  if(who==='garo') return rollChest_Garo(type);
+  if(who==='mina') return rollChest_Mina(type);
+  return rollChest_Leon(type);
+}
+
+// ▼レオン：従来仕様
+function rollChest_Leon(type){
   const r = Math.random()*100;
   if(type==='white'){
-    // アイテム：回復+3(55) / +10(25) / 解毒(10) = 90
-    // 装備：鉄の剣(5) / 鉄の盾(5) = 10
     if(r<55){ grantItem('potion3');  return {label:'回復薬+3'}; }
     else if(r<80){ grantItem('potion10'); return {label:'回復薬+10'}; }
     else if(r<90){ grantItem('antidote'); return {label:'解毒薬'}; }
-    else if(r<95){ grantEquip('ironSword'); return {label:'鉄の剣（出目割当用）'}; }
-    else { grantEquip('ironShield'); return {label:'鉄の盾（出目割当用）'}; }
+    else if(r<95){ grantEquip('ironSword'); return {label:'鉄の剣'}; }
+    else { grantEquip('ironShield'); return {label:'鉄の盾'}; }
   }
   if(type==='blue'){
-    // アイテム：+10(35)/+25(25)/目薬(10)/解呪(10) = 80
-    // 装備：蒼鉄の剣(10)/蒼鉄の盾(10) = 20
     if(r<35){ grantItem('potion10'); return {label:'回復薬+10'}; }
     else if(r<60){ grantItem('potion25'); return {label:'回復薬+25'}; }
     else if(r<70){ grantItem('eyedrops'); return {label:'目薬'}; }
@@ -991,8 +1172,6 @@ function rollChestContent(type){
     else { grantEquip('blueShield'); return {label:'蒼鉄の盾'}; }
   }
   if(type==='blueSparkle'){
-    // アイテム：+25(30)/攻撃薬(15)/守備薬(15)/解呪(20)=80
-    // 装備：ドラゴンの剣(20)
     if(r<30){ grantItem('potion25'); return {label:'回復薬+25'}; }
     else if(r<45){ grantItem('atkPot'); return {label:'攻撃薬'}; }
     else if(r<60){ grantItem('defPot'); return {label:'守備薬'}; }
@@ -1000,8 +1179,6 @@ function rollChestContent(type){
     else { grantEquip('dragonSword'); return {label:'ドラゴンの剣'}; }
   }
   if(type==='yellow'){
-    // アイテム：+25(25)/攻撃薬(15)/守備薬(15)/解呪(20)=75
-    // 装備：ソル(10)/レガリア(10)=20（残り5%は何もなしにせず+25に寄せても良いがここはそのまま比例）
     if(r<25){ grantItem('potion25'); return {label:'回復薬+25'}; }
     else if(r<40){ grantItem('atkPot'); return {label:'攻撃薬'}; }
     else if(r<55){ grantItem('defPot'); return {label:'守備薬'}; }
@@ -1009,7 +1186,87 @@ function rollChestContent(type){
     else if(r<85){ grantEquip('sol'); return {label:'ソル'}; }
     else { grantEquip('regalia'); return {label:'レガリア'}; }
   }
-  // 既定
+  grantItem('potion3'); return {label:'回復薬+3'};
+}
+
+// ▼ガロ：盾寄り＆守備薬厚め（装備/盾の比重UP）
+function rollChest_Garo(type){
+  const r = Math.random()*100;
+  if(type==='white'){
+    // アイテム80 / 装備20（盾15・剣5）
+    if(r<50){ grantItem('potion3');  return {label:'回復薬+3'}; }
+    else if(r<70){ grantItem('potion10'); return {label:'回復薬+10'}; }
+    else if(r<80){ grantItem('antidote'); return {label:'解毒薬'}; }
+    else if(r<95){ grantEquip('ironShield'); return {label:'鉄の盾'}; }
+    else { grantEquip('ironSword'); return {label:'鉄の剣'}; }
+  }
+  if(type==='blue'){
+    // アイテム75 / 装備25（盾15・剣10）
+    if(r<30){ grantItem('potion10'); return {label:'回復薬+10'}; }
+    else if(r<55){ grantItem('potion25'); return {label:'回復薬+25'}; }
+    else if(r<65){ grantItem('eyedrops'); return {label:'目薬'}; }
+    else if(r<75){ grantItem('dispel'); return {label:'解呪薬'}; }
+    else if(r<90){ grantEquip('blueShield'); return {label:'蒼鉄の盾'}; }
+    else { grantEquip('blueSword'); return {label:'蒼鉄の剣'}; }
+  }
+  if(type==='blueSparkle'){
+    // アイテム70 / 装備30（竜鱗の盾20・ドラ剣10）※守備薬を厚め
+    if(r<25){ grantItem('potion25'); return {label:'回復薬+25'}; }
+    else if(r<35){ grantItem('atkPot'); return {label:'攻撃薬'}; }
+    else if(r<60){ grantItem('defPot'); return {label:'守備薬'}; }
+    else if(r<70){ grantItem('dispel'); return {label:'解呪薬'}; }
+    else if(r<90){ grantEquip('scaleShield'); return {label:'竜鱗の盾'}; }
+    else { grantEquip('dragonSword'); return {label:'ドラゴンの剣'}; }
+  }
+  if(type==='yellow'){
+    // アイテム75 / 装備25（レガリア15・ソル10）
+    if(r<20){ grantItem('potion25'); return {label:'回復薬+25'}; }
+    else if(r<30){ grantItem('atkPot'); return {label:'攻撃薬'}; }
+    else if(r<55){ grantItem('defPot'); return {label:'守備薬'}; }
+    else if(r<75){ grantItem('dispel'); return {label:'解呪薬'}; }
+    else if(r<90){ grantEquip('regalia'); return {label:'レガリア'}; }
+    else { grantEquip('sol'); return {label:'ソル'}; }
+  }
+  grantItem('potion3'); return {label:'回復薬+3'};
+}
+
+// ▼ミナ：アイテム非常に出やすい（アイテム90%系）
+function rollChest_Mina(type){
+  const r = Math.random()*100;
+  if(type==='white'){
+    // アイテム90 / 装備10（盾6・杖4）
+    if(r<60){ grantItem('potion3');  return {label:'回復薬+3'}; }
+    else if(r<85){ grantItem('potion10'); return {label:'回復薬+10'}; }
+    else if(r<90){ grantItem('antidote'); return {label:'解毒薬'}; }
+    else if(r<96){ grantEquip('ironShield'); return {label:'鉄の盾'}; }
+    else { grantEquip('priestStaff'); return {label:'司祭の杖（回復+）'}; }
+  }
+  if(type==='blue'){
+    // アイテム90 / 装備10（盾8・祝福の杖2）
+    if(r<40){ grantItem('potion10'); return {label:'回復薬+10'}; }
+    else if(r<70){ grantItem('potion25'); return {label:'回復薬+25'}; }
+    else if(r<85){ grantItem('eyedrops'); return {label:'目薬'}; }
+    else if(r<90){ grantItem('dispel'); return {label:'解呪薬'}; }
+    else if(r<98){ grantEquip('blueShield'); return {label:'蒼鉄の盾'}; }
+    else { grantEquip('blessedStaff'); return {label:'祝福の杖（回復+）'}; }
+  }
+  if(type==='blueSparkle'){
+    // アイテム90 / 装備10
+    if(r<35){ grantItem('potion25'); return {label:'回復薬+25'}; }
+    else if(r<45){ grantItem('atkPot'); return {label:'攻撃薬'}; }
+    else if(r<65){ grantItem('defPot'); return {label:'守備薬'}; }
+    else if(r<90){ grantItem('dispel'); return {label:'解呪薬'}; }
+    else { grantEquip('dragonSword'); return {label:'ドラゴンの剣'}; }
+  }
+  if(type==='yellow'){
+    // アイテム90 / 装備10
+    if(r<30){ grantItem('potion25'); return {label:'回復薬+25'}; }
+    else if(r<40){ grantItem('atkPot'); return {label:'攻撃薬'}; }
+    else if(r<60){ grantItem('defPot'); return {label:'守備薬'}; }
+    else if(r<90){ grantItem('dispel'); return {label:'解呪薬'}; }
+    else if(r<95){ grantEquip('sol'); return {label:'ソル'}; }
+    else { grantEquip('regalia'); return {label:'レガリア'}; }
+  }
   grantItem('potion3'); return {label:'回復薬+3'};
 }
 
@@ -1024,18 +1281,34 @@ function clearStageBG(){
 }
 
 // ------------------ 設定モーダル ------------------
-btnSettings.addEventListener('click',()=>{
+btnSettings?.addEventListener('click', ()=>{
   speedSel.value='normal';
   pName.value=P.name; pMax.value=P.max; eName.value=E.name; eMax.value=E.max;
   pTbl.innerHTML = buildSkillTbl(P.skills,'p');
   eTbl.innerHTML = buildSkillTbl(E.skills,'e');
   settingsModal.hidden=false; settingsModal.classList.add('show');
 });
-closeSettings.addEventListener('click',()=>{ settingsModal.classList.remove('show'); settingsModal.hidden=true });
-applySettings.addEventListener('click',()=>{
-  P.name=(pName.value||'勇者A').trim(); Game.player.name=P.name;
-  Game.player.baseMax = Math.max(1, parseInt(pMax.value||20)); applyDerivedStats(); P.hp=P.max;
-  P.skills = collectTbl('p'); Game.player.skills = JSON.parse(JSON.stringify(P.skills));
+closeSettings?.addEventListener('click',()=>{ settingsModal.classList.remove('show'); settingsModal.hidden=true });
+applySettings?.addEventListener('click',()=>{
+  const who = Game.activeChar || 'leon';
+  const newName = (pName.value || '剣士レオン').trim();
+  const newMax  = Math.max(1, parseInt(pMax.value || 20));
+  const newSkills = collectTbl('p');
+
+  // P（現在のプレイ中キャラ）へ即時反映
+  P.name = newName; P.max = newMax; P.hp = newMax; P.skills = newSkills;
+
+  // セーブ側は操作キャラへ保存
+  if (who === 'leon') {
+    Game.player.name = newName;
+    Game.player.baseMax = newMax; applyDerivedStats(); Game.player.hp = Game.player.max;
+    Game.player.skills = JSON.parse(JSON.stringify(newSkills));
+  } else {
+    const ch = Game.party[who];
+    ch.name = newName;
+    ch.baseMax = newMax; ch.max = newMax; ch.hp = newMax;
+    ch.skills = JSON.parse(JSON.stringify(newSkills));
+  }
   E.name=(eName.value||E.name).trim(); E.max=Math.max(1, parseInt(eMax.value||E.max)); E.hp=E.max;
   E.skills = collectTbl('e');
   resetBattle(true);
@@ -1043,34 +1316,66 @@ applySettings.addEventListener('click',()=>{
 });
 
 function buildSkillTbl(skills, prefix){
+  // モーダルの見出し側（リスト）
   if(prefix==='p'){
-    const list=document.getElementById('skillPList'); list.innerHTML='';
+    const list=document.getElementById('skillPList'); if(list){ list.innerHTML=''; }
     for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1};
       const row=document.createElement('div'); row.className='item';
-      row.innerHTML=`<span>${i}：${s.name}</span><span>敵にダメージ${s.dmg} + 攻撃</span>`; list.appendChild(row);
+      let desc=''; 
+      if(s.heal!=null) desc = `自身を回復 +${s.heal}（+役割/杖補正）`;
+      else if(s.guard!=null) desc = `自身にガード +${s.guard}（+役割補正）`;
+      else desc = `敵にダメージ ${s.dmg} + 攻撃`;
+      row.innerHTML=`<span>${i}：${s.name}</span><span>${desc}</span>`; 
+      list?.appendChild(row);
     }
   }else{
-    const list=document.getElementById('skillEList'); list.innerHTML='';
+    const list=document.getElementById('skillEList'); if(list){ list.innerHTML=''; }
     for(let i=1;i<=6;i++){ const s=skills[i]||{name:`技${i}`,dmg:1};
       const row=document.createElement('div'); row.className='item';
-      row.innerHTML=`<span>${i}：${s.name}</span><span>味方にダメージ${s.dmg}</span>`; list.appendChild(row);
+      row.innerHTML=`<span>${i}：${s.name}</span><span>味方にダメージ${s.dmg}</span>`; 
+      document.getElementById('skillEList')?.appendChild(row);
     }
   }
+  // 編集テーブル（数値欄は dmg/heal/guard のいずれかを表示）
   let html=''; for(let i=1;i<=6;i++){
     const s=skills[i]||{name:`技${i}`,dmg:1};
+    const val = (s.dmg!=null) ? s.dmg : (s.heal!=null) ? s.heal : (s.guard!=null) ? s.guard : 0;
     html+=`<div class="cell"><div style="font-weight:700;margin-bottom:4px">${i}</div>
     <input id="${prefix}_name_${i}" class="txt" placeholder="技名" value="${s.name}">
-    <div style="margin-top:4px"><input id="${prefix}_dmg_${i}" class="num" type="number" min="0" value="${s.dmg}"></div></div>`;
+    <div style="margin-top:4px"><input id="${prefix}_dmg_${i}" class="num" type="number" min="0" value="${val}"></div></div>`;
   }
   return html;
 }
+// buildSkillTbl の下あたりに追加
+function rebuildSoloSkillListForActive(){
+  const who = Game.activeChar || 'leon';
+  const skills = (who === 'leon') ? Game.player.skills : Game.party[who].skills;
+  buildSkillTbl(skills, 'p');
+}
+
 function collectTbl(prefix){
-  const out={}; for(let i=1;i<=6;i++){
-    const nm=(document.getElementById(prefix+'_name_'+i)?.value||`技${i}`).trim();
-    const dm=Math.max(0, parseInt(document.getElementById(prefix+'_dmg_'+i)?.value||0));
-    out[i]={name:nm,dmg:dm};
+  const out={}; 
+  if(prefix==='p'){
+    // 既存の P.skills を見て「ダメ/回復/ガード」を維持
+    for(let i=1;i<=6;i++){
+      const nm=(document.getElementById(prefix+'_name_'+i)?.value||`技${i}`).trim();
+      const dm=Math.max(0, parseInt(document.getElementById(prefix+'_dmg_'+i)?.value||0));
+      const cur = P.skills[i] || {};
+      if(cur.heal!=null) out[i]={name:nm, heal:dm};
+      else if(cur.guard!=null) out[i]={name:nm, guard:dm};
+      else out[i]={name:nm, dmg:dm};
+    }
+    buildSkillTbl(out, prefix); 
+    return out;
+  }else{
+    for(let i=1;i<=6;i++){
+      const nm=(document.getElementById(prefix+'_name_'+i)?.value||`技${i}`).trim();
+      const dm=Math.max(0, parseInt(document.getElementById(prefix+'_dmg_'+i)?.value||0));
+      out[i]={name:nm,dmg:dm};
+    }
+    buildSkillTbl(out, prefix); 
+    return out;
   }
-  buildSkillTbl(out, prefix); return out;
 }
 
 // ------------------ EQUIP FACE（出目割当） ------------------
@@ -1196,6 +1501,29 @@ function assignEquipToFace(face, key){
   pendingFace = null;
 }
 
+// ---- ソロのキャラ切替（最小UI対応） ----
+window.setActiveChar = function setActiveChar(k){
+  if(!['leon','garo','mina'].includes(k)) return;
+  Game.activeChar = k;
+  saveGame();
+  refreshSelect();
+  highlightActiveSoloButtons();
+  applyActiveCharVisuals();
+  rebuildSoloSkillListForActive(); // ★技一覧を今のキャラで描画
+};
+
+function highlightActiveSoloButtons(){
+  const map = { leon:'btnCharLeon', garo:'btnCharGaro', mina:'btnCharMina' }; // ← 'leon' 修正
+  Object.entries(map).forEach(([k,id])=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    // 選択中だけ強調（ghost外してprimary風に）
+    el.classList.toggle('ghost', Game.activeChar!==k);
+    el.style.fontWeight = Game.activeChar===k ? '700' : '400';
+    el.style.opacity     = Game.activeChar===k ? '1'   : '0.8';
+  });
+}
+
 // ------------------ INIT ------------------
 function init(){
   loadGame(); applyDerivedStats();
@@ -1204,7 +1532,7 @@ function init(){
 
   for(const k of Object.keys(STAGE_BOOK)){ setStageProgress(k, 0, STAGE_BOOK[k].battles); }
   refreshSelect(); restoreEquipFaces();
-
+  if (typeof installSoloCharSwitcher === 'function') installSoloCharSwitcher();
   // モーダルopen
   document.querySelectorAll('[data-open]').forEach(btn=>{
     btn.addEventListener('click',()=>{
@@ -1217,7 +1545,9 @@ function init(){
     btn.addEventListener('click',()=>{ const modal = btn.closest('.modal'); if(modal){ modal.classList.remove('show'); modal.hidden = true; } });
   });
 
-  buildSkillTbl(P.skills, 'p');
+  rebuildSoloSkillListForActive();
+  highlightActiveSoloButtons();
+  applyActiveCharVisuals();
 }
 init();
 
