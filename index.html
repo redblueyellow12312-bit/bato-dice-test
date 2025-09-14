@@ -14,13 +14,14 @@
     <h1>BatoDice</h1>
     <p>ダイスで戦う小さなRPG。装備とアイテムで攻略ルートを選ぼう。</p>
     <div class="homeBtns">
-      <button class="btn" onclick="goto('select')">ゲーム開始！</button>
+      <button class="btn" onclick="goto('select')">ゲーム開始！（ソロ）</button>
+      <button class="btn" onclick="goto('party-select')">パーティ戦で遊ぶ</button>
       <button class="btn ghost" onclick="resetSave(true)">セーブ初期化</button>
     </div>
   </div>
 </section>
 
-<!-- ===================== SELECT ===================== -->
+<!-- ===================== SELECT（ソロ） ===================== -->
 <section id="select">
   <div class="selWrap">
     <div class="selLeft">
@@ -157,15 +158,24 @@
         <button class="btn" onclick="openEquip()">装備を変更</button>
         <button class="btn" onclick="openItems()">アイテムを確認</button>
         <button class="btn ghost" onclick="goto('home')">ホームへ戻る</button>
+        <button class="btn" onclick="goto('party-select')">▶ パーティ戦に切替</button>
       </div>
     </div>
 
     <div class="selRight">
       <h3 class="selTitle">勇者情報</h3>
-      <div class="row"><div>名前</div><div><span id="plName">勇者A</span></div></div>
+      <div class="row"><div>名前</div><div><span id="plName">剣士レオン</span></div></div>
       <div class="row"><div>レベル</div><div>Lv.<span id="plLv">1</span> <span class="statBadge">経験値 <span id="plXp">0</span></span></div></div>
       <div class="row"><div>HP</div><div><span id="plHp">20</span> / <span id="plMax">20</span></div></div>
       <div class="row"><div>攻撃力</div><div><span id="plAtk">0</span></div></div>
+      <div class="row">
+  <div>操作キャラ</div>
+  <div id="soloCharRow" style="display:flex; gap:6px; flex-wrap:wrap;">
+    <button class="pill2 ghost" data-char="leon" id="btnCharLeon" onclick="setActiveChar('leon')">レオン</button>
+    <button class="pill2 ghost" data-char="garo" id="btnCharGaro" onclick="setActiveChar('garo')">ガロ</button>
+    <button class="pill2 ghost" data-char="mina" id="btnCharMina" onclick="setActiveChar('mina')">ミナ</button>
+  </div>
+</div>
       <div class="row"><div>装備</div><div class="equipList" id="equipBadges"></div></div>
       <div class="row"><div>所持アイテム</div><div id="plItems">-</div></div>
 
@@ -176,7 +186,7 @@
   </div>
 </section>
 
-<!-- ===================== BATTLE ===================== -->
+<!-- ===================== BATTLE（ソロ） ===================== -->
 <section id="battle">
   <div class="wrap">
     <div class="top">
@@ -193,7 +203,7 @@
         <article class="card" id="cardP">
           <img class="img" id="imgP" src="勇者.jpg" alt="勇者">
           <div class="topbar">
-            <div class="name" id="nameP">勇者A</div>
+            <div class="name" id="nameP">剣士レオン</div>
             <div class="hp"><i id="hpP" style="width:100%"></i><span class="ticks"></span></div>
             <span class="badge" id="badgeP">先制</span>
           </div>
@@ -312,7 +322,7 @@
       <div class="grid2">
         <fieldset class="fieldset">
           <legend>味方設定</legend>
-          <div class="ctlrow"><label>名前</label><input id="pName" class="txt" value="勇者A"></div>
+          <div class="ctlrow"><label>名前</label><input id="pName" class="txt" value="剣士レオン"></div>
           <div class="ctlrow"><label>最大HP</label><input id="pMax" type="number" class="num" min="1" value="20"></div>
           <div class="ctlrow"><label>技（1〜6）</label><div class="skilltbl" id="pSkillsTbl"></div></div>
         </fieldset>
@@ -339,7 +349,7 @@
   <div class="modal" id="skillE" ><div class="card"><h4>敵の技（参考）</h4><div class="list" id="skillEList"></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
 </section>
 
-<!-- ===================== RESULT ===================== -->
+<!-- ===================== RESULT（ソロ） ===================== -->
 <section id="result">
   <div class="selWrap" style="grid-template-columns:1fr;">
     <h2 id="resultStageName" style="margin:8px 0 4px">ステージクリア！</h2>
@@ -357,16 +367,306 @@
   </div>
 </section>
 
-<!-- ===================== アイテムモーダル ===================== -->
-<div class="modal" id="itemModal">
-  <div class="card">
-    <h4>アイテム</h4>
-    <div class="list" id="itemList"></div>
-    <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
-  </div>
-</div>
+<!-- ===================== PARTY SELECT（パーティ） ===================== -->
+<section id="party-select">
+  <div class="selWrap">
+    <div class="selLeft">
+      <h3 class="selTitle">パーティ戦：ステージ選択（1〜10）</h3>
 
-<!-- ===================== 出目に装備割当モーダル ===================== -->
+      <div class="stageGrid">
+        <div class="stage">
+          <div class="prog">草原 進行 <span id="pprog_st1">0/3</span></div>
+          <img src="stage1.png" alt="草原">
+          <button class="btn" onclick="gotoPartyStage('pst1')">草原へ</button>
+        </div>
+        <div class="stage">
+          <div class="prog">森 進行 <span id="pprog_st2">0/3</span></div>
+          <img src="stage2.png" alt="森">
+          <button class="btn" onclick="gotoPartyStage('pst2')">森へ</button>
+        </div>
+        <div class="stage">
+          <div class="prog">湖畔 進行 <span id="pprog_st3">0/3</span></div>
+          <img src="stage3.png" alt="湖畔">
+          <button class="btn" onclick="gotoPartyStage('pst3')">湖畔へ</button>
+        </div>
+        <div class="stage">
+          <div class="prog">洞窟 進行 <span id="pprog_st4">0/3</span></div>
+          <img src="stage4.png" alt="洞窟">
+          <button class="btn" onclick="gotoPartyStage('pst4')">洞窟へ</button>
+        </div>
+        <div class="stage">
+          <div class="prog">廃墟 進行 <span id="pprog_st5">0/2</span></div>
+          <img src="stage5.png" alt="廃墟">
+          <button class="btn" onclick="gotoPartyStage('pst5')">廃墟へ</button>
+        </div>
+        <div class="stage">
+          <div class="prog">火山 進行 <span id="pprog_st6">0/3</span></div>
+          <img src="stage6.png" alt="火山">
+          <button class="btn" onclick="gotoPartyStage('pst6')">火山へ</button>
+        </div>
+        <div class="stage">
+          <div class="prog">氷の洞窟 進行 <span id="pprog_st7">0/3</span></div>
+          <img src="stage7.png" alt="氷の洞窟">
+          <button class="btn" onclick="gotoPartyStage('pst7')">氷の洞窟へ</button>
+        </div>
+        <div class="stage">
+          <div class="prog">砂漠 進行 <span id="pprog_st8">0/3</span></div>
+          <img src="stage8.png" alt="砂漠">
+          <button class="btn" onclick="gotoPartyStage('pst8')">砂漠へ</button>
+        </div>
+        <div class="stage">
+          <div class="prog">天空城 進行 <span id="pprog_st9">0/3</span></div>
+          <img src="stage9.png" alt="天空城">
+          <button class="btn" onclick="gotoPartyStage('pst9')">天空城へ</button>
+        </div>
+        <div class="stage">
+          <div class="prog">竜の間 進行 <span id="pprog_st10">0/1</span></div>
+          <img src="stage10.png" alt="ドラゴン">
+          <button class="btn" onclick="gotoPartyStage('pst10')">竜の間へ</button>
+        </div>
+      </div>
+
+      <hr class="sep">
+
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="openPartyItems()">パーティのアイテム</button>
+        <button class="btn ghost" onclick="goto('home')">ホームへ戻る</button>
+        <button class="btn" onclick="goto('select')">▶ ソロ戦に切替</button>
+      </div>
+    </div>
+
+    <div class="selRight">
+      <h3 class="selTitle">パーティ情報</h3>
+
+      <!-- Ally 1 -->
+      <div class="row">
+        <div>アタッカー</div>
+        <div><strong id="p1Name">剣士レオン</strong> / Lv.<span id="p1Lv">1</span> <span class="statBadge">EXP <span id="p1Xp">0</span></span></div>
+      </div>
+      <div class="row"><div>HP</div><div><span id="p1Hp">20</span> / <span id="p1Max">20</span></div></div>
+      <div class="row"><div>攻撃力</div><div><span id="p1Atk">1</span></div></div>
+
+      <!-- Ally 2 -->
+      <hr class="sep" />
+      <div class="row">
+        <div>タンク</div>
+        <div><strong id="p2Name">盾騎士ガロ</strong> / Lv.<span id="p2Lv">1</span> <span class="statBadge">EXP <span id="p2Xp">0</span></span></div>
+      </div>
+      <div class="row"><div>HP</div><div><span id="p2Hp">24</span> / <span id="p2Max">24</span></div></div>
+      <div class="row"><div>攻撃力</div><div><span id="p2Atk">0</span></div></div>
+
+      <!-- Ally 3 -->
+      <hr class="sep" />
+      <div class="row">
+        <div>サポート</div>
+        <div><strong id="p3Name">僧侶ミナ</strong> / Lv.<span id="p3Lv">1</span> <span class="statBadge">EXP <span id="p3Xp">0</span></span></div>
+      </div>
+      <div class="row"><div>HP</div><div><span id="p3Hp">18</span> / <span id="p3Max">18</span></div></div>
+      <div class="row"><div>攻撃力</div><div><span id="p3Atk">0</span></div></div>
+
+      <div style="text-align:center; margin-top:12px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+        <img src="勇者.jpg" alt="レオン" style="max-width:100px; border-radius:12px; box-shadow:0 0 10px #0008;">
+        <img src="ミナ.png" alt="ミナ" style="max-width:100px; border-radius:12px; box-shadow:0 0 10px #0008;">
+        <img src="ガロ.png" alt="ガロ" style="max-width:100px; border-radius:12px; box-shadow:0 0 10px #0008;">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PARTY BATTLE（パーティ） ===================== -->
+<section id="party-battle">
+  <div class="wrap">
+    <div class="top">
+      <div class="title">BatoDice – パーティバトル</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="gear" id="btnPartySettings">⚙ 設定</button>
+        <button class="gear" onclick="leavePartyBattle()">⏎ パーティ選択へ</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- 上段：味方3 / 敵3 -->
+      <section class="arena" style="grid-template-columns: repeat(3, 1fr);">
+        <!-- Allies -->
+        <article class="card" id="pCard1">
+          <img class="img" id="pImg1" src="勇者.jpg" alt="味方1">
+          <div class="topbar">
+            <div class="name" id="pName1">レオン</div>
+            <div class="hp"><i id="pHp1" style="width:100%"></i><span class="ticks"></span></div>
+            <span class="badge" id="pBadge1">アタッカー</span>
+          </div>
+          <div class="ribbon" id="pRibbon1" style="display:none"><div class="lab" id="pRibbonText1"></div></div>
+          <div class="foot">
+            <button class="pill" data-open="#p1Skills">技</button>
+            <button class="pill" data-open="#pCombos">連携</button>
+          </div>
+        </article>
+
+        <article class="card" id="pCard2">
+          <img class="img" id="pImg2" src="戦士.png" alt="味方2">
+          <div class="topbar">
+            <div class="name" id="pName2">ガロ</div>
+            <div class="hp"><i id="pHp2" style="width:100%"></i><span class="ticks"></span></div>
+            <span class="badge" id="pBadge2">タンク</span>
+          </div>
+          <div class="ribbon" id="pRibbon2" style="display:none"><div class="lab" id="pRibbonText2"></div></div>
+          <div class="foot">
+            <button class="pill" data-open="#p2Skills">技</button>
+            <button class="pill" data-open="#pCombos">連携</button>
+          </div>
+        </article>
+
+        <article class="card" id="pCard3">
+          <img class="img" id="pImg3" src="僧侶.png" alt="味方3">
+          <div class="topbar">
+            <div class="name" id="pName3">ミナ</div>
+            <div class="hp"><i id="pHp3" style="width:100%"></i><span class="ticks"></span></div>
+            <span class="badge" id="pBadge3">サポート</span>
+          </div>
+          <div class="ribbon" id="pRibbon3" style="display:none"><div class="lab" id="pRibbonText3"></div></div>
+          <div class="foot">
+            <button class="pill" data-open="#p3Skills">技</button>
+            <button class="pill" data-open="#pCombos">連携</button>
+          </div>
+        </article>
+
+        <!-- Enemies -->
+        <article class="card" id="eCard1">
+          <img class="img" id="eImg1" src="スライム.png" alt="敵1">
+          <div class="topbar">
+            <div class="name" id="eName1">スライム</div>
+            <div class="hp"><i id="eHp1" style="width:100%"></i><span class="ticks"></span></div>
+          </div>
+          <div class="ribbon" id="eRibbon1" style="display:none"><div class="lab" id="eRibbonText1"></div></div>
+          <div class="foot">
+            <button class="pill" data-open="#partyEnemySkills">技</button>
+          </div>
+        </article>
+
+        <article class="card" id="eCard2">
+          <img class="img" id="eImg2" src="スライム.png" alt="敵2">
+          <div class="topbar">
+            <div class="name" id="eName2">スライム</div>
+            <div class="hp"><i id="eHp2" style="width:100%"></i><span class="ticks"></span></div>
+          </div>
+          <div class="ribbon" id="eRibbon2" style="display:none"><div class="lab" id="eRibbonText2"></div></div>
+          <div class="foot">
+            <button class="pill" data-open="#partyEnemySkills">技</button>
+          </div>
+        </article>
+
+        <article class="card" id="eCard3">
+          <img class="img" id="eImg3" src="スライム.png" alt="敵3">
+          <div class="topbar">
+            <div class="name" id="eName3">スライム</div>
+            <div class="hp"><i id="eHp3" style="width:100%"></i><span class="ticks"></span></div>
+          </div>
+          <div class="ribbon" id="eRibbon3" style="display:none"><div class="lab" id="eRibbonText3"></div></div>
+          <div class="foot">
+            <button class="pill" data-open="#partyEnemySkills">技</button>
+          </div>
+        </article>
+      </section>
+
+      <!-- 下段：バトルログ + ダイス -->
+      <section class="row">
+        <div class="log">
+          <h3>パーティバトルログ</h3>
+          <pre id="partyLog"></pre>
+        </div>
+        <div class="dicePanel">
+          <div class="scene"><div class="dice" id="partyDice">
+            <div class="face front"></div>
+            <div class="face back"></div>
+            <div class="face right"></div>
+            <div class="face left"></div>
+            <div class="face topp"></div>
+            <div class="face bottom"></div>
+          </div></div>
+        </div>
+      </section>
+    </div>
+
+    <aside class="sidebar" aria-label="コマンド">
+      <button class="bigbtn" id="btnPartyRoll">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="3" y="3" width="18" height="18" rx="4" fill="#fff" opacity=".95"/>
+          <circle cx="8.0" cy="8.0" r="1.7" fill="#1e2a60"/>
+          <circle cx="12.0" cy="12.0" r="1.7" fill="#1e2a60"/>
+          <circle cx="16.0" cy="16.0" r="1.7" fill="#1e2a60"/>
+        </svg>
+        <span class="label"><span class="jp">サイコロ</span> <span class="en">Roll</span></span>
+      </button>
+      <button class="bigbtn" id="btnPartyAct" disabled>
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" fill="#fff" opacity=".95"/></svg>
+        <span class="label"><span class="jp" id="partyActLabel">行動</span></span>
+      </button>
+      <button class="bigbtn" id="btnPartyItem">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2h4v2l2 3v2l-1 1v8a3 3 0 01-3 3H12a3 3 0 01-3-3V10L8 9V7l2-3V2z" fill="#fff" opacity=".95"/></svg>
+        <span class="label"><span class="jp">アイテム</span> <span class="en">Item</span></span>
+      </button>
+
+      <div class="sidebox">
+        <h4>出目履歴</h4>
+        <div class="history">
+          <div class="hrow"><span class="hlabel">味方</span><div class="chips" id="partyAllyChips"></div></div>
+          <div class="hrow"><span class="hlabel">敵</span><div class="chips" id="partyEnemyChips"></div></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- WIN overlay -->
+  <div class="win-overlay" id="partyWinOverlay"><span>WIN</span></div>
+
+  <!-- 技モーダル（味方） -->
+  <div class="modal" id="p1Skills"><div class="card"><h4>レオン：技一覧</h4><div class="list" id="p1SkillList"></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
+  <div class="modal" id="p2Skills"><div class="card"><h4>ガロ：技一覧</h4><div class="list" id="p2SkillList"></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
+  <div class="modal" id="p3Skills"><div class="card"><h4>ミナ：技一覧</h4><div class="list" id="p3SkillList"></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
+
+  <!-- 連携・コンボ案 -->
+  <div class="modal" id="pCombos"><div class="card"><h4>パーティ連携（コンボ）</h4>
+    <div class="list" id="partyComboList">
+      <div class="item"><span>ゾロ目（同ターンに味方がゾロ目）</span><span>与ダメ +3</span></div>
+      <div class="item"><span>4-5-6（味方3人の最終出目が 4/5/6）</span><span>全体に追加+2</span></div>
+      <div class="item"><span>守護→会心（タンクが挑発成功後、アタッカーが5-6）</span><span>単体与ダメ +2</span></div>
+      <div class="item"><span>祈り→連撃（サポートが回復成功後、アタッカーが連撃）</span><span>追加攻撃 1</span></div>
+    </div>
+    <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
+  </div></div>
+
+  <!-- 敵技モーダル -->
+  <div class="modal" id="partyEnemySkills"><div class="card"><h4>敵の技（参考）</h4><div class="list" id="partyEnemySkillList"></div><div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div></div></div>
+
+  <!-- アイテムモーダル（パーティ） -->
+  <div class="modal" id="partyItemModal">
+    <div class="card">
+      <h4>パーティアイテム</h4>
+      <div class="list" id="partyItemList"></div>
+      <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== PARTY RESULT（パーティ） ===================== -->
+<section id="party-result">
+  <div class="selWrap" style="grid-template-columns:1fr;">
+    <h2 id="partyResultStageName" style="margin:8px 0 4px">ステージクリア！</h2>
+    <p id="partyResultXp" style="margin:0 0 8px">獲得経験値</p>
+
+    <div id="partyChestArea" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:8px 0;"></div>
+
+    <h3 style="margin:8px 0 6px">獲得アイテム / 装備</h3>
+    <ul id="partyRewardList" style="margin:0 0 12px"></ul>
+
+    <div style="margin-top:12px; display:flex; gap:8px">
+  <button class="btn" onclick="openAllPartyChests()">すべて開封</button>
+  <button class="btn" onclick="finishPartyResult()">OK</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 出目に装備割当モーダル（ソロ） ===================== -->
 <div class="modal" id="equipFaceModal">
   <div class="card">
     <h4>出目に装備を割り当て</h4>
@@ -401,6 +701,18 @@
   </div>
 </div>
 
+<!-- ===================== アイテムモーダル（ソロ） ===================== -->
+<div class="modal" id="itemModal">
+  <div class="card">
+    <h4>アイテム</h4>
+    <div class="list" id="itemList"></div>
+    <div style="text-align:right;margin-top:8px"><button class="pill2 ghost" data-close>閉じる</button></div>
+  </div>
+</div>
+
+<!-- ===================== Scripts ===================== -->
 <script src="app.js"></script>
+<!-- パーティ戦ロジック -->
+<script src="party.js"></script>
 </body>
 </html>
