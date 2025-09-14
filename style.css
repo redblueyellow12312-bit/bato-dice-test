@@ -38,7 +38,7 @@ section#select{min-height:100vh;padding:18px}
 .equipList{display:flex;gap:8px;flex-wrap:wrap}
 .badgeEquip{border:1px solid #3e4dbb;background:#18205a;padding:6px 10px;border-radius:10px}
 
-/* ====== Battle ====== */
+/* ====== Battle (Solo) ====== */
 section#battle{min-height:100vh; transition: background .3s ease}
 .wrap {
   max-width:1200px;
@@ -210,3 +210,54 @@ section.active { display: block; }
   .log { height: 140px; }
   :root { --dice-size: 85px; }
 }
+
+/* =========================================================
+   以降：パーティ戦用の追加スタイル（ソロ既存は未変更）
+   ========================================================= */
+
+/* Party Select */
+section#party-select{min-height:100vh;padding:18px}
+#party-select .stageGrid{grid-template-columns:repeat(3,1fr)}
+
+/* Party Battle layout tweaks */
+#party-battle { min-height:100vh; }
+#party-battle .arena{grid-template-columns:repeat(3,1fr);gap:12px}
+#party-battle .img{height:clamp(220px, 28vh, 340px)}
+#party-battle .title{letter-spacing:.02em}
+#party-battle .sidebar .bigbtn{min-height:72px}
+
+/* Role color hints (badges on ally cards) */
+#pBadge1{ background:#1a2d6a; border-color:#334aa0; color:#dfe8ff } /* Attacker */
+#pBadge2{ background:#183a2a; border-color:#2a6a52; color:#e6fffa } /* Tank */
+#pBadge3{ background:#3a255e; border-color:#6b4ca8; color:#f0e8ff } /* Support */
+
+/* Party log area */
+#party-battle .log h3{color:#cfe6ff}
+#partyLog{font-size:13px;line-height:1.3}
+
+/* Party dice size (slightly smaller for 3v3 layout) */
+#party-battle{ --dice-size: 100px; }
+@media (max-width: 1024px){
+  #party-battle{ --dice-size: 90px; }
+  #party-battle .img{height:clamp(200px, 26vh, 300px)}
+}
+@media (max-width: 768px){
+  #party-battle{ --dice-size: 80px; }
+  #party-battle .row{grid-template-columns:1fr 0.5fr}
+  #party-battle .img{height:clamp(180px, 24vh, 260px)}
+}
+
+/* Party win overlay reuses base .win-overlay */
+#partyWinOverlay{z-index:80}
+
+/* Party modals reuse base styles; lists align a bit denser */
+#p1Skills .list, #p2Skills .list, #p3Skills .list, #partyEnemySkills .list { gap:8px }
+#partyComboList .item span:first-child{max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Party Result */
+section#party-result{min-height:100vh;padding:18px}
+#party-result .selWrap{grid-template-columns:1fr}
+#partyChestArea .result-chest{width:96px;height:96px}
+
+/* Utility: subtle highlight when a card acts (added via JS class) */
+.actorGlow{box-shadow:0 0 0 2px rgba(120,200,255,.35) inset, 0 0 18px rgba(120,200,255,.22)}
