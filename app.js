@@ -496,7 +496,7 @@ function loadGame(){
 function resetSave(andStay){
   Game = { 
     player:{
-      name:'剣士レオン', lvl:1, xp:1, atk:1,
+      name:'剣士レオン', lvl:1, xp:1, atk:0,
       baseMax:20, max:20, hp:20,
       guardPower:0, healPower:0,
       skills:JSON.parse(JSON.stringify(SKILLS_LEON)),
@@ -505,8 +505,8 @@ function resetSave(andStay){
       equipFaces:{}
     },
     party:{
-      garo:{ name:'盾騎士ガロ', lvl:1, xp:1, atk:1, baseMax:24, max:24, hp:24, guardPower:0, healPower:0, skills:JSON.parse(JSON.stringify(SKILLS_GARO)) },
-      mina:{ name:'僧侶ミナ',   lvl:1, xp:1, atk:1, baseMax:18, max:18, hp:18, guardPower:0, healPower:0, skills:JSON.parse(JSON.stringify(SKILLS_MINA)) }
+      garo:{ name:'盾騎士ガロ', lvl:1, xp:1, atk:0, baseMax:24, max:24, hp:24, guardPower:0, healPower:0, skills:JSON.parse(JSON.stringify(SKILLS_GARO)) },
+      mina:{ name:'僧侶ミナ',   lvl:1, xp:1, atk:0, baseMax:18, max:18, hp:18, guardPower:0, healPower:0, skills:JSON.parse(JSON.stringify(SKILLS_MINA)) }
     },
     progress:{ kills:{}, unlock:{} },
     activeChar:'leon'
