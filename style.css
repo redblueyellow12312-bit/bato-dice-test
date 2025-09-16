@@ -53,28 +53,31 @@ section#battle{min-height:100vh; transition: background .3s ease}
 .gear{padding:6px 10px;border:1px solid var(--line);border-radius:10px;background:#151c3d;color:#cfe0ff}
 .main{display:grid;gap:12px}
 .arena{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.card{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#0f1430}
-.img{width:100%;height:clamp(280px, 34vh, 420px);object-fit:contain;object-position:center;background:#0b1130;display:block}
+
+/* === 透過ガラス風 === */
+.card, .log, .sidebox, .dicePanel {
+  background: rgba(15, 20, 48, 0.52);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(8px) saturate(1.1);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+}
+.card{position:relative;border-radius:14px;overflow:hidden}
+.card::after{
+  content:""; position:absolute; inset:0;
+  background: radial-gradient(1200px 320px at 50% -10%, rgba(255,255,255,.08), transparent 50%);
+  pointer-events:none; mix-blend-mode:screen;
+}
+
+.img{width:100%;height:clamp(280px, 34vh, 420px);object-fit:contain;object-position:center;background:transparent;display:block}
 .topbar {
-  position:absolute;
-  left:0;
-  right:0;
-  top:0;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  padding:6px 10px;
-  background:rgba(8,12,28,.72);
-  z-index:3;
+  position:absolute; left:0; right:0; top:0;
+  display:flex; flex-direction:column; gap:4px; padding:6px 10px;
+  background:rgba(8,12,28,.55); z-index:3;
 }
 .topbar .name { font-weight:800; }
 .topbar .hp {
-  width:100%;
-  height:12px;
-  border:1px solid var(--line);
-  background:#0d1430;
-  border-radius:999px;
-  overflow:hidden;
+  width:100%; height:12px; border:1px solid var(--line);
+  background:rgba(13,20,48,.65); border-radius:999px; overflow:hidden;
 }
 .topbar .hp i { display:block; height:100%; background:linear-gradient(90deg,var(--hpG),#2ad1c8); }
 .hp.warn i{background:linear-gradient(90deg,var(--hpW),#ffb800)}
@@ -82,53 +85,114 @@ section#battle{min-height:100vh; transition: background .3s ease}
 .badge{padding:2px 8px;border:1px solid var(--line);border-radius:999px;background:#0f1536;font-size:12px;color:#c9d6ff}
 .foot{position:absolute;left:10px;right:10px;bottom:10px;display:flex;align-items:center;gap:8px;z-index:2}
 .pill {
-  background:#20306b;
-  border:1px solid var(--line);
-  color:#dbe6ff;
-  padding:8px 10px;
-  border-radius:10px;
-  display:inline-block;
-  font-size: clamp(4px, 1.2vw, 13px);
-  max-width: 120px;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  background:#20306b; border:1px solid var(--line); color:#dbe6ff;
+  padding:8px 10px; border-radius:10px; display:inline-block;
+  font-size: clamp(4px, 1.2vw, 13px); max-width: 120px; text-align: center;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .ribbon{position:absolute;left:0;right:0;top:58px;display:flex;justify-content:center;pointer-events:none;z-index:4}
 .ribbon .lab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:linear-gradient(180deg,#2440c2,#1b2d7f); box-shadow:0 10px 24px rgba(0,0,0,.28); font-weight:900}
-.ribbon.ult .lab{background:linear-gradient(180deg,#ffd54a,#ffb84d); color:#4b2b00; border-color:#efc14a; text-shadow:0 1px 0 #fff8}
+.ribbon.ult .lab{
+  background: linear-gradient(180deg,#ffd54a,#ff9800);
+  color:#4b2b00; border-color:#efc14a; text-shadow:0 0 6px #fff, 0 0 14px #ff8f00;
+  animation: ultFlash 1.2s ease-in-out infinite alternate;
+}
+@keyframes ultFlash{
+  from{ box-shadow:0 0 12px rgba(255,200,50,.6), 0 0 22px rgba(255,150,0,.35) }
+  to  { box-shadow:0 0 26px rgba(255,200,50,.9), 0 0 36px rgba(255,150,0,.5) }
+}
 .ribbon.show{animation:rib .9s ease both}
 @keyframes rib{0%{transform:translateY(-16px);opacity:0}15%{opacity:1}85%{opacity:1}100%{transform:translateY(-32px);opacity:0}}
 .hitShake{animation:shake .25s ease}
 @keyframes shake{20%{transform:translateX(-3px)}40%{transform:translateX(3px)}60%{transform:translateX(-2px)}80%{transform:translateX(2px)}100%{transform:translateX(0)}}
-.flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.22), transparent 60%);animation:flash .35s ease;z-index:2}
+.flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.22), transparent 60%);animation:flash .35s ease;z-index:2; pointer-events:none}
 @keyframes flash{from{opacity:0}50%{opacity:1}to{opacity:0}}
-.dmg{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);font-size:42px;font-weight:900;color:#fff;text-shadow:0 0 14px rgba(255,80,80,.85),0 0 3px #000;opacity:0;animation:dpop .8s ease both;z-index:5}
-@keyframes dpop{0%{opacity:0;transform:translate(-50%,-34%) scale(.7)}20%{opacity:1;transform:translate(-50%,-52%) scale(1)}100%{opacity:0;transform:translate(-50%,-76%) scale(1.1)}}
+
+/* ===== ド派手なダメージ数値 ===== */
+.dmg{
+  position:absolute; left:50%; top:46%;
+  transform:translate(-50%,-50%); font-size:48px; font-weight:900;
+  color:#ff4444; text-shadow:0 0 20px rgba(255,80,80,.9), 0 0 6px #fff;
+  opacity:0; animation:dmgBoom .9s ease both; z-index:6; pointer-events:none;
+}
+@keyframes dmgBoom{
+  0%   { opacity:0; transform: translate(-50%,-40%) scale(.6) }
+  25%  { opacity:1; transform: translate(-50%,-60%) scale(1.28) }
+  60%  { opacity:1; transform: translate(-50%,-70%) scale(1.02) }
+  100% { opacity:0; transform: translate(-50%,-90%) scale(1.4) }
+}
+
+/* 追加エフェクト：衝撃波・破片・斬撃・回復 */
+.shockwave{
+  position:absolute; left:50%; top:48%; width:12px; height:12px;
+  border:2px solid rgba(255,255,255,.7); border-radius:50%;
+  transform:translate(-50%,-50%) scale(.6); opacity:.9;
+  animation:sw .6s ease-out forwards; z-index:4; pointer-events:none;
+}
+@keyframes sw{ to{ transform:translate(-50%,-50%) scale(7); opacity:0 } }
+
+.hitShard{
+  --tx: 0px; --ty: -40px;
+  position:absolute; left:50%; top:48%; width:6px; height:14px;
+  background:linear-gradient(180deg,#fff,#ff9b9b);
+  transform: translate(-50%,-50%) rotate(20deg);
+  opacity:.9; filter: blur(.2px);
+  animation:shard .55s ease-out forwards; z-index:5; pointer-events:none;
+}
+@keyframes shard{
+  to{ transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) rotate(70deg); opacity:0 }
+}
+
+.slashFX{
+  position:absolute; left:0; right:0; top:40%;
+  height:2px; background:linear-gradient(90deg, transparent, #fff 40%, #ffd9d9 60%, transparent);
+  filter: drop-shadow(0 0 10px #fff);
+  animation:slashFly .35s ease-out forwards; z-index:5; pointer-events:none;
+}
+@keyframes slashFly{
+  from{ transform: translateX(-40%) rotate(-6deg); opacity:.9 }
+  to  { transform: translateX(40%) rotate(-6deg); opacity:0 }
+}
+
+.healBurst{
+  position:absolute; left:50%; top:46%; transform:translate(-50%,-50%);
+  font-weight:900; font-size:42px; color:#9fffb0;
+  text-shadow:0 0 14px rgba(80,255,120,.85),0 0 3px #000;
+  animation:healRise .9s ease both; z-index:6; pointer-events:none;
+}
+@keyframes healRise{
+  0%{ opacity:0; transform:translate(-50%,-34%) scale(.7) }
+  20%{ opacity:1; transform:translate(-50%,-52%) scale(1.06) }
+  100%{ opacity:0; transform:translate(-50%,-80%) scale(1.18) }
+}
+
 .vanish{animation:vanish .8s forwards ease}
 @keyframes vanish{0%{opacity:1}60%{opacity:.6;filter:blur(2px) brightness(1.2);transform:scale(.97)}100%{opacity:0;filter:blur(6px) brightness(1.25);transform:scale(.9)}}
 .row{display:grid;grid-template-columns:1.6fr 0.9fr;gap:12px}
-.log{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#101536,#0b1130);padding:10px;height:var(--lowerH);display:flex;flex-direction:column;min-height:0}
+.log{border:1px solid var(--line);border-radius:12px;padding:10px;height:var(--lowerH);display:flex;flex-direction:column;min-height:0}
 .log h3{margin:0 0 6px 0;color:#bcd1ff;font-size:14px}
 .log pre{margin:0;color:#cdd7ff;font-size:13px;line-height:1.3;white-space:pre-wrap;overflow:auto;flex:1;min-height:0}
 .log .t{display:inline-block;min-width:24px;text-align:center;border-radius:6px;margin-right:6px;padding:0 4px;font-weight:700}
 .tA{background:rgba(77,163,255,.2);border:1px solid var(--ally);color:#cfe6ff}
 .tE{background:rgba(255,109,109,.2);border:1px solid var(--enemy);color:#ffd1d1}
 .red{color:#ff8f8f} .gray{color:#b5c2ff}
-.dicePanel{border: 1px solid var(--line);border-radius: 12px;background: linear-gradient(180deg, var(--panel), var(--panel2));padding: 10px;height: var(--lowerH);display: grid;place-items: center}
+.dicePanel{border: 1px solid var(--line);border-radius: 12px;padding: 10px;height: var(--lowerH);display: grid;place-items: center}
 
 /* ===== 3D Dice ===== */
 :root { --dice-size: 120px; }
 .scene { width: var(--dice-size); height: var(--dice-size); perspective: 800px; }
 .dice { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 1s ease-in-out; }
-.face { position: absolute; width: 100%; height: 100%; background-size: cover; background-position: center; }
+.face { position: absolute; width: 100%; height: 100%; background-size: cover; background-position: center;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.3)); }
 .front  { transform: rotateY(0deg) translateZ(calc(var(--dice-size) / 2));  background-image: url("1.png") }
 .back   { transform: rotateY(180deg) translateZ(calc(var(--dice-size) / 2)); background-image: url("6.png") }
 .right  { transform: rotateY(90deg) translateZ(calc(var(--dice-size) / 2)); background-image: url("3.png") }
 .left   { transform: rotateY(-90deg) translateZ(calc(var(--dice-size) / 2)); background-image: url("4.png") }
 .topp   { transform: rotateX(90deg) translateZ(calc(var(--dice-size) / 2));  background-image: url("5.png") }
 .bottom { transform: rotateX(-90deg) translateZ(calc(var(--dice-size) / 2)); background-image: url("2.png") }
+
+/* 停止時に光る */
+.dice.stop .face{ filter: drop-shadow(0 0 18px rgba(255,255,255,0.9)) }
 
 .sidebar{position:sticky;top:8px;align-self:start;display:grid;gap:16px}
 .bigbtn{width:100%; min-height:72px; padding:14px 18px; display:flex; align-items:center; gap:12px; color:#fff;border-radius:16px; border:1px solid #2240b2;background:linear-gradient(180deg,var(--btn),var(--btn2)); box-shadow:0 10px 24px rgba(37,66,210,.35), inset 0 1px 0 rgba(255,255,255,.15);font-weight:800; letter-spacing:.02em; white-space:nowrap}
@@ -138,7 +202,7 @@ section#battle{min-height:100vh; transition: background .3s ease}
 .jp{font-size:18px;line-height:1}
 .en{font-size:13px;opacity:.9}
 .bigbtn:disabled{opacity:.5;cursor:not-allowed}
-.sidebox{border:1px solid var(--line);border-radius:12px;background:linear-gradient(180deg,#101536,#0b1130);padding:10px}
+.sidebox{border:1px solid var(--line);border-radius:12px}
 .sidebox h4{margin:0 0 8px 0;font-size:14px;color:#bcd1ff}
 .history{display:grid;gap:6px}
 .hrow{display:flex;align-items:center;gap:8px}
@@ -149,8 +213,18 @@ section#battle{min-height:100vh; transition: background .3s ease}
 .last{box-shadow:0 0 0 3px rgba(255,255,255,.12);animation:pulse 1.2s ease-out 1}
 @keyframes pulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(255,255,255,.28)}100%{transform:scale(1.06);box-shadow:0 0 0 8px rgba(255,255,255,0)}}
 
+/* WIN overlay 強化 */
 .win-overlay{pointer-events:none;position:fixed;inset:0;display:grid;place-items:center;font-size:72px;font-weight:900;letter-spacing:.06em;color:transparent;-webkit-text-stroke:2px #fff;text-shadow:0 0 18px rgba(255,255,255,.6);background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.08), transparent 55%);opacity:0;transform:scale(.9);transition:opacity .35s,transform .35s;z-index:80}
-.win-overlay.show{opacity:1;transform:scale(1)}
+.win-overlay.show{
+  opacity:1; transform:scale(1);
+  background: radial-gradient(circle at center, rgba(255,230,150,.35), transparent 60%);
+  animation: winPulse 2s ease infinite;
+}
+@keyframes winPulse{
+  0%  { text-shadow: 0 0 20px #fff, 0 0 40px #ffcc66 }
+  50% { text-shadow: 0 0 40px #fff, 0 0 80px #ffaa00 }
+  100%{ text-shadow: 0 0 20px #fff, 0 0 40px #ffcc66 }
+}
 .win-overlay span{background:linear-gradient(180deg,#fff,#ffe28a 60%,#ffb84d);-webkit-background-clip:text;background-clip:text;color:transparent}
 
 .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:90}
@@ -261,3 +335,46 @@ section#party-result{min-height:100vh;padding:18px}
 
 /* Utility: subtle highlight when a card acts (added via JS class) */
 .actorGlow{box-shadow:0 0 0 2px rgba(120,200,255,.35) inset, 0 0 18px rgba(120,200,255,.22)}
+
+/* ==== JUICE PACK – effects =================================== */
+/* 軽いカメラシェイク（#battle か #party-battle に付く） */
+.shake { animation: camShake .35s cubic-bezier(.36,.07,.19,.97); }
+@keyframes camShake{
+  10% { transform: translate(-2px,  2px) rotate(-.2deg); }
+  20% { transform: translate( 3px, -1px) rotate( .2deg); }
+  30% { transform: translate(-4px, -3px) rotate(-.3deg); }
+  40% { transform: translate( 3px,  2px) rotate( .3deg); }
+  50% { transform: translate(-2px,  1px) rotate(-.2deg); }
+  60% { transform: translate( 2px, -2px) rotate( .2deg); }
+  70% { transform: translate(-1px,  2px) rotate(-.1deg); }
+  80% { transform: translate( 1px, -1px) rotate( .1deg); }
+}
+
+/* クリティカル時の強発光 */
+.critFlash{ background:radial-gradient(circle at 50% 40%, rgba(255,255,255,.55), transparent 60%) !important; }
+.dmg.crit{ font-size:56px; text-shadow:0 0 22px rgba(255,220,120,.95),0 0 3px #000; }
+
+/* ヒットスパーク粒子 */
+.spark{ position:absolute; width:6px; height:6px; border-radius:50%;
+  background:linear-gradient(180deg,#ffe18a,#ff9b3d); filter:drop-shadow(0 0 6px rgba(255,200,120,.9));
+  opacity:.95; animation:sparkFly .55s ease-out forwards; z-index:5; }
+@keyframes sparkFly{
+  0%{ transform:translate(0,0) scale(1); opacity:1 }
+  70%{ opacity:.9 }
+  100%{ transform:translate(var(--tx,20px), var(--ty,-24px)) scale(.3); opacity:0 }
+}
+
+/* フィニッシュ時の黒帯（シネマバー） */
+#battle.cine::before, #battle.cine::after{
+  content:""; position:fixed; left:0; right:0; height:10vh; z-index:70; background:rgba(0,0,0,.55); pointer-events:none;
+  box-shadow:0 2px 24px rgba(0,0,0,.6);
+}
+#battle.cine::before{ top:0 }  #battle.cine::after{ bottom:0 }
+
+/* ダイスの発光強調 */
+#dice.glow, #partyDice.glow{
+  filter: drop-shadow(0 0 10px rgba(255,255,255,.55)) drop-shadow(0 0 22px rgba(120,160,255,.55));
+}
+
+/* 画像の背景は透明に（既に修正済みならこのコメントだけでOK） */
+.img{ background:transparent }
