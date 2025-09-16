@@ -62,10 +62,10 @@ const SKILLS_GARO = {
 // ミナ：回復型（一人旅なので単体回復のみでOK）
 const SKILLS_MINA = {
   1:{name:'杖打ち',dmg:1},                 // 低ロールでも削れる
-  2:{name:'小癒し',heal:3},
+  2:{name:'小癒し',heal:2},
   3:{name:'祝福',heal:2,buffAtk:1},
   4:{name:'光線',dmg:2},
-  5:{name:'大回復',heal:6},
+  5:{name:'大回復',heal:4},
   6:{name:'聖なる光',dmg:3}  
 };
 const PRESETS = {
@@ -354,10 +354,12 @@ let rotX=0, rotY=0;
 function spinPartyDice(n){
   const dice=$('#partyDice'); if(!dice) return;
   const FACE={1:{x:0,y:0},2:{x:90,y:0},3:{x:0,y:-90},4:{x:0,y:90},5:{x:-90,y:0},6:{x:0,y:180}};
+  const base=FACE[n];
+  dice.classList.remove('stop');
   rotX += 360*(2+Math.floor(Math.random()*2));
   rotY += 360*(2+Math.floor(Math.random()*2));
-  const base=FACE[n];
   dice.style.transform=`rotateX(${rotX+base.x}deg) rotateY(${rotY+base.y}deg)`;
+  setTimeout(()=> dice.classList.add('stop'), 1000);
 }
 function pushChip(containerSel,n,cls){
   const box=$(containerSel); if(!box) return;
@@ -515,15 +517,25 @@ async function execAllyAction(actor, aIdx, skill, comboBonus){
 function hitFXEnemy(e, dmg){
   const idx=PSquad.indexOf(e)+1;
   const card=$(`#eCard${idx}`); if(!card) return;
+
   const f=document.createElement('div'); f.className='flash'; card.appendChild(f); setTimeout(()=>f.remove(),350);
-  const d=document.createElement('div'); d.className='dmg'; d.textContent='-'+dmg; card.appendChild(d); setTimeout(()=>d.remove(),820);
+  const d=document.createElement('div'); d.className='dmg'; d.textContent='-'+dmg; card.appendChild(d); setTimeout(()=>d.remove(),900);
+  const sw=document.createElement('div'); sw.className='shockwave'; card.appendChild(sw); setTimeout(()=>sw.remove(),650);
+  const sl=document.createElement('div'); sl.className='slashFX'; card.appendChild(sl); setTimeout(()=>sl.remove(),360);
+  for(let i=0;i<6;i++){
+    const s=document.createElement('div'); s.className='hitShard';
+    s.style.setProperty('--tx', (Math.random()*120-60)+'px');
+    s.style.setProperty('--ty', (Math.random()*-70-10)+'px');
+    card.appendChild(s);
+    setTimeout(()=>s.remove(),560);
+  }
   card.classList.remove('hitShake'); void card.offsetWidth; card.classList.add('hitShake');
 }
 function healFXAlly(t, val){
   const idx=Party.roster.indexOf(t)+1;
   const card=$(`#pCard${idx}`); if(!card) return;
-  const d=document.createElement('div'); d.className='dmg'; d.style.color='#9fffb0'; d.style.textShadow='0 0 14px rgba(80,255,120,.85),0 0 3px #000'; d.textContent='+'+val;
-  card.appendChild(d); setTimeout(()=>d.remove(),820);
+  const h=document.createElement('div'); h.className='healBurst'; h.textContent='+'+val;
+  card.appendChild(h); setTimeout(()=>h.remove(),900);
 }
 
 // ====== 敵ターン ======
@@ -561,8 +573,17 @@ async function enemyTurnPhase(){
 function hitFXAlly(t, dmg){
   const idx=Party.roster.indexOf(t)+1;
   const card=$(`#pCard${idx}`); if(!card) return;
+
   const f=document.createElement('div'); f.className='flash'; card.appendChild(f); setTimeout(()=>f.remove(),350);
-  const d=document.createElement('div'); d.className='dmg'; d.textContent='-'+dmg; card.appendChild(d); setTimeout(()=>d.remove(),820);
+  const d=document.createElement('div'); d.className='dmg'; d.textContent='-'+dmg; card.appendChild(d); setTimeout(()=>d.remove(),900);
+  const sw=document.createElement('div'); sw.className='shockwave'; card.appendChild(sw); setTimeout(()=>sw.remove(),650);
+  for(let i=0;i<5;i++){
+    const s=document.createElement('div'); s.className='hitShard';
+    s.style.setProperty('--tx', (Math.random()*110-55)+'px');
+    s.style.setProperty('--ty', (Math.random()*-60-10)+'px');
+    card.appendChild(s);
+    setTimeout(()=>s.remove(),540);
+  }
   card.classList.remove('hitShake'); void card.offsetWidth; card.classList.add('hitShake');
 }
 
