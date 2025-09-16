@@ -22,6 +22,35 @@ const pct=(v,tot)=>Math.round((v/tot)*100);
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const $ = s=>document.querySelector(s);
 
+// ==== JUICE PACK utils ====
+// 画面シェイク
+function camShake(targetId='battle'){
+  const el = document.getElementById(targetId);
+  if(!el) return;
+  el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake');
+}
+// スパーク粒子
+function spawnSparks(card, count=8){
+  const rect = card.getBoundingClientRect();
+  for(let i=0;i<count;i++){
+    const s = document.createElement('i'); s.className='spark';
+    const ang = Math.random()*Math.PI*2;
+    const pow = 24 + Math.random()*26;
+    s.style.setProperty('--tx', `${Math.cos(ang)*pow}px`);
+    s.style.setProperty('--ty', `${Math.sin(ang)*pow}px`);
+    const cx = rect.width*0.5 + (Math.random()*20-10);
+    const cy = rect.height*0.42 + (Math.random()*20-10);
+    s.style.left = cx+'px'; s.style.top = cy+'px';
+    card.appendChild(s); setTimeout(()=>s.remove(), 600);
+  }
+}
+// ヒットストップ（ちょい間を持たせる）
+async function hitStop(ms=110){ await wait(ms); }
+// シネマバー ON/OFF（必殺/撃破時）
+function cineOn(){ document.getElementById('battle')?.classList.add('cine'); }
+function cineOff(){ document.getElementById('battle')?.classList.remove('cine'); }
+
+
 // ------------------ レベルテーブル共通ヘルパ ------------------
 const XP_TABLE = {};    // UI用：次レベルに必要な累計 (=(L+1)^2)
 for (let lv=1; lv<MAX_LEVEL; lv++){ XP_TABLE[lv] = (lv+1)*(lv+1) }
@@ -113,10 +142,10 @@ const SKILLS_GARO = {
 // ミナ：回復型（一人旅なので単体回復のみでOK）
 const SKILLS_MINA = {
   1:{name:'杖打ち',dmg:1},                 // 低ロールでも削れる
-  2:{name:'小癒し',heal:3},
+  2:{name:'小癒し',heal:2},
   3:{name:'祝福',heal:2,buffAtk:1},
   4:{name:'光線',dmg:2},
-  5:{name:'大回復',heal:6},
+  5:{name:'大回復',heal:4},
   6:{name:'聖なる光',dmg:3}  
 };
 
@@ -627,8 +656,28 @@ function showRibbon(who, text, ult=false){
 }
 function hitFX(card, dmg){
   const f=document.createElement('div'); f.className='flash'; f.style.zIndex=2; card.appendChild(f); setTimeout(()=>f.remove(),350);
-  const d=document.createElement('div'); d.className='dmg'; d.textContent='-'+dmg; card.appendChild(d); setTimeout(()=>d.remove(),820);
+  const d=document.createElement('div'); d.className='dmg'; d.textContent='-'+dmg; card.appendChild(d); setTimeout(()=>d.remove(),900);
+
+  // 衝撃波
+  const sw=document.createElement('div'); sw.className='shockwave'; card.appendChild(sw); setTimeout(()=>sw.remove(),650);
+
+  // 斬撃の軌跡（軽め）
+  const sl=document.createElement('div'); sl.className='slashFX'; card.appendChild(sl); setTimeout(()=>sl.remove(),360);
+
+  // 破片をランダムに飛ばす
+  for(let i=0;i<6;i++){
+    const s=document.createElement('div'); s.className='hitShard';
+    s.style.setProperty('--tx', (Math.random()*120-60)+'px');
+    s.style.setProperty('--ty', (Math.random()*-70-10)+'px');
+    card.appendChild(s);
+    setTimeout(()=>s.remove(),560);
+  }
+
   card.classList.remove('hitShake'); void card.offsetWidth; card.classList.add('hitShake');
+}
+function healFX(card, val){
+  const h=document.createElement('div'); h.className='healBurst'; h.textContent='+'+val;
+  card.appendChild(h); setTimeout(()=>h.remove(),900);
 }
 function checkComboP(){
   if(P.hist.length<3) return null;
@@ -642,11 +691,15 @@ function checkComboP(){
 let rotX=0, rotY=0;
 function spinDice(n){
   const dice=document.getElementById('dice');
-  rotX += 360 * (2 + Math.floor(Math.random()*2));
-  rotY += 360 * (2 + Math.floor(Math.random()*2));
   const FACE={1:{x:0,y:0},2:{x:90,y:0},3:{x:0,y:-90},4:{x:0,y:90},5:{x:-90,y:0},6:{x:0,y:180}};
   const base=FACE[n];
+
+  // 演出のために stop を外して 1秒後に再付与
+  dice.classList.remove('stop');
+  rotX += 360 * (2 + Math.floor(Math.random()*2));
+  rotY += 360 * (2 + Math.floor(Math.random()*2));
   dice.style.transform=`rotateX(${rotX+base.x}deg) rotateY(${rotY+base.y}deg)`;
+  setTimeout(()=> dice.classList.add('stop'), 1000);
 }
 function resetEquipFaces(){
   for(let i=1;i<=6;i++){
@@ -834,25 +887,45 @@ btnAct?.addEventListener('click', async ()=>{
   const equip    = equipKey ? EQUIP_BOOK[equipKey] : null;
 
   // === 回復技 ===
-  if (s.heal != null){
-    const plusEquip = equip?.healPlus || 0;
-    const healAmt = Math.max(0, (s.heal||0) + (P.healPower||0) + plusEquip);
-    const before = P.hp;
-    P.hp = clamp(P.hp + healAmt, 0, P.max);
-    setHp('P');
-    appendLog('味', rolledP, `${s.name}（回復 +${P.hp-before}）`, null, `${P.hp}/${P.max}`);
-    phase='ready'; btnRoll.disabled=false; btnAct.disabled=true; busy=false;
-    return;
+ if (s.heal != null){
+  const plusEquip = equip?.healPlus || 0;
+  const healAmt = Math.max(0, (s.heal||0) + (P.healPower||0) + plusEquip);
+  P.hp = clamp(P.hp + healAmt, 0, P.max);
+  setHp('P');
+
+  appendLog('味', rolledP, `${s.name}（回復 +${healAmt}）`, null, `${P.hp}/${P.max}`);
+
+  // ---- 敵ターンへ ----
+  if(E.hp > 0){                // 敵がまだ生きている場合
+    await enemyAttackTurn(false);
+    if(P.hp <= 0) return;       // 倒れていたら終了
   }
+
+  phase='ready';
+  btnRoll.disabled=false;
+  btnAct.disabled=true;
+  busy=false;
+  return;
+}
 
   // === ガード技 ===
   if (s.guard != null){
-    const add = Math.max(0, (s.guard||0) + (P.guardPower||0));
-    PStatus.guard += add;
-    appendLog('味', rolledP, `${s.name}（ガード +${add}）`, null, `${P.hp}/${P.max}`);
-    phase='ready'; btnRoll.disabled=false; btnAct.disabled=true; busy=false;
-    return;
-  }
+  const add = Math.max(0, (s.guard||0) + (P.guardPower||0));
+  PStatus.guard += add;
+
+  // 🔽 ログは1回だけ
+  appendLog('味', rolledP, `${s.name}（ガード +${add}）`, null, `${P.hp}/${P.max}`);
+  if(E.hp > 0){
+  await enemyAttackTurn(false);
+  if(P.hp <= 0) return;
+}
+
+  phase='ready'; 
+  btnRoll.disabled=false; 
+  btnAct.disabled=true; 
+  busy=false;
+  return;  // ← ★これを追加
+}
 
   // === 攻撃技 ===
   let bonus = 0;
